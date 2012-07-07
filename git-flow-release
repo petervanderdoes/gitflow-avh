@@ -332,6 +332,7 @@ cmd_finish() {
 	if noflag inplace; then
 		echo "- Release branch '$BRANCH' has been merged into '$MASTER_BRANCH'"
 	fi
+	flag fetch && echo "- Latest objects have been fetched from '$ORIGIN'"
 	if noflag notag; then
 		echo "- The release was tagged '$VERSION_PREFIX$VERSION'"
 	fi
