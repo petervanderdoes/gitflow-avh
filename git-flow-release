@@ -214,6 +214,14 @@ cmd_finish() {
 	fi
 
 	parse_args "$@"
+
+	# Handle disabled master
+	if gitflow_has_master_disabled; then
+		UPSTREAM_BRANCH="$DEVELOP_BRANCH"
+	else
+		UPSTREAM_BRANCH="$MASTER_BRANCH"
+	fi
+
 	# Run filter on the version
 	VERSION=$(run_filter_hook release-finish-version $VERSION)
 
@@ -236,27 +244,26 @@ cmd_finish() {
 	require_branch "$BRANCH"
 	require_clean_working_tree
 	if flag fetch; then
-		git fetch -q "$ORIGIN" "$MASTER_BRANCH" || die "Could not fetch $MASTER_BRANCH from $ORIGIN."
-		git fetch -q "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
+		git fetch -q "$ORIGIN" "$UPSTREAM_BRANCH" || die "Could not fetch $UPSTREAM_BRANCH from $ORIGIN."
+		gitflow_has_master_disabled || \
+		    git fetch -q "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
 	fi
-	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
-		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
+	if git_remote_branch_exists "$ORIGIN/$UPSTREAM_BRANCH"; then
+		require_branches_equal "$UPSTREAM_BRANCH" "$ORIGIN/$UPSTREAM_BRANCH"
 	fi
-	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
+	if ! gitflow_has_master_disabled && git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
 	fi
 
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
 
-	if noflag inplace; then
-		# Try to merge into master.
-		# In case a previous attempt to finish this release branch has failed,
-		# but the merge into master was successful, we skip it now
-		if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
-			git checkout "$MASTER_BRANCH" || die "Could not check out $MASTER_BRANCH."
-			git merge --no-ff "$BRANCH" || die "There were merge conflicts."
-			  # TODO: What do we do now?
-		fi
+	# Try to merge into upstream branch.
+	# In case a previous attempt to finish this release branch has failed,
+	# but the merge into master was successful, we skip it now
+	if ! git_is_branch_merged_into "$BRANCH" "$UPSTREAM_BRANCH"; then
+		git checkout "$UPSTREAM_BRANCH" || die "Could not check out $UPSTREAM_BRANCH."
+		git merge --no-ff "$BRANCH" || die "There were merge conflicts."
+		  # TODO: What do we do now?
 	fi
 
 
@@ -273,34 +280,36 @@ cmd_finish() {
 		fi
 	fi
 
-	# By default we backmerge the $MASTER_BRANCH unless the user explicitly
-	# stated not to do a back merge, in that case we use the $BRANCH.
-	if noflag nobackmerge; then
-		MERGE_BRANCH="$MASTER_BRANCH"
-	else
-		MERGE_BRANCH="$BRANCH"
-	fi
-
-	# Try to merge into develop.
-	# In case a previous attempt to finish this release branch has failed,
-	# but the merge into develop was successful, we skip it now
-	if ! git_is_branch_merged_into "$MERGE_BRANCH" "$DEVELOP_BRANCH"; then
-		git checkout "$DEVELOP_BRANCH" || die "Could not check out $DEVELOP_BRANCH."
-
+	if ! gitflow_has_master_disabled; then
+		# By default we backmerge the $UPSTREAM_BRANCH unless the user explicitly
+		# stated not to do a back merge, in that case we use the $BRANCH.
 		if noflag nobackmerge; then
-			# Accounting for 'git describe', if a release is tagged
-			# we use the tag commit instead of the branch.
-			if noflag notag; then
-				commit="$VERSION_PREFIX$VERSION"
-			else
-				commit="$MASTER_BRANCH"
-			fi
+			MERGE_BRANCH="$UPSTREAM_BRANCH"
 		else
-			commit="$BRANCH"
+			MERGE_BRANCH="$BRANCH"
 		fi
 
-		git merge --no-ff "$commit" || die "There were merge conflicts."
-		  # TODO: What do we do now?
+		# Try to merge into develop.
+		# In case a previous attempt to finish this release branch has failed,
+		# but the merge into develop was successful, we skip it now
+		if noflag inplace && ! git_is_branch_merged_into "$MERGE_BRANCH" "$DEVELOP_BRANCH"; then
+			git checkout "$DEVELOP_BRANCH" || die "Could not check out $DEVELOP_BRANCH."
+
+			if noflag nobackmerge; then
+				# Accounting for 'git describe', if a release is tagged
+				# we use the tag commit instead of the branch.
+				if noflag notag; then
+					commit="$VERSION_PREFIX$VERSION"
+				else
+					commit="$MASTER_BRANCH"
+				fi
+			else
+				commit="$BRANCH"
+			fi
+
+			git merge --no-ff "$commit" || die "There were merge conflicts."
+			  # TODO: What do we do now?
+		fi
 	fi
 
 	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
@@ -308,14 +317,15 @@ cmd_finish() {
 	# Delete branch
 	if noflag keep && noflag inplace; then
 		if [ "$BRANCH" = "$(git_current_branch)" ]; then
-			git checkout "$MASTER_BRANCH"
+			git checkout "$UPSTREAM_BRANCH"
 		fi
 		git branch -d "$BRANCH"
 	fi
 
 	if flag push; then
 		git push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
-		git push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push to $MASTER_BRANCH from $ORIGIN."
+		gitflow_has_master_disabled || \
+		    git push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push to $MASTER_BRANCH from $ORIGIN."
 		if noflag notag; then
 			git push --tags "$ORIGIN" || die "Could not push tags to $ORIGIN."
 		fi
@@ -328,25 +338,36 @@ cmd_finish() {
 
 	echo
 	echo "Summary of actions:"
-	echo "- Latest objects have been fetched from '$ORIGIN'"
+	flag fetch && echo "- Latest objects have been fetched from '$ORIGIN'"
+	flag fetch && echo "- Latest objects have been fetched from '$ORIGIN'"
 	if noflag inplace; then
-		echo "- Release branch '$BRANCH' has been merged into '$MASTER_BRANCH'"
+		echo "- Release branch '$BRANCH' has been merged into '$UPSTREAM_BRANCH'"
 	fi
 	flag fetch && echo "- Latest objects have been fetched from '$ORIGIN'"
 	if noflag notag; then
 		echo "- The release was tagged '$VERSION_PREFIX$VERSION'"
 	fi
-	[ "$commit" = "$MASTER_BRANCH" ] && echo "- Master branch '$MASTER_BRANCH' has been back-merged into '$DEVELOP_BRANCH'"
-	[ "$commit" = "$VERSION_PREFIX$VERSION" ] && echo "- Release tag '$VERSION_PREFIX$VERSION' has been back-merged into '$DEVELOP_BRANCH'"
-	[ "$commit" = "$BRANCH" ] && echo "- Release branch '$BRANCH' has been merged into '$DEVELOP_BRANCH'"
-	if flag keep; then
-		echo "- Release branch '$BRANCH' is still available"
-	elif noflag inplace; then
-		echo "- Release branch '$BRANCH' has been deleted"
+	if gitflow_has_master_disabled; then
+		if flag push; then
+			echo "- '$DEVELOP_BRANCH' and tags have been pushed to '$ORIGIN'"
+		fi
+	else
+		[ "$commit" = "$MASTER_BRANCH" ] \
+		    && echo "- Master branch '$MASTER_BRANCH' has been back-merged into '$DEVELOP_BRANCH'"
+		[ "$commit" = "$VERSION_PREFIX$VERSION" ] \
+		    && echo "- Release tag '$VERSION_PREFIX$VERSION' has been back-merged into '$DEVELOP_BRANCH'"
+		[ "$commit" = "$BRANCH" ] \
+		    && echo "- Release branch '$BRANCH' has been merged into '$DEVELOP_BRANCH'"
+		if flag push; then
+			echo "- '$DEVELOP_BRANCH', '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
+		fi
 	fi
-	if flag push; then
-		echo "- '$DEVELOP_BRANCH', '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
-		echo "- Release branch '$BRANCH' in '$ORIGIN' has been deleted."
+	if noflag inplace; then
+		flag keep   && echo "- Release branch '$BRANCH' is still available"
+		noflag keep && echo "- Release branch '$BRANCH' has been deleted"
+
+		flag keep   && flag push && echo "- Release branch '$BRANCH' in '$ORIGIN' is still available."
+		noflag keep && flag push && echo "- Release branch '$BRANCH' in '$ORIGIN' has been deleted."
 	fi
 	echo
 }
@@ -424,7 +445,8 @@ cmd_delete() {
 		git checkout "$DEVELOP_BRANCH"
 	fi
 
-	if ( git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH" && git_is_branch_merged_into "$BRANCH" "$DEVELOP_BRANCH" ); then
+	if ( gitflow_has_master_disabled || git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH" ) \
+	    && git_is_branch_merged_into "$BRANCH" "$DEVELOP_BRANCH"; then
 		git branch -d "$BRANCH" || die "Could not delete the $BRANCH."
 		if flag remote; then
 			git push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
@@ -436,11 +458,15 @@ cmd_delete() {
 				git push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
 			fi
 		else
+			if gitflow_has_master_disabled; then
+			 die "Release branch '$BRANCH' has been not been merged in develop branch '$DEVELOP_BRANCH'. Use -f to force the deletion."
+			else
 			 die "Release branch '$BRANCH' has been not been merged in master '$MASTER_BRANCH' and/or develop branch '$DEVELOP_BRANCH'. Use -f to force the deletion."
-		 fi
-	 fi
+			fi
+		fi
+	fi
 
-	 run_post_hook "$VERSION" "$ORIGIN" "$BRANCH"
+	run_post_hook "$VERSION" "$ORIGIN" "$BRANCH"
 
 	echo
 	echo "Summary of actions:"
