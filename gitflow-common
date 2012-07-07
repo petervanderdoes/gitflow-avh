@@ -101,10 +101,12 @@ git_repo_is_headless() {
 }
 
 git_local_branch_exists() {
+	[ -n "$1" ] || die "Missing branch name"
 	[ -n "$(git for-each-ref --format='%(refname:short)' refs/heads/$1)" ]
 }
 
 git_remote_branch_exists() {
+	[ -n "$1" ] || die "Missing branch name"
 	[ -n "$(git for-each-ref --format='%(refname:short)' refs/remotes/$1)" ]
 }
 
@@ -113,6 +115,7 @@ git_branch_exists() {
 }
 
 git_tag_exists() {
+	[ -n "$1" ] || die "Missing tag name"
 	[ -n "$(git for-each-ref --format='%(refname:short)' refs/tags/$1)" ]
 }
 
@@ -313,7 +316,7 @@ require_remote_branch() {
 }
 
 require_branch() {
-	git_branch_exists || die "Branch '$1' does not exist and is required."
+	git_branch_exists "$1" || die "Branch '$1' does not exist and is required."
 }
 
 require_branch_absent() {
