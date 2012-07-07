@@ -12,6 +12,10 @@
 
 # Changelog
 
+#### 1.0.71-avh
+[Daniel Dehennin][baby-gnu]
+* Check for parameter existence for branch and tag existence helpers
+
 #### 1.0.70-avh
 [Peter van der Does][petervanderdoes]
 * Bugfix: When running git flow version an error message pops up.
