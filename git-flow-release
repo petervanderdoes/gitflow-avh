@@ -279,7 +279,11 @@ cmd_finish() {
 		if noflag notag; then
 			git push --tags "$ORIGIN" || die "Could not push tags to $ORIGIN."
 		fi
-		git push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
+		if noflag keep && git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			git push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
+		elif flag keep
+			git push "$ORIGIN" "$BRANCH" || die "Could not update the remote $BRANCH in $ORIGIN."
+		fi
 	fi
 
 	echo
