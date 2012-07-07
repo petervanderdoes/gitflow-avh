@@ -36,7 +36,7 @@
 #
 
 usage() {
-	echo "usage: git flow init [-fd]"
+	echo "usage: git flow init [-fdm]"
 }
 
 parse_args() {
@@ -49,6 +49,7 @@ parse_args() {
 cmd_default() {
 	DEFINE_boolean force false 'force setting of gitflow branches, even if already configured' f
 	DEFINE_boolean defaults false 'use default branch naming conventions' d
+	DEFINE_boolean nomaster false 'disable the creation of production release branch' m
 	parse_args "$@"
 
 	if ! git rev-parse --git-dir >/dev/null 2>&1; then
@@ -74,7 +75,9 @@ cmd_default() {
 
 	# Add a master branch if no such branch exists yet
 	local master_branch
-	if gitflow_has_master_configured && ! flag force; then
+	if (flag nomaster || gitflow_has_master_disabled) && noflag force; then
+		git config --bool gitflow.branch.master.disabled true
+	elif gitflow_has_master_configured && noflag force; then
 		master_branch=$(git config --get gitflow.branch.master)
 	else
 		# Two cases are distinguished:
@@ -113,24 +116,45 @@ cmd_default() {
 		fi
 		master_branch=${answer:-$default_suggestion}
 
-		# Check existence in case of an already existing repo
-		if [ "$should_check_existence" = "YES" ]; then
-			# If no local branch exists and a remote branch of the same
-			# name exists, checkout that branch and use it for master
-			if ! git_local_branch_exists "$master_branch" && git_remote_branch_exists "origin/$master_branch"; then
-				git branch "$master_branch" "origin/$master_branch" >/dev/null 2>&1
-			elif ! git_local_branch_exists "$master_branch"; then
-				die "Local branch '$master_branch' does not exist."
-			fi
+		# disabling/enabling
+		if [ -n "$master_branch" ] && gitflow_has_master_disabled; then
+			echo "Warning: production release branch was disabled."
+			default_suggestion="Yes"
+			printf "Do you want to enable production release branch (Yes/No): [$default_suggestion] "
+			read answer
+			answer=${answer:-$default_suggestion}
+			[ "$answer" = "Yes" ] && git config --bool gitflow.branch.master.disabled false
+		elif [ -z "$master_branch" ]; then
+			echo "Warning: no production release branch name defined "
+			default_suggestion="No"
+			printf "Do you want to disable production release branch (No/Yes): [$default_suggestion] "
+			read answer
+			[ "$answer" = "Yes" ] || die "No production release branch defined."
+			git config gitflow.branch.master.disabled true
 		fi
 
-		# Store the name of the master branch
-		git config gitflow.branch.master "$master_branch"
+		if ! gitflow_has_master_disabled; then
+			# Check existence in case of an already existing repo
+			if [ "$should_check_existence" = "YES" ]; then
+				# If no local branch exists and a remote branch of the same
+				# name exists, checkout that branch and use it for master
+				if ! git_local_branch_exists "$master_branch" \
+				    && git_remote_branch_exists "origin/$master_branch"; then
+					git branch "$master_branch" "origin/$master_branch" >/dev/null 2>&1
+				elif ! git_local_branch_exists "$master_branch"; then
+					die "Local branch '$master_branch' does not exist."
+				fi
+			fi
+
+			# Store the name of the master branch
+			git config gitflow.branch.master "$master_branch"
+		fi
 	fi
 
 	# Add a develop branch if no such branch exists yet
 	local develop_branch
-	if gitflow_has_develop_configured && ! flag force; then
+	if gitflow_has_develop_configured \
+	    && [ "$master_branch" != $(git config --get gitflow.branch.develop) ] && ! flag force; then
 		develop_branch=$(git config --get gitflow.branch.develop)
 	else
 		# Again, the same two cases as with the master selection are
@@ -171,7 +195,12 @@ cmd_default() {
 		develop_branch=${answer:-$default_suggestion}
 
 		if [ "$master_branch" = "$develop_branch" ]; then
-			die "Production and integration branches should differ."
+			echo "Warning: your production and \"next release\" development branches are the same."
+			default_suggestion="No"
+			printf "Do you want to disable production release branch (No/Yes): [$default_suggestion] "
+			read answer
+			[ "$answer" = "Yes" ] || die "Production and integration branches should differ."
+			git config gitflow.branch.master.disabled true
 		fi
 
 		# Check existence in case of an already existing repo
@@ -189,16 +218,21 @@ cmd_default() {
 	# it to be able to create new branches.
 	local created_gitflow_branch=0
 	if ! git rev-parse --quiet --verify HEAD >/dev/null 2>&1; then
-		git symbolic-ref HEAD "refs/heads/$master_branch"
+		if gitflow_has_master_disabled; then
+			git symbolic-ref HEAD "refs/heads/$develop_branch"
+		else
+			git symbolic-ref HEAD "refs/heads/$master_branch"
+		fi
 		git commit --allow-empty --quiet -m "Initial commit"
 		created_gitflow_branch=1
 	fi
 
 	# Creation of master
 	# ------------------
-	# At this point, there always is a master branch: either it existed already
-	# (and was picked interactively as the production branch) or it has just
-	# been created in a fresh repo
+	# At this point, the master branch is disabled or there always
+	# is a master branch: either it existed already (and was
+	# picked interactively as the production branch) or it has
+	# just been created in a fresh repo
 
 	# Creation of develop
 	# -------------------
