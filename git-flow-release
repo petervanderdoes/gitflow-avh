@@ -281,8 +281,8 @@ cmd_finish() {
 		fi
 		if noflag keep && git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 			git push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
-		elif flag keep
-			git push "$ORIGIN" "$BRANCH" || die "Could not update the remote $BRANCH in $ORIGIN."
+		else
+			git push "$ORIGIN" "$BRANCH" || die "Could not push to $BRANCH from $ORIGIN."
 		fi
 	fi
 
