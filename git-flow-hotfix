@@ -43,10 +43,10 @@ PREFIX=$(git config --get gitflow.prefix.hotfix)
 
 usage() {
 	echo "usage: git flow hotfix [list] [-v]"
-	echo "       git flow hotfix start [-F] <version> [<base>]"
-	echo "       git flow hotfix finish [-Fsumpknb] <version>"
-	echo "       git flow hotfix publish <version>"
-	echo "       git flow hotfix delete [-fr] <version>"
+	echo "       git flow hotfix start [-F] <name> [<base>]"
+	echo "       git flow hotfix finish [-Fsumpknb] <version> [<name>]"
+	echo "       git flow hotfix publish <name>"
+	echo "       git flow hotfix delete [-fr] <name>"
 }
 
 cmd_default() {
@@ -72,7 +72,7 @@ cmd_list() {
                 warn ""
                 warn "You can start a new hotfix branch:"
                 warn ""
-                warn "    git flow hotfix start <version> [<base>]"
+                warn "    git flow hotfix start <name> [<base>]"
                 warn ""
 		exit 0
 	fi
@@ -129,8 +129,8 @@ parse_args() {
 	eval set -- "${FLAGS_ARGV}"
 
 	# Read arguments into global variables
-	VERSION=$1
-	BRANCH=$PREFIX$VERSION
+	NAME=$1
+	BRANCH=$PREFIX$NAME
 }
 
 cmd_start() {
@@ -154,28 +154,21 @@ cmd_start() {
 		git fetch -q "$ORIGIN" "$UPSTREAM_BRANCH"
 	fi
 
-	# Run filter on the version
-	VERSION=$(run_filter_hook hotfix-start-version $VERSION)
-
-	# As VERSION might have changed reset BRANCH with new VERSION
-	BRANCH=$PREFIX$VERSION
-
-	gitflow_require_version_arg
+	gitflow_require_name_arg
 	git_is_ancestor "$BASE" "$UPSTREAM_BRANCH" || die "Given base '$BASE' is not a valid commit on '$UPSTREAM_BRANCH'."
 
 	# Sanity checks
 	require_branch_absent "$BRANCH"
-	require_tag_absent "$VERSION_PREFIX$VERSION"
 	if git_remote_branch_exists "$ORIGIN/$UPSTREAM_BRANCH"; then
 		require_branches_equal "$UPSTREAM_BRANCH" "$ORIGIN/$UPSTREAM_BRANCH"
 	fi
 
-	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$BASE"
+	run_pre_hook "$ORIGIN" "$BRANCH" "$BASE"
 
 	# Create branch
 	git checkout -b "$BRANCH" "$BASE"  || die "Could not create hotfix branch '$BRANCH'"
 
-	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$BASE"
+	run_post_hook "$ORIGIN" "$BRANCH" "$BASE"
 
 	echo
 	echo "Summary of actions:"
@@ -193,7 +186,7 @@ cmd_start() {
 
 cmd_publish() {
 	parse_args "$@"
-	gitflow_require_version_arg
+	gitflow_require_name_arg
 
 	# Sanity checks
 	require_clean_working_tree
@@ -201,7 +194,7 @@ cmd_publish() {
 	git fetch -q "$ORIGIN"
 	require_branch_absent "$ORIGIN/$BRANCH"
 
-	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+	run_pre_hook "$ORIGIN" "$BRANCH"
 
 	# Create remote branch
 	git push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH"
@@ -212,7 +205,7 @@ cmd_publish() {
 	git config "branch.$BRANCH.merge" "refs/heads/$BRANCH"
 	git checkout "$BRANCH"
 
-	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+	run_post_hook "$ORIGIN" "$BRANCH"
 
 	echo
 	echo "Summary of actions:"
@@ -233,7 +226,26 @@ cmd_finish() {
 	DEFINE_boolean nobackmerge false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
 
 	parse_args "$@"
+	eval set -- "${FLAGS_ARGV}"
+
+	# The first argument is version, not name
+	VERSION="$1"
+
+	# Run filter on the version
+	VERSION=$(run_filter_hook hotfix-finish-version $VERSION)
+
+	# As VERSION might have changed reset BRANCH with new VERSION
+	BRANCH=$PREFIX$VERSION
+
 	gitflow_require_version_arg
+
+	# User set a specific branch name
+	if [ -n "$2" ]; then
+		BRANCH="$PREFIX$2"
+	elif ! git_local_branch_exists "$BRANCH"; then
+		require_current_hotfix_branch
+		BRANCH=$(git_current_branch)
+	fi
 
 	# Handle disabled master
 	if gitflow_has_master_disabled; then
@@ -391,7 +403,7 @@ cmd_delete() {
 	DEFINE_boolean force false "force deletion" f
 	DEFINE_boolean remote false "delete remote branch" r
 	parse_args "$@"
-	gitflow_require_version_arg
+	gitflow_require_name_arg
 
 	# Handle disabled master
 	if gitflow_has_master_disabled; then
@@ -403,7 +415,7 @@ cmd_delete() {
 	# Sanity checks
 	require_branch "$BRANCH"
 
-	run_pre_hook "$VERSION" "$ORIGIN" "$BRANCH"
+	run_pre_hook "$ORIGIN" "$BRANCH"
 
 	local current_branch=$(git_current_branch)
 	# We can't delete a branch we are on, switch to the "upstream" branch.
@@ -433,7 +445,7 @@ cmd_delete() {
 		fi
 	fi
 
-	run_post_hook "$VERSION" "$ORIGIN" "$BRANCH"
+	run_post_hook "$ORIGIN" "$BRANCH"
 
 	echo
 	echo "Summary of actions:"
