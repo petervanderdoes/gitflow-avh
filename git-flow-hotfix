@@ -133,13 +133,6 @@ parse_args() {
 	BRANCH=$PREFIX$VERSION
 }
 
-require_no_existing_hotfix_branches() {
-	local hotfix_branches=$(git_local_branches_prefixed "$PREFIX")
-	local first_branch=$(echo ${hotfix_branches} | head -n1)
-	first_branch=${first_branch#$PREFIX}
-	[ -z "$hotfix_branches" ] || die "There is an existing hotfix branch ($first_branch). Finish that one first."
-}
-
 cmd_start() {
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	parse_args "$@"
@@ -168,7 +161,6 @@ cmd_start() {
 
 	gitflow_require_version_arg
 	git_is_ancestor "$BASE" "$UPSTREAM_BRANCH" || die "Given base '$BASE' is not a valid commit on '$UPSTREAM_BRANCH'."
-	require_no_existing_hotfix_branches
 
 	# Sanity checks
 	require_branch_absent "$BRANCH"
@@ -279,6 +271,17 @@ cmd_finish() {
 		   ;;
 		*) ;;
 	esac
+
+	if noflag notag; then
+		# We ask for a tag, be sure it does not exists or
+		# points to the latest hotfix commit
+		if git_tag_exists "$VERSION_PREFIX$VERSION"; then
+			local hotfix_sha=$(git rev-parse "$BRANCH")
+			local tag_parent_sha=$(git rev-parse "$VERSION_PREFIX$VERSION"^2)
+			[ "$hotfix_sha" = "$tag_parent_sha" ] \
+			    || die "Tag already exists and does not point to hotfix branch '$BRANCH'"
+		fi
+	fi
 
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
 
