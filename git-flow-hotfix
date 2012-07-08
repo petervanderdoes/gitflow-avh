@@ -274,7 +274,7 @@ cmd_finish() {
 	# Try to merge into upstream branch
 	# In case a previous attempt to finish this release branch has failed,
 	# but the merge into master was successful, we skip it now
-	if git_is_branch_merged_into "$BRANCH" "$UPSTREAM_BRANCH"; then
+	if ! git_is_branch_merged_into "$BRANCH" "$UPSTREAM_BRANCH"; then
 		git checkout "$UPSTREAM_BRANCH" || die "Could not check out $UPSTREAM_BRANCH."
 		git merge --no-ff "$BRANCH" || die "There were merge conflicts."
 		  # TODO: What do we do now?
