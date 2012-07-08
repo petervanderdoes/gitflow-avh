@@ -230,7 +230,8 @@ cmd_finish() {
 
 	if flag inplace; then
 		BRANCH="$(git_current_branch)"
-		require_branches_equal "$BRANCH" "$DEVELOP_BRANCH"
+		git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH" \
+		    && require_branches_equal "$BRANCH" "$DEVELOP_BRANCH"
 	fi
 
 	gitflow_require_version_arg
