@@ -413,6 +413,35 @@ require_branches_equal() {
 	fi
 }
 
+require_current_branch_prefix() {
+	local prefix="$1"
+	local branch=$(git_current_branch)
+	[ -n "$prefix" ] || die "Fatal: Prefix parameter missing."
+	[ "${branch#$prefix}" != "$branch" ]
+}
+
+require_current_feature_branch() {
+	require_current_branch_prefix $(git config --get gitflow.prefix.feature) \
+	    || die "Current branch is not a feature"
+}
+
+require_current_release_branch() {
+	require_current_branch_prefix $(git config --get gitflow.prefix.release) \
+	    || die "Current branch is not a release"
+}
+
+require_current_hotfix_branch() {
+	local branch=$(git_current_branch)
+	require_current_branch_prefix $(git config --get gitflow.prefix.hotfix) \
+	    || die "Current branch is not a hotfix"
+}
+
+require_current_support_branch() {
+	local branch=$(git_current_branch)
+	require_current_branch_prefix $(git config --get gitflow.prefix.support) \
+	    || die "Current branch is not a support"
+}
+
 #
 # Show commands if flag is set.
 #
