@@ -287,6 +287,15 @@ cmd_finish() {
 	*) ;;
 	esac
 
+	if noflag notag; then
+		# We ask for a tag, be sure it does not exists or
+		# points to the latest hotfix commit
+		if git_tag_exists "$VERSION_PREFIX$VERSION"; then
+			git_compare_refs  "$BRANCH" "$VERSION_PREFIX$VERSION"^2 2>/dev/null
+			[ $? -eq 0 ] || die "Tag already exists and does not point to hotfix branch '$BRANCH'"
+		fi
+	fi
+
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
 
 	# Try to merge into master.
