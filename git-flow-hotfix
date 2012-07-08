@@ -136,6 +136,7 @@ parse_args() {
 cmd_start() {
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	parse_args "$@"
+	eval set -- "${FLAGS_ARGV}"
 
 	# Handle disabled master
 	if gitflow_has_master_disabled; then
