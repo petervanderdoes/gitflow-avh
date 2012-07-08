@@ -249,6 +249,17 @@ cmd_finish() {
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
 	fi
 
+	if noflag notag; then
+		# We ask for a tag, be sure it does not exists or
+		# points to the latest hotfix commit
+		if git_tag_exists "$VERSION_PREFIX$VERSION"; then
+			local hotfix_sha=$(git rev-parse "$BRANCH")
+			local tag_parent_sha=$(git rev-parse "$VERSION_PREFIX$VERSION"^2)
+			[ "$hotfix_sha" = "$tag_parent_sha" ] \
+			    || die "Tag already exists and does not point to hotfix branch '$BRANCH'"
+		fi
+	fi
+
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
 
 	if noflag inplace; then
