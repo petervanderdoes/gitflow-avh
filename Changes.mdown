@@ -16,11 +16,11 @@
 
 [Peter van der Does][petervanderdoes]
 * Show correct help for subactions.  
-  When requesting help with -h for the subactions, the help would show the
-incorrect command line.
+  When requesting help with -h for the subactions, the help would show the 
+  incorrect command line.
 * Support reading the tag message from a file in release/hotfix finish.  
-  Add the option -f,--messagefile to release and hotfix finish. Thanks to [Steve Streeting][sinbad]
-  for the original coding.
+  Add the option -f,--messagefile to release and hotfix finish. Thanks to 
+  [Steve Streeting][sinbad] for the original coding.
 
 [Myke Hines][mykehsd]
 
