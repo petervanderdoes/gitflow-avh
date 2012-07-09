@@ -12,6 +12,9 @@
 
 # Changelog
 
+#### 1.0.56-avh
+* Implement feature tag_message_from_file
+
 #### 1.0.54-avh
 [Peter van der Does][petervanderdoes]
 * Show correct help for subactions.  
