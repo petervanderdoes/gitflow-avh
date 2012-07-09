@@ -12,7 +12,7 @@
 
 # Changelog
 
-#### 1.0.52-avh
+#### 1.0.54-avh
 [Peter van der Does][petervanderdoes]
 * Show correct help for subactions.  
   When requesting help with -h for the subactions, the help would show the
