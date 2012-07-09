@@ -46,7 +46,7 @@ init() {
 usage() {
 	echo "usage: git flow release [list] [-v]"
 	echo "       git flow release start [-F] <version> [<base>]"
-	echo "       git flow release finish [-Fsumpknb] <version>"
+	echo "       git flow release finish [-FsumpknbS] <version>"
 	echo "       git flow release publish <name>"
 	echo "       git flow release track <name>"
 	echo "       git flow release delete [-fr] <version>"
@@ -187,6 +187,7 @@ cmd_finish() {
 	DEFINE_boolean keep false "keep branch after performing finish" k
 	DEFINE_boolean notag false "don't tag this release" n
 	DEFINE_boolean nobackmerge false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
+	DEFINE_boolean squash false "squash release during merge" S
 
 	parse_args "$@"
 	gitflow_require_version_arg
@@ -217,8 +218,12 @@ cmd_finish() {
 	# but the merge into master was successful, we skip it now
 	if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
 		git checkout "$MASTER_BRANCH" || die "Could not check out $MASTER_BRANCH."
-		git merge --no-ff "$BRANCH" || die "There were merge conflicts."
-		  # TODO: What do we do now?
+		if noflag squash; then
+			git merge --no-ff "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+		else
+			git merge --squash "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+			git commit
+		fi
 	fi
 
 
@@ -261,8 +266,12 @@ cmd_finish() {
 			commit="$BRANCH"
 		fi
 
-		git merge --no-ff "$commit" || die "There were merge conflicts."
-		  # TODO: What do we do now?
+		if noflag squash; then
+			git merge --no-ff "$commit" || die "There were merge conflicts." # TODO: What do we do now?
+		else
+			git merge --squash "$commit" || die "There were merge conflicts." # TODO: What do we do now?
+			git commit
+		fi
 	fi
 
 	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
