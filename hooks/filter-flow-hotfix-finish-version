@@ -1,14 +1,18 @@
 #!/bin/sh
 #
-# Runs during git flow release start
+# Runs during git flow hotfix finish
 #
 # Positional arguments:
 # $1    Version
+# $2    The full branch name (including the hotfix prefix)
+# $3    The base from which this feature is started
 #
 # Return VERSION - When VERSION is returned empty gitflow 
 #	will stop as the version is necessary
 #
 VERSION=$1
+ORIGIN=$2
+BRANCH=$3
 
 # Implement your script here.
 
