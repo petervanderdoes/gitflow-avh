@@ -12,6 +12,9 @@
 
 # Changelog
 
+#### 1.0.52-avh
+* Implement feature Better_help_function
+
 #### 1.0.50-avh
 [Myke Hines][mykehsd]
 
