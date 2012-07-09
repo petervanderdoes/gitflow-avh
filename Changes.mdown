@@ -13,19 +13,21 @@
 # Changelog
 
 #### 1.0.52-avh
-* Implement feature Better_help_function
+[Peter van der Does][petervanderdoes]
+* Show correct help for subactions.  
+  When requesting help with -h for the subactions, the help would show the
+incorrect command line.
 
-#### 1.0.50-avh
 [Myke Hines][mykehsd]
 
-* Feature and Release squashing options    
+* Feature and Release squashing options  
   This allows a -S option to both feature and releasing finishing actions so 
   that developers can squash commits into one large one.
 
 #### 1.0.44-avh
 [Peter Ragone][pcragone]
 
-* Add init to git-flow-{feature,release,hotfix,support}    
+* Add init to git-flow-{feature,release,hotfix,support}   
   Fixes the relatively minor issue where 'git flow subcommand help' 
   gives "Not a gitflow-enabled repo yet"
 
@@ -38,7 +40,7 @@
 
 [Peter van der Does][petervanderdoes]
 
-* Clean up code    
+* Clean up code  
   Remove all porcelain commands.    
   Refactor code    
 
@@ -50,13 +52,13 @@
   Adds an command line option (-b), which the user can utilize if the user
   doesn't want to back-merge but rather merge the release branch into
   develop.
-* Add the sub-action delete to sub-commands feature, release and hotfix.
+* Add the sub-action delete to sub-commands feature, release and hotfix.    
   The sub-commands feature, release and hotfix now have a new sub-action, 
   delete. With that action you can delete the branches, locally and remote.
   The action has two options, -f and -r. With -f you can force the deletion,
   even when the to be deleted branch was not merged yet. With -r the remote 
   branch will also be deleted.  
-* Special thanks to the following individual:
+* Special thanks to the following individual:    
   [Gert Van Gool][gvangool]
   
 #### 1.0-avh
@@ -64,7 +66,7 @@
 [Peter van der Does][petervanderdoes]
 
 * Remove trailing whitespace.
-* Updated from latest develop branch from nvie.  
+* Updated from latest develop branch from nvie.    
   Some features were still missing.
 * Remove the submodule shFlags.  
   Instead of the submodule we'll just use the file.

@@ -112,6 +112,9 @@ main() {
 	if [ $SUBACTION != "help" ]; then
 		init
   	fi
+  	if [ $SUBACTION != 'default' ]; then
+  		FLAGS_PARENT="git flow $SUBCOMMAND $SUBACTION"
+  	fi
 	cmd_$SUBACTION "$@"
 }
 
