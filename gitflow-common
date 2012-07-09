@@ -79,7 +79,8 @@ git_local_branches_prefixed() {
 	git for-each-ref --format='%(refname:short)' refs/heads/$1 ;
 }
 git_current_branch() {
-	local branch_name="$(git symbolic-ref --short --quiet HEAD)" || branch_name="(unnamed branch)" # detached HEAD
+	local branch_name="$(git symbolic-ref --quiet HEAD)"
+	[ -z $branch_name ] && branch_name="(unnamed branch)" || branch_name="$(git for-each-ref --format='%(refname:short)' $branch_name)"
 	echo "$branch_name"
 }
 

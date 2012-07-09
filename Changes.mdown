@@ -21,6 +21,10 @@
 * Support reading the tag message from a file in release/hotfix finish.  
   Add the option -f,--messagefile to release and hotfix finish. Thanks to 
   [Steve Streeting][sinbad] for the original coding.
+* Bugfix: git_current_branch fails for git prior 1.7.10  
+  git symbolic-ref does not have the --short option prior to version 1.7.10.
+  Bug found by [Daniel Dehennin][baby-gnu]
+
 
 [Myke Hines][mykehsd]
 
