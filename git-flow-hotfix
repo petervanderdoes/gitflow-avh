@@ -180,7 +180,7 @@ cmd_start() {
 	echo "- Start committing your hot fixes"
 	echo "- When done, run:"
 	echo
-	echo "     git flow hotfix finish '$VERSION'"
+	echo "     git flow hotfix finish '<version>'"
 	echo
 }
 
