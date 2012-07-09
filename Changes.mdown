@@ -8,11 +8,16 @@
 [gvangool]: https://github.com/gvangool
 [baby-gnu]: https://github.com/baby-gnu
 [pcragone]: https://github.com/pcragone
+[mykehsd]: https://github.com/mykehsd
 
 # Changelog
 
 #### 1.0.46-avh
-* Implement feature Feature_and_Release_squashing_options
+[Myke Hines][mykehsd]
+
+* Feature and Release squashing options    
+  This allows a -S option to both feature and releasing finishing actions so 
+  that developers can squash commits into one large one.
 
 #### 1.0.44-avh
 [Peter Ragone][pcragone]
