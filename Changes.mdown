@@ -13,13 +13,14 @@
 # Changelog
 
 #### 1.0.56-avh
-* Implement feature tag_message_from_file
 
-#### 1.0.54-avh
 [Peter van der Does][petervanderdoes]
 * Show correct help for subactions.  
   When requesting help with -h for the subactions, the help would show the
 incorrect command line.
+* Support reading the tag message from a file in release/hotfix finish.  
+  Add the option -f,--messagefile to release and hotfix finish. Thanks to [Steve Streeting][sinbad]
+  for the original coding.
 
 [Myke Hines][mykehsd]
 
