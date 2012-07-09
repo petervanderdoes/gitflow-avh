@@ -11,6 +11,9 @@
 
 # Changelog
 
+#### 1.0.46-avh
+* Implement feature Feature_and_Release_squashing_options
+
 #### 1.0.44-avh
 [Peter Ragone][pcragone]
 
