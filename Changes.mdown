@@ -12,7 +12,7 @@
 
 # Changelog
 
-#### 1.0.56-avh
+#### 1.0.61-avh
 
 [Peter van der Does][petervanderdoes]
 * Show correct help for subactions.  
