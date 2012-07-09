@@ -12,7 +12,7 @@
 
 # Changelog
 
-#### 1.0.46-avh
+#### 1.0.50-avh
 [Myke Hines][mykehsd]
 
 * Feature and Release squashing options    
