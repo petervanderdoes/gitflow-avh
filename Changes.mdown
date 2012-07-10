@@ -12,7 +12,7 @@
 
 # Changelog
 
-#### 1.0.69-avh
+#### 1.0.70-avh
 [Peter van der Does][petervanderdoes]
 * Bugfix: When running git flow version an error message pops up.
 
