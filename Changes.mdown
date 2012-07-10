@@ -12,7 +12,7 @@
 
 # Changelog
 
-#### 1.0.66-avh
+#### 1.0.67-avh
 [Peter van der Does][petervanderdoes]
 * Bugfix: When running git init an error message pops up.
 
