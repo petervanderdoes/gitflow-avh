@@ -188,13 +188,13 @@ cmd_start() {
 	BASE=${2:-$DEVELOP_BRANCH}
 	gitflow_require_name_arg
 
-	# Sanity checks
-	require_branch_absent "$BRANCH"
-
 	# Update the local repo with remote changes, if asked
 	if flag fetch; then
 		git fetch -q "$ORIGIN" "$DEVELOP_BRANCH"
 	fi
+
+	# Sanity checks
+	require_branch_absent "$BRANCH"
 
 	# If the origin branch counterpart exists, assert that the local branch
 	# isn't behind it (to avoid unnecessary rebasing)

@@ -140,6 +140,14 @@ cmd_start() {
 	parse_args "$@"
 	BASE=${2:-$MASTER_BRANCH}
 
+	# No need to continue if not clean
+	require_clean_working_tree
+
+ 	# Update the local repo with remote changes, if asked
+	if flag fetch; then
+		git fetch -q "$ORIGIN" "$MASTER_BRANCH"
+	fi
+
 	# Run filter on the version
 	VERSION=$(run_filter_hook hotfix-start-version $VERSION)
 
@@ -151,12 +159,8 @@ cmd_start() {
 	require_no_existing_hotfix_branches
 
 	# Sanity checks
-	require_clean_working_tree
 	require_branch_absent "$BRANCH"
 	require_tag_absent "$VERSION_PREFIX$VERSION"
-	if flag fetch; then
-		git fetch -q "$ORIGIN" "$MASTER_BRANCH"
-	fi
 	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
 		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
 	fi
