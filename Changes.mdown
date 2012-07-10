@@ -12,6 +12,10 @@
 
 # Changelog
 
+#### 1.0.66-avh
+[Peter van der Does][petervanderdoes]
+* Bugfix: When running git init an error message pops up.
+
 #### 1.0.65-avh
 
 [Peter van der Does][petervanderdoes]
@@ -24,7 +28,6 @@
 * Bugfix: git_current_branch fails for git prior 1.7.10  
   git symbolic-ref does not have the --short option prior to version 1.7.10.
   Bug found by [Daniel Dehennin][baby-gnu]
-
 
 [Myke Hines][mykehsd]
 
