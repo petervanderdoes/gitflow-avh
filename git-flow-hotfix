@@ -250,6 +250,17 @@ cmd_finish() {
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
 	fi
 
+	git_compare_branches "$BRANCH" "$MASTER_BRANCH"
+	case $? in
+		0) die "You need some commits in the hotfix branch '$BRANCH'"
+		   ;;
+		1) die "The hotfix branch '$BRANCH' is not ahead of '$MASTER_BRANCH'"
+		   ;;
+		4) die "The hotfix branch '$BRANCH' has no common ancestor with '$MASTER_BRANCH'"
+		   ;;
+		*) ;;
+	esac
+
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
 
 	# Try to merge into master.
