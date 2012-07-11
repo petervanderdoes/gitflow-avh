@@ -12,11 +12,13 @@
 
 # Changelog
 
-#### 1.0.78-avh
+#### 1.0.79-avh
 [Daniel Dehennin][baby-gnu]
 * Check for parameter existence for branch and tag existence helpers
 * Do not finish hotfixes if they have no commits  
   A hotfix branch must have some commits and be ahead of master.
+* Implement in-place release with -i/--inplace option  
+  This implement a solution to "Add ability to release directly from develop".
 
 #### 1.0.70-avh
 [Peter van der Does][petervanderdoes]
