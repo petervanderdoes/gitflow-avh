@@ -263,20 +263,20 @@ cmd_finish() {
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
 
 
-if noflag inplace; then
-	# Try to merge into master.
-	# In case a previous attempt to finish this release branch has failed,
-	# but the merge into master was successful, we skip it now
-	if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
-		git checkout "$MASTER_BRANCH" || die "Could not check out $MASTER_BRANCH."
-		if noflag squash; then
-			git merge --no-ff "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
-		else
-			git merge --squash "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
-			git commit
-		fi
+	if noflag inplace; then
+		# Try to merge into master.
+		# In case a previous attempt to finish this release branch has failed,
+		# but the merge into master was successful, we skip it now
+		if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
+				git checkout "$MASTER_BRANCH" || die "Could not check out $MASTER_BRANCH."
+					if noflag squash; then
+							git merge --no-ff "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+					else
+							git merge --squash "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+						git commit
+				fi
+			fi
 	fi
-
 
 	if noflag notag; then
 		# Try to tag the release.
