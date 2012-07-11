@@ -113,7 +113,7 @@ git_remote_branch_exists() {
 
 git_branch_exists() {
 	[ -n "$1" ] || die "Missing branch name"
-	git_local_branch_exists "$1" || git_remote_branch_exists "$1"
+	git_local_branch_exists "$1" || git_remote_branch_exists "$ORIGIN/$1"
 }
 
 git_tag_exists() {
