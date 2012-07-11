@@ -12,6 +12,9 @@
 
 # Changelog
 
+#### 1.0.90-avh
+* Implement feature option-to-delete-remote-on-finish
+
 #### 1.0.80-avh
 [Peter van der Does][petervanderdoes]
 * Do not display object fetch summary if flag was not set. 
