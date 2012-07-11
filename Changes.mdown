@@ -12,7 +12,7 @@
 
 # Changelog
 
-#### 1.0.75-avh
+#### 1.0.78-avh
 [Daniel Dehennin][baby-gnu]
 * Check for parameter existence for branch and tag existence helpers
 * Do not finish hotfixes if they have no commits  
