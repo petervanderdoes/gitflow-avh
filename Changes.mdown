@@ -12,6 +12,11 @@
 
 # Changelog
 
+#### 1.0.80-avh
+[Peter van der Does][petervanderdoes]
+* Do not display object fetch summary if flag was not set. 
+  Thanks to [Daniel Dehennin][baby-gnu]
+  
 #### 1.0.79-avh
 [Daniel Dehennin][baby-gnu]
 * Check for parameter existence for branch and tag existence helpers

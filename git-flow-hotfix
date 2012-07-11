@@ -337,7 +337,9 @@ cmd_finish() {
 
 	echo
 	echo "Summary of actions:"
-	echo "- Latest objects have been fetched from '$ORIGIN'"
+	if flag fetch; then
+		echo "- Latest objects have been fetched from '$ORIGIN'"
+	fi
 	echo "- Hotfix branch '$BRANCH'has been merged into '$MASTER_BRANCH'"
 	if noflag notag; then
 		echo "- The hotfix was tagged '$VERSION_PREFIX$VERSION'"

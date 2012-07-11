@@ -317,7 +317,9 @@ cmd_finish() {
 
 	echo
 	echo "Summary of actions:"
-	echo "- Latest objects have been fetched from '$ORIGIN'"
+	if flag fetch; then
+		echo "- Latest objects have been fetched from '$ORIGIN'"
+	fi
 	if noflag inplace; then
 		echo "- Release branch '$BRANCH' has been merged into '$MASTER_BRANCH'"
 	fi
