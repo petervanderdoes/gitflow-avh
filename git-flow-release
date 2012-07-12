@@ -236,7 +236,9 @@ cmd_finish() {
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
 	fi
 	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
+		if flag keepremote || flag keep; then
+			require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
+		fi
 	fi
 
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
@@ -355,11 +357,12 @@ cmd_finish() {
 			 local keepmsg="is locally still available."
 			 if [ $remotebranch -eq 1 ]; then
 				 keepmsg=$keepmsg" It is deleted from '$ORIGIN'."
+			 fi
 		 fi
 		 if flag keepremote ; then
 			 if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 			 	keepmsg="is remotely still available. It is deleted locally."
-			fi
+			 fi
 		 fi
 	else
 		keepmsg="is still available"
