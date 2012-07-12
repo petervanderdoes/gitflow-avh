@@ -217,7 +217,7 @@ cmd_finish() {
 		FLAGS_sign=$FLAGS_TRUE
 	fi
 
-		# Keeping both branches implies the --keep flag to be true.
+	# Keeping both branches implies the --keep flag to be true.
 	if flag keepremote && flag keeplocal; then
 		 FLAGS_keep=$FLAGS_TRUE
 	fi
@@ -352,7 +352,7 @@ cmd_finish() {
 	if noflag keep; then
 		keepmsg="'has been deleted"
 		if flag keeplocal; then
-			 keepmsg="is locally still available."
+			 local keepmsg="is locally still available."
 			 if [ $remotebranch -eq 1 ]; then
 				 keepmsg=$keepmsg" It is deleted from '$ORIGIN'."
 		 fi

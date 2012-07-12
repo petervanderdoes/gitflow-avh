@@ -224,11 +224,18 @@ cmd_finish() {
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	DEFINE_boolean rebase false "rebase instead of merge" r
 	DEFINE_boolean keep false "keep branch after performing finish" k
+	DEFINE_boolean keepremote false "keep the remote branch"
+	DEFINE_boolean keeplocal false "keep the local branch"
 	DEFINE_boolean force_delete false "force delete feature branch after finish" D
 	DEFINE_boolean squash false "squash feature during merge" S
 
 	parse_args "$@"
 	expand_nameprefix_arg_or_current
+
+	# Keeping both branches implies the --keep flag to be true.
+	if flag keepremote && flag keeplocal; then
+		 FLAGS_keep=$FLAGS_TRUE
+	fi
 
 	# Sanity checks
 	require_branch "$BRANCH"
@@ -291,6 +298,9 @@ cmd_finish() {
 	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
 	fi
+	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
+	fi
 
     run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
 
@@ -347,29 +357,44 @@ helper_finish_cleanup() {
 	require_branch "$BRANCH"
 	require_clean_working_tree
 
-	# Delete branch
-	if flag fetch; then
-		git push "$ORIGIN" ":refs/heads/$BRANCH"
-	fi
-
-
 	if noflag keep; then
-		if flag force_delete; then
-			git branch -D "$BRANCH"
-		else
-			git branch -d "$BRANCH"
+		if noflag keeplocal; then
+			if flag force_delete; then
+				git branch -D "$BRANCH"
+			else
+				git branch -d "$BRANCH"
+			fi
 		fi
+		if noflag keepremote;then
+			local remotebranch=0
+			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+				remotebranch=1
+				git_remote_branch_delete "$BRANCH"
+			fi
+		fi
+
 	fi
 
 	echo
 	echo "Summary of actions:"
 	echo "- The feature branch '$BRANCH' was merged into '$DEVELOP_BRANCH'"
 	#echo "- Merge conflicts were resolved"		# TODO: Add this line when it's supported
-	if flag keep; then
-		echo "- Feature branch '$BRANCH' is still available"
+	if noflag keep; then
+		local keepmsg="'has been deleted"
+		if flag keeplocal; then
+			 keepmsg="is locally still available."
+			 if [ $remotebranch -eq 1 ]; then
+				 keepmsg=$keepmsg" It is deleted from '$ORIGIN'."
+		 fi
+		 if flag keepremote ; then
+			 if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			 	keepmsg="is remotely still available. It is deleted locally."
+			fi
+		 fi
 	else
-		echo "- Feature branch '$BRANCH' has been removed"
+		keepmsg="is still available"
 	fi
+	echo "- Feature branch '$BRANCH' "$keepmsg
 	echo "- You are now on branch '$DEVELOP_BRANCH'"
 	echo
 }
