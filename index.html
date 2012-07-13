@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <title>Gitflow by petervanderdoes</title>
+  </head>
+
+  <body>
+    <div id="container">
+      <div class="inner">
+
+        <header>
+          <h1>Gitflow</h1>
+          <h2>Git extensions to provide high-level repository operations for Vincent Driessen's branching model, with modifications.</h2>
+        </header>
+
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/petervanderdoes/gitflow/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/petervanderdoes/gitflow/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/petervanderdoes/gitflow" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
+
+        <hr>
+
+        <section id="main_content">
+          <h1>git-flow</h1>
+
+<p>A collection of Git extensions to provide high-level repository operations
+for Vincent Driessen's <a href="http://nvie.com/git-model" title="original
+blog post">branching model</a>. This fork adds functionality not added to the original branch.</p>
+
+<h2>Getting started</h2>
+
+<p>For the best introduction to get started with <code>git flow</code>, please read Jeff
+Kreeftmeijer's blog post:</p>
+
+<p><a href="http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/">http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/</a></p>
+
+<p>Or have a look at one of these screen casts:</p>
+
+<ul>
+<li>
+<a href="http://buildamodule.com/video/change-management-and-version-control-deploying-releases-features-and-fixes-with-git-how-to-use-a-scalable-git-branching-model-called-gitflow">How to use a scalable Git branching model called git-flow</a> (by Build a Module)</li>
+<li>
+<a href="http://vimeo.com/16018419">A short introduction to git-flow</a> (by Mark Derricutt)</li>
+<li>
+<a href="http://codesherpas.com/screencasts/on_the_path_gitflow.mov">On the path with git-flow</a> (by Dave Bock)</li>
+</ul><h2>Installing git-flow</h2>
+
+<p>See the Wiki for up-to-date <a href="https://github.com/petervanderdoes/gitflow/wiki/Installation">Installation Instructions</a>.</p>
+
+<h2>Integration with your shell</h2>
+
+<p>For those who use the <a href="http://www.gnu.org/software/bash/">Bash</a> or
+<a href="http://www.zsh.org">ZSH</a> shell, please check out the excellent work on the
+<a href="http://github.com/bobthecow/git-flow-completion">git-flow-completion</a> project
+by <a href="http://github.com/bobthecow">bobthecow</a>. It offers tab-completion for all
+git-flow subcommands and branch names.</p>
+
+<h2>FAQ</h2>
+
+<ul>
+<li>See the <a href="http://github.com/petervanderdoes/gitflow/wiki/FAQ">FAQ</a> section
+of the project Wiki.</li>
+<li>Version Numbering Scheme.<br>
+Starting with version 1.0, the project uses the following scheme:
+&lt;MAJOR&gt;.&lt;MINOR&gt;.&lt;REVISION&gt;-avh</li>
+</ul><h2>Please help out</h2>
+
+<p>This project is still under development. Feedback and suggestions are very
+welcome and I encourage you to use the <a href="http://github.com/petervanderdoes/gitflow/issues">Issues
+list</a> on Github to provide that
+feedback.</p>
+
+<p>Feel free to fork this repo and to commit your additions. For a list of all
+contributors, please see the <a href="AUTHORS">AUTHORS</a> file.</p>
+
+<p>Any questions, tips, or general discussion can be posted to our Google group:
+<a href="http://groups.google.com/group/gitflow-users">http://groups.google.com/group/gitflow-users</a>
+This is the original group set up to support the nvie branch, but I am monitoring
+the list as well for any questions related to my version.
+When you do post a question on the list please indicate which version you are,
+using the complete version number.</p>
+
+<h2>Contributing</h2>
+
+<p>Fork the repository.  Then, run:</p>
+
+<pre lang="shell"><code>git clone git@github.com:&lt;username&gt;/gitflow.git
+cd gitflow
+</code></pre>
+
+<p>Install the git-flow software by running make.</p>
+
+<pre lang="shell"><code>git flow init -d
+git flow feature start &lt;your feature&gt;
+</code></pre>
+
+<p>Then, do work and commit your changes.</p>
+
+<pre lang="shell"><code>git flow feature publish &lt;your feature&gt;
+</code></pre>
+
+<p>When done, open a pull request to your feature branch.</p>
+
+<h2>License terms</h2>
+
+<p>git-flow is published under the FreeBSD License, see the
+<a href="LICENSE">LICENSE</a> file. Although the FreeBSD License does not require you to
+share any modifications you make to the source code, you are very much
+encouraged and invited to contribute back your modifications to the community,
+preferably in a Github fork, of course.</p>
+
+<h2>git flow usage</h2>
+
+<h3>Initialization</h3>
+
+<p>To initialize a new repo with the basic branch structure, use:</p>
+
+<pre><code>    git flow init [-d]
+</code></pre>
+
+<p>This will then interactively prompt you with some questions on which branches
+you would like to use as development and production branches, and how you
+would like your prefixes be named. You may simply press Return on any of
+those questions to accept the (sane) default suggestions.</p>
+
+<p>The <code>-d</code> flag will accept all defaults.</p>
+
+<h3>Creating feature/release/hotfix/support branches</h3>
+
+<ul>
+<li>
+<p>To list/start/finish/delete feature branches, use:</p>
+
+<pre><code>git flow feature
+git flow feature start &lt;name&gt; [&lt;base&gt;]
+git flow feature finish &lt;name&gt;
+git flow feature delete &lt;name&gt;
+</code></pre>
+
+<p>For feature branches, the <code>&lt;base&gt;</code> arg must be a commit on <code>develop</code>.</p>
+</li>
+<li>
+<p>To push/pull a feature branch to the remote repository, use:</p>
+
+<pre><code>git flow feature publish &lt;name&gt;
+git flow feature pull &lt;remote&gt; &lt;name&gt;
+</code></pre>
+</li>
+<li>
+<p>To list/start/finish/delete release branches, use:</p>
+
+<pre><code>git flow release
+git flow release start &lt;release&gt; [&lt;base&gt;]
+git flow release finish &lt;release&gt;
+git flow release delete &lt;release&gt;
+</code></pre>
+
+<p>For release branches, the <code>&lt;base&gt;</code> arg must be a commit on <code>develop</code>.</p>
+</li>
+<li>
+<p>To list/start/finish/delete hotfix branches, use:</p>
+
+<pre><code>git flow hotfix
+git flow hotfix start &lt;release&gt; [&lt;base&gt;]
+git flow hotfix finish &lt;release&gt;
+git flow hotfix delete &lt;release&gt;
+</code></pre>
+
+<p>For hotfix branches, the <code>&lt;base&gt;</code> arg must be a commit on <code>master</code>.</p>
+</li>
+<li>
+<p>To list/start support branches, use:</p>
+
+<pre><code>git flow support
+git flow support start &lt;release&gt; &lt;base&gt;
+</code></pre>
+
+<p>For support branches, the <code>&lt;base&gt;</code> arg must be a commit on <code>master</code>.</p>
+</li>
+</ul><h3>Using Hooks and Filters</h3>
+
+<p>For a wide variety of commands hooks or filters can called before and after
+the command.<br>
+The files should be placed in .git/hooks<br>
+In the directory hooks you can find examples of all the hooks available.</p>
+
+<h2>Showing your appreciation</h2>
+
+<p>Of course, the best way to show your appreciation for the git-flow tool itself
+remains contributing to the community.  If you'd like to show your appreciation
+in another way, however, consider donating through PayPal:</p>
+
+<p><a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=S85FXJ9EBHAF2&amp;lc=US&amp;item_name=gitflow&amp;item_number=gitflow&amp;no_note=0&amp;cn=Add%20special%20instructions%20to%20the%20seller&amp;no_shipping=1&amp;rm=1&amp;return=https%3a%2f%2fgithub%2ecom%2fpetervanderdoes%2fgitflow&amp;cancel_return=https%3a%2f%2fgithub%2ecom%2fpetervanderdoes%2fgitflow&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted"><img src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" alt="PayPal"></a></p>
+        </section>
+
+        <footer>
+          Gitflow is maintained by <a href="https://github.com/petervanderdoes">petervanderdoes</a><br>
+          This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="http://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
+
+        
+      </div>
+    </div>
+  </body>
+</html>
