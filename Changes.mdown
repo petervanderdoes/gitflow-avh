@@ -12,6 +12,9 @@
 
 # Changelog
 
+#### 1.0.92-avh
+* Implement feature clean-up-inconsistencies
+
 #### 1.0.91-avh
 [Peter van der Does][petervanderdoes]
 * Do not display object fetch summary if flag was not set. 
