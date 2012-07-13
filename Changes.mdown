@@ -19,6 +19,10 @@
 * Bugfix: Checking if branch exists will fail for remote branches.
 * Make die output consistent for each die case.
 
+[Daniel Dehennin][baby-gnu]
+* Accept tags as base for hotfix/release/support start.  
+  Commit pointed by tags are reachable with ^0[1].
+
 #### 1.0.79-avh
 [Daniel Dehennin][baby-gnu]
 * Check for parameter existence for branch and tag existence helpers
