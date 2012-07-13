@@ -145,7 +145,7 @@ cmd_start() {
 
  	# Update the local repo with remote changes, if asked
 	if flag fetch; then
-		git fetch -q "$ORIGIN" "$MASTER_BRANCH"
+		git fetch -q "$ORIGIN" "$MASTER_BRANCH" || die "Could not fetch branch '$MASTER_BRANCH' from remote '$ORIGIN'."
 	fi
 
 	# Run filter on the version
@@ -193,14 +193,14 @@ cmd_publish() {
 	# Sanity checks
 	require_clean_working_tree
 	require_branch "$BRANCH"
-	git fetch -q "$ORIGIN"
+	git fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 	require_branch_absent "$ORIGIN/$BRANCH"
 
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
 
 	# Create remote branch
 	git push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH"
-	git fetch -q "$ORIGIN"
+	git fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from '$ORIGIN'."
 
 	# Configure remote tracking
 	git config "branch.$BRANCH.remote" "$ORIGIN"
@@ -240,8 +240,8 @@ cmd_finish() {
 	require_branch "$BRANCH"
 	require_clean_working_tree
 	if flag fetch; then
-		git fetch -q "$ORIGIN" "$MASTER_BRANCH" || die "Could not fetch $MASTER_BRANCH from $ORIGIN."
-		git fetch -q "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
+		git fetch -q "$ORIGIN" "$MASTER_BRANCH" || die "Could not fetch branch '$MASTER_BRANCH' from remote '$ORIGIN'."
+		git fetch -q "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not fetch branch '$DEVELOP_BRANCH' from remote '$ORIGIN'."
 	fi
 	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
 		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
