@@ -132,7 +132,7 @@ require_no_existing_release_branches() {
 	local release_branches=$(git_local_branches_prefixed "$PREFIX")
 	local first_branch=$(echo ${release_branches} | head -n1)
 	first_branch=${first_branch#$PREFIX}
-	[ -z "$release_branches" ] || die "There is an existing release branch ($first_branch). Finish that one first."
+	[ -z "$release_branches" ] || die "There is an existing release branch '$first_branch'. Finish that one first."
 }
 
 cmd_start() {
@@ -307,10 +307,10 @@ cmd_finish() {
 	fi
 
 	if flag push; then
-		git push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
-		git push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push to $MASTER_BRANCH from $ORIGIN."
+		git push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
+		git push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push branch '$MASTER_BRANCH' to remote '$ORIGIN'."
 		if noflag notag; then
-			git push --tags "$ORIGIN" || die "Could not push tags to $ORIGIN."
+			git push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
 		fi
 		git push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
 	fi
@@ -426,7 +426,7 @@ cmd_delete() {
 				git push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
 			fi
 		else
-			 die "Release branch '$BRANCH' has been not been merged in master '$MASTER_BRANCH' and/or develop branch '$DEVELOP_BRANCH'. Use -f to force the deletion."
+			 die "Release branch '$BRANCH' has been not been merged in branch '$MASTER_BRANCH' and/or branch '$DEVELOP_BRANCH'. Use -f to force the deletion."
 		 fi
 	 fi
 
