@@ -21,7 +21,7 @@
 
 [Daniel Dehennin][baby-gnu]
 * Accept tags as base for hotfix/release/support start.  
-  Commit pointed by tags are reachable with ^0[1].
+  Commit pointed by tags are reachable with ^0\[1\].
 
 #### 1.0.79-avh
 [Daniel Dehennin][baby-gnu]
