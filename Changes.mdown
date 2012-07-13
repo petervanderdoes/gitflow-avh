@@ -12,7 +12,7 @@
 
 # Changelog
 
-#### 1.0.96-avh
+#### 1.0.100-avh
 [Peter van der Does][petervanderdoes]
 * Do not display object fetch summary if flag was not set. 
   Thanks to [Daniel Dehennin][baby-gnu]
