@@ -168,7 +168,7 @@ cmd_start() {
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$BASE"
 
 	# Create branch
-	git checkout -b "$BRANCH" "$BASE"  || die "Could not create hotfix branch '$BRANCH'"
+	git checkout -b "$BRANCH" "$BASE"  || die "Could not create hotfix branch '$BRANCH'."
 
 	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$BASE"
 
@@ -205,7 +205,7 @@ cmd_publish() {
 	# Configure remote tracking
 	git config "branch.$BRANCH.remote" "$ORIGIN"
 	git config "branch.$BRANCH.merge" "refs/heads/$BRANCH"
-	git checkout "$BRANCH"
+	git checkout "$BRANCH" || die "Could not check out branch '$BRANCH'."
 
 	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
 
@@ -267,7 +267,7 @@ cmd_finish() {
 	# In case a previous attempt to finish this release branch has failed,
 	# but the merge into master was successful, we skip it now
 	if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
-		git checkout "$MASTER_BRANCH" || die "Could not check out $MASTER_BRANCH."
+		git checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
 		git merge --no-ff "$BRANCH" || die "There were merge conflicts."
 		  # TODO: What do we do now?
 	fi
@@ -302,7 +302,7 @@ cmd_finish() {
 	# In case a previous attempt to finish this release branch has failed,
 	# but the merge into develop was successful, we skip it now
 	if ! git_is_branch_merged_into "$MERGE_BRANCH" "$DEVELOP_BRANCH"; then
-		git checkout "$DEVELOP_BRANCH" || die "Could not check out $DEVELOP_BRANCH."
+		git checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
 
 		if noflag nobackmerge; then
 			# Accounting for 'git describe', if a release is tagged
@@ -373,7 +373,7 @@ cmd_delete() {
 	# We can't delete a branch we are on, switch to the master branch.
 	if [ "$BRANCH" = "$current_branch" ]; then
 		require_clean_working_tree
-		git checkout "$MASTER_BRANCH"
+		git checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
 	fi
 
 	if ( git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH" && git_is_branch_merged_into "$BRANCH" "$DEVELOP_BRANCH" ); then
