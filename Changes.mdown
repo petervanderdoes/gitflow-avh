@@ -12,7 +12,7 @@
 
 # Changelog
 
-#### 1.0.92-avh
+#### 1.0.96-avh
 * Implement feature clean-up-inconsistencies
 
 #### 1.0.91-avh
