@@ -132,7 +132,7 @@ require_no_existing_release_branches() {
 	local release_branches=$(git_local_branches_prefixed "$PREFIX")
 	local first_branch=$(echo ${release_branches} | head -n1)
 	first_branch=${first_branch#$PREFIX}
-	[ -z "$release_branches" ] || die "There is an existing release branch ($first_branch). Finish that one first."
+	[ -z "$release_branches" ] || die "There is an existing release branch '$first_branch'. Finish that one first."
 }
 
 cmd_start() {
@@ -155,7 +155,7 @@ cmd_start() {
 	require_branch_absent "$BRANCH"
 	require_tag_absent "$VERSION_PREFIX$VERSION"
 	if flag fetch; then
-		git fetch -q "$ORIGIN" "$DEVELOP_BRANCH"
+		git fetch -q "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not fetch branch '$DEVELOP_BRANCH' from remote '$ORIGIN'."
 	fi
 	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
@@ -164,7 +164,7 @@ cmd_start() {
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$BASE"
 
 	# Create branch
-	git checkout -b "$BRANCH" "$BASE" || die "Could not create release branch '$BRANCH'"
+	git checkout -b "$BRANCH" "$BASE" || die "Could not create release branch '$BRANCH'."
 
 	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$BASE"
 
@@ -218,8 +218,8 @@ cmd_finish() {
 	require_branch "$BRANCH"
 	require_clean_working_tree
 	if flag fetch; then
-		git fetch -q "$ORIGIN" "$MASTER_BRANCH" || die "Could not fetch $MASTER_BRANCH from $ORIGIN."
-		git fetch -q "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
+		git fetch -q "$ORIGIN" "$MASTER_BRANCH" || die "Could not fetch branch '$MASTER_BRANCH' from remote '$ORIGIN'."
+		git fetch -q "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not fetch branch '$DEVELOP_BRANCH' from remote '$ORIGIN'."
 	fi
 	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
 		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
@@ -235,7 +235,7 @@ cmd_finish() {
 		# In case a previous attempt to finish this release branch has failed,
 		# but the merge into master was successful, we skip it now
 		if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
-				git checkout "$MASTER_BRANCH" || die "Could not check out $MASTER_BRANCH."
+				git checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
 				if noflag squash; then
 					git merge --no-ff "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
 				else
@@ -274,7 +274,7 @@ cmd_finish() {
 	# In case a previous attempt to finish this release branch has failed,
 	# but the merge into develop was successful, we skip it now
 	if ! git_is_branch_merged_into "$MERGE_BRANCH" "$DEVELOP_BRANCH"; then
-		git checkout "$DEVELOP_BRANCH" || die "Could not check out $DEVELOP_BRANCH."
+		git checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
 
 		if noflag nobackmerge; then
 			# Accounting for 'git describe', if a release is tagged
@@ -301,16 +301,16 @@ cmd_finish() {
 	# Delete branch
 	if noflag keep && noflag inplace; then
 		if [ "$BRANCH" = "$(git_current_branch)" ]; then
-			git checkout "$MASTER_BRANCH"
+			git checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
 		fi
 		git branch -d "$BRANCH"
 	fi
 
 	if flag push; then
-		git push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
-		git push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push to $MASTER_BRANCH from $ORIGIN."
+		git push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
+		git push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push branch '$MASTER_BRANCH' to remote '$ORIGIN'."
 		if noflag notag; then
-			git push --tags "$ORIGIN" || die "Could not push tags to $ORIGIN."
+			git push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
 		fi
 		git push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
 	fi
@@ -348,19 +348,19 @@ cmd_publish() {
 	# Sanity checks
 	require_clean_working_tree
 	require_branch "$BRANCH"
-	git fetch -q "$ORIGIN"
+	git fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 	require_branch_absent "$ORIGIN/$BRANCH"
 
 	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
 
 	# Create remote branch
 	git push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH"
-	git fetch -q "$ORIGIN"
+	git fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 
 	# Configure remote tracking
 	git config "branch.$BRANCH.remote" "$ORIGIN"
 	git config "branch.$BRANCH.merge" "refs/heads/$BRANCH"
-	git checkout "$BRANCH"
+	git checkout "$BRANCH" || die "Could not check out branch '$BRANCH'."
 
 	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
 
@@ -379,13 +379,13 @@ cmd_track() {
 	# Sanity checks
 	require_clean_working_tree
 	require_branch_absent "$BRANCH"
-	git fetch -q "$ORIGIN"
+	git fetch -q "$ORIGIN"  || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 	require_branch "$ORIGIN/$BRANCH"
 
 	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
 
 	# Create tracking branch
-	git checkout -b "$BRANCH" "$ORIGIN/$BRANCH"
+	git checkout -b "$BRANCH" "$ORIGIN/$BRANCH" || die "Could not create branch '$BRANCH'."
 
 	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
 
@@ -411,7 +411,7 @@ cmd_delete() {
 	# We can't delete a branch we are on, switch to the develop branch.
 	if [ "$BRANCH" = "$current_branch" ]; then
 		require_clean_working_tree
-		git checkout "$DEVELOP_BRANCH"
+		git checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
 	fi
 
 	if ( git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH" && git_is_branch_merged_into "$BRANCH" "$DEVELOP_BRANCH" ); then
@@ -426,7 +426,7 @@ cmd_delete() {
 				git push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
 			fi
 		else
-			 die "Release branch '$BRANCH' has been not been merged in master '$MASTER_BRANCH' and/or develop branch '$DEVELOP_BRANCH'. Use -f to force the deletion."
+			 die "Release branch '$BRANCH' has been not been merged in branch '$MASTER_BRANCH' and/or branch '$DEVELOP_BRANCH'. Use -f to force the deletion."
 		 fi
 	 fi
 

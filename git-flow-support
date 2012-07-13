@@ -142,7 +142,7 @@ cmd_start() {
 
 	# Fetch remote changes
 	if flag fetch; then
-		git fetch -q "$ORIGIN" "$BASE"
+		git fetch -q "$ORIGIN" "$BASE" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 	fi
 
 	git_is_ancestor "$BASE" "$MASTER_BRANCH" || die "Given base '$BASE' is not a valid commit on '$MASTER_BRANCH'."
@@ -150,7 +150,7 @@ cmd_start() {
 	require_branch_absent "$BRANCH"
 
 	# Create branch
-	git checkout -b "$BRANCH" "$BASE" || die "Could not create support branch '$BRANCH'"
+	git checkout -b "$BRANCH" "$BASE" || die "Could not create support branch '$BRANCH'."
 
 	echo
 	echo "Summary of actions:"

@@ -12,12 +12,13 @@
 
 # Changelog
 
-#### 1.0.91-avh
+#### 1.0.96-avh
 [Peter van der Does][petervanderdoes]
 * Do not display object fetch summary if flag was not set. 
   Thanks to [Daniel Dehennin][baby-gnu]
 * Bugfix: Checking if branch exists will fail for remote branches.
-  
+* Make die output consistent for each die case.
+
 #### 1.0.79-avh
 [Daniel Dehennin][baby-gnu]
 * Check for parameter existence for branch and tag existence helpers

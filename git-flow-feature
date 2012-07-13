@@ -190,7 +190,7 @@ cmd_start() {
 
 	# Update the local repo with remote changes, if asked
 	if flag fetch; then
-		git fetch -q "$ORIGIN" "$DEVELOP_BRANCH"
+		git fetch -q "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not fetch branch '$DEVELOP_BRANCH' from remote '$ORIGIN'."
 	fi
 
 	# Sanity checks
@@ -205,7 +205,7 @@ cmd_start() {
 	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH" "$BASE"
 
 	# create branch
-	git checkout -b "$BRANCH" "$BASE" || die "Could not create feature branch '$BRANCH'"
+	git checkout -b "$BRANCH" "$BASE" || die "Could not create feature branch '$BRANCH'."
 
 	run_post_hook "$NAME" "$ORIGIN" "$BRANCH" "$BASE"
 
@@ -280,8 +280,8 @@ cmd_finish() {
 	# Update local repo with remote changes first, if asked
 	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 		if flag fetch; then
-			git fetch -q "$ORIGIN" "$BRANCH"
-			git fetch -q "$ORIGIN" "$DEVELOP_BRANCH"
+			git fetch -q "$ORIGIN" "$BRANCH" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
+			git fetch -q "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not fetch branch '$DEVELOP_BRANCH' from remote '$ORIGIN'."
 		fi
 	fi
 
@@ -306,7 +306,7 @@ cmd_finish() {
 	fi
 
 	# Merge into BASE
-	git checkout "$DEVELOP_BRANCH"
+	git checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
 	if [ "$(git rev-list -n2 "$DEVELOP_BRANCH..$BRANCH" | wc -l)" -eq 1 ]; then
 		git merge --ff "$BRANCH"
 	else
@@ -381,19 +381,19 @@ cmd_publish() {
 	# Sanity checks
 	require_clean_working_tree
 	require_branch "$BRANCH"
-	git fetch -q "$ORIGIN"
+	git fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 	require_branch_absent "$ORIGIN/$BRANCH"
 
 	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
 
 	# Create remote branch
 	git push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH"
-	git fetch -q "$ORIGIN"
+	git fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 
 	# Configure remote tracking
 	git config "branch.$BRANCH.remote" "$ORIGIN"
 	git config "branch.$BRANCH.merge" "refs/heads/$BRANCH"
-	git checkout "$BRANCH"
+	git checkout "$BRANCH" || die "Could not check out branch '$BRANCH'."
 
 	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
 
@@ -415,11 +415,11 @@ cmd_track() {
 
 	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
 
-	git fetch -q "$ORIGIN"
+	git fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 	require_branch "$ORIGIN/$BRANCH"
 
 	# Create tracking branch
-	git checkout -b "$BRANCH" "$ORIGIN/$BRANCH"
+	git checkout -b "$BRANCH" "$ORIGIN/$BRANCH" || die "Could not create '$BRANCH'."
 
 	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
 
@@ -452,7 +452,7 @@ cmd_checkout() {
 
 	if [ "$NAME" != "" ]; then
 		expand_nameprefix_arg
-		git checkout "$BRANCH"
+		git checkout "$BRANCH"  || die "Could not check out branch '$BRANCH'."
 	else
 		die "Name a feature branch explicitly."
 	fi
@@ -471,7 +471,7 @@ cmd_rebase() {
 	require_clean_working_tree
 	require_branch "$BRANCH"
 
-	git checkout -q "$BRANCH"
+	git checkout -q "$BRANCH"  || die "Could not check out branch '$BRANCH'."
 	local OPTS=
 	if flag interactive; then
 		OPTS="$OPTS -i"
@@ -531,9 +531,9 @@ cmd_pull() {
 		echo "Pulled $REMOTE's changes into $BRANCH."
 	else
 		# Setup the local branch clone for the first time
-		git fetch -q "$REMOTE" "$BRANCH" || die "Fetch failed."     # Stores in FETCH_HEAD
+		git fetch -q "$REMOTE" "$BRANCH" ||  die "Could not fetch branch '$BRANCH' from remote '$REMOTE'."     # Stores in FETCH_HEAD
 		git branch --no-track "$BRANCH" FETCH_HEAD || die "Branch failed."
-		git checkout -q "$BRANCH" || die "Checking out new local branch failed."
+		git checkout -q "$BRANCH" || die "Could not check out branch '$BRANCH'."
 		echo "Created local branch $BRANCH based on $REMOTE's $BRANCH."
 	fi
 
@@ -555,7 +555,7 @@ cmd_delete() {
 	# We can't delete a branch we are on, switch to the develop branch.
 	if [ "$BRANCH" = "$current_branch" ]; then
 		require_clean_working_tree
-		git checkout "$DEVELOP_BRANCH"
+		git checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
 	fi
 
 	if git_is_branch_merged_into "$BRANCH" "$DEVELOP_BRANCH"; then

@@ -220,7 +220,7 @@ cmd_default() {
 
 	# Switch to develop branch if its newly created
 	if [ $created_gitflow_branch -eq 1 ]; then
-		git checkout -q "$develop_branch"
+		git checkout -q "$develop_branch" || die "Could not check out branch '$develop_branch'."
 	fi
 
 	# Ask the user for naming conventions (branch and tag prefixes )
