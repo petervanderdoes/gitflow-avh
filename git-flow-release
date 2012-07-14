@@ -137,6 +137,13 @@ require_no_existing_release_branches() {
 
 cmd_start() {
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
+	OPTIONS_SPEC="\
+git flow release start [options] <version>
+--
+Available options are
+f,fetch!           fetch from $ORIGIN before performing finish
+"
+
 	parse_args "$@"
 	eval set -- "${FLAGS_ARGV}"
 	BASE=${2:-$DEVELOP_BRANCH}
@@ -590,4 +597,8 @@ cmd_delete() {
 	flag remote && echo "- Release branch '$BRANCH' in '$ORIGIN' has been deleted."
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo
+}
+
+flags_help() {
+	eval "$( echo "$OPTIONS_SPEC" | git rev-parse --parseopt -- "-h" || echo exit $? )"
 }
