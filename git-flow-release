@@ -57,6 +57,14 @@ cmd_default() {
 }
 
 cmd_list() {
+		OPTIONS_SPEC="\
+git flow release [list] [-h] [-v]
+
+List existing release branches
+--
+h,help!           Show this help
+v,verbose!        verbose (more) output
+"
 	# cmd_default may already define flags
 	# at this stage we can not use parse_args
 	if [ -z "${FLAGS_verbose}" ]; then
@@ -139,9 +147,12 @@ cmd_start() {
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	OPTIONS_SPEC="\
 git flow release start [options] <version>
+
+Start a new release branch
 --
-Available options are
-f,fetch!           fetch from $ORIGIN before performing finish
+h,help!           Show this help
+F,fetch    fetch from $ORIGIN before performing finish
+v,verbose! verbose (more) output
 "
 
 	parse_args "$@"
@@ -204,6 +215,26 @@ cmd_finish() {
 	DEFINE_boolean nobackmerge false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
 	DEFINE_boolean squash false "squash release during merge" S
 
+		OPTIONS_SPEC="\
+git flow release finish [-h] [-F] [-s] [-u] [-m | -f] [-p] [-k] [-n] [-b] [-S] <version>
+
+
+Finish a release branch
+--
+h,help          Show this help
+F,fetch 		Fetch from origin before performing finish
+s,sign!         Sign the release tag cryptographically
+u,signingkey! 	Use the given GPG-key for the digital signature (implies -s)
+m,message! 		Use the given tag message
+f,messagefile= 	Use the contents of the given file as a tag message
+p,push 			Push to origin after performing finish
+k,keep			Keep branch after performing finish
+keepremote 		Keep the remote branchk
+keeplocal 		Keep the local branch
+n,tag 			Don't tag this release
+b,nobackmerge 	Don't back-merge master, or tag if applicable, in develop
+S,squash 		Squash release during merge
+"
 	parse_args "$@"
 	# Run filter on the version
 	VERSION=$(run_filter_hook release-finish-version $VERSION)
@@ -501,6 +532,13 @@ cmd_branch() {
 }
 
 cmd_publish() {
+	OPTIONS_SPEC="\
+git flow release publish [-h] <name>
+
+Publish the release branch <name> on $ORIGIN
+--
+h,help Show this help
+"
 	parse_args "$@"
 	gitflow_require_version_arg
 
@@ -532,6 +570,13 @@ cmd_publish() {
 }
 
 cmd_track() {
+	OPTIONS_SPEC="\
+git flow release track [-h] <name>
+
+Start tracking release <name> that is shared on $ORIGIN
+--
+h,help Show this help
+"
 	parse_args "$@"
 	gitflow_require_version_arg
 
@@ -558,6 +603,15 @@ cmd_track() {
 cmd_delete() {
 	DEFINE_boolean force false "force deletion" f
 	DEFINE_boolean remote false "delete remote branch" r
+	OPTIONS_SPEC="\
+git flow release delete [-h] [-f] [-r] <name>
+
+Delete the given release branch
+--
+h,help Show this help
+f,force Force deletion
+r,remote Delete remote branch
+"
 	parse_args "$@"
 	gitflow_require_version_arg
 
