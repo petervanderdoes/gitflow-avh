@@ -249,6 +249,9 @@ cmd_finish() {
 	if flag fetch; then
 		git_fetch_branch "$ORIGIN" "$MASTER_BRANCH"
 		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
+		if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			git_fetch_branch "$ORIGIN" "$BRANCH"
+		fi
 	fi
 	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
 		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
