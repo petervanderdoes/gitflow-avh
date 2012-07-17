@@ -385,15 +385,16 @@ helper_finish_cleanup() {
 	if noflag keep; then
 		local keepmsg="'has been deleted"
 		if flag keeplocal; then
-			 keepmsg="is locally still available."
-			 if [ $remotebranch -eq 1 ]; then
-				 keepmsg=$keepmsg" It is deleted from '$ORIGIN'."
-		 fi
-		 if flag keepremote ; then
-			 if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-			 	keepmsg="is remotely still available. It is deleted locally."
+		 	keepmsg="is locally still available."
+			if [ $remotebranch -eq 1 ]; then
+				keepmsg=$keepmsg" It is deleted from '$ORIGIN'."
 			fi
-		 fi
+		fi
+		if flag keepremote ; then
+			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+				keepmsg="is remotely still available. It is deleted locally."
+			fi
+		fi
 	else
 		keepmsg="is still available"
 	fi
@@ -599,8 +600,8 @@ cmd_delete() {
 			fi
 		else
 			 die "Feature branch '$BRANCH' has been not been merged yet. Use -f to force the deletion."
-		 fi
-	 fi
+		fi
+	fi
 
 	 run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
 
