@@ -197,7 +197,7 @@ git_is_ancestor() {
 git_fetch_branch() {
 	[ -n "$1" ] || die "Missing origin"
 	[ -n "$2" ] || die "Missing branch name"
-	local orgin="$1"
+	local origin="$1"
 	local branch="$2"
 	git fetch -q "$origin" "$branch":refs/remotes/"$origin"/"$branch" || die "Could not fetch $branch from $origin."
 }
