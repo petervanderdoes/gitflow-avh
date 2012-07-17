@@ -284,14 +284,17 @@ cmd_finish() {
 	# Sanity checks
 	require_clean_working_tree
 
+	# We always fetch the Branch from Origin
+	# This is done to avoid possible commits on the remote that are not
+	# merged into the local branch
+	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			git_fetch_branch "$ORIGIN" "$BRANCH"
+	fi
 	# Update local repo with remote changes first, if asked
 	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 		if flag fetch; then
 			git_fetch_branch "$ORIGIN" "$BRANCH"
 			git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
-			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-				git_fetch_branch "$ORIGIN" "$BRANCH"
-			fi
 		fi
 	fi
 
