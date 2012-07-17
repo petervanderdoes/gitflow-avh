@@ -12,13 +12,18 @@
 
 # Changelog
 
+#### 1.0.117-avh
+[Daniel Dehennin][baby-gnu]
+* Bugfix: release/feature/hotfix start -F fails  
+  Usage of positional parameters requires to eval ${FLAGS_ARGV}. The "eval set" 
+  in function call does not propagate to the caller.  
+  
 #### 1.0.103-avh
-
 [Peter van der Does][petervanderdoes]
 * Add the ability to keep/delete local/remote branches on finish.  
   When finishing a release/hotfix/feature you now can keep/delete the 
   local/remote release/hotfix/feature branch.
-* Do not display object fetch summary if flag was not set. 
+* Do not display object fetch summary if flag was not set.  
   Thanks to [Daniel Dehennin][baby-gnu]
 * Bugfix: Checking if branch exists will fail for remote branches.
 * Make die output consistent for each die case.
@@ -50,7 +55,6 @@
 * Bugfix: When running git flow init an error message pops up.
 
 #### 1.0.65-avh
-
 [Peter van der Does][petervanderdoes]
 * Show correct help for subactions.  
   When requesting help with -h for the subactions, the help would show the 
@@ -81,7 +85,6 @@
 * Fix flag test in cmd_delete()
 
 #### 1.0.35-avh
-
 [Peter van der Does][petervanderdoes]
 
 * Clean up code  
@@ -89,7 +92,6 @@
   Refactor code    
 
 #### 1.0.6-avh
-
 [Peter van der Does][petervanderdoes]
 
 * Improve the back-merge functionality.  
@@ -106,7 +108,6 @@
   [Gert Van Gool][gvangool]
   
 #### 1.0-avh
-
 [Peter van der Does][petervanderdoes]
 
 * Remove trailing whitespace.
@@ -133,7 +134,6 @@
   leads to all sorts of other problems.
 
 #### 0.4.2-avh1
-
 [Peter van der Does][petervanderdoes]
 
 * Start of the git flow AVH release.
@@ -146,7 +146,6 @@ and `git flow hotfix start`
 * Fix usage of shFlags on FreeBSD
 
 #### 0.4.2
-
 Release date: not yet
 
 * `git flow init` now detects situations where origin already has gitflow
@@ -167,7 +166,6 @@ Release date: not yet
 * Add package installer for the Windows platform.
 
 #### 0.4.1
-
 Release date: **2011/02/04**
 
 * New option `-d` added to `git flow init`, to initialize with defaults without
@@ -181,7 +179,6 @@ Release date: **2011/02/04**
 
 
 #### 0.4
-
 Release date: **2010/10/18**
 
 * The flag parsing issues of git-flow subcommands are solved for most
@@ -199,7 +196,6 @@ Release date: **2010/10/18**
 
 
 #### 0.3
-
 Release date: **2010/07/22**
 
 * New subcommands for `git flow feature`:
