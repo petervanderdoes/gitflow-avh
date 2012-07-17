@@ -155,7 +155,7 @@ cmd_start() {
 	require_branch_absent "$BRANCH"
 	require_tag_absent "$VERSION_PREFIX$VERSION"
 	if flag fetch; then
-		git fetch -q "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not fetch branch '$DEVELOP_BRANCH' from remote '$ORIGIN'."
+		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
 	fi
 	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
@@ -191,6 +191,8 @@ cmd_finish() {
 	DEFINE_string messagefile "" "use the contents of the given file as a tag message" f
 	DEFINE_boolean push false "push to $ORIGIN after performing finish" p
 	DEFINE_boolean keep false "keep branch after performing finish" k
+	DEFINE_boolean keepremote false "keep the remote branch"
+	DEFINE_boolean keeplocal false "keep the local branch"
 	DEFINE_boolean notag false "don't tag this release" n
 	DEFINE_boolean nobackmerge false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
 	DEFINE_boolean squash false "squash release during merge" S
@@ -214,12 +216,31 @@ cmd_finish() {
 		FLAGS_sign=$FLAGS_TRUE
 	fi
 
+	# Keeping both branches implies the --keep flag to be true.
+	if flag keepremote && flag keeplocal; then
+		 FLAGS_keep=$FLAGS_TRUE
+	fi
+
 	# Sanity checks
 	require_branch "$BRANCH"
 	require_clean_working_tree
+
+	# We always fetch the Branch from Origin
+	# This is done to avoid possible commits on the remote that are not
+	# merged into the local branch
+	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			git_fetch_branch "$ORIGIN" "$BRANCH"
+	fi
+
+	# Update local branches with remote branches
 	if flag fetch; then
-		git fetch -q "$ORIGIN" "$MASTER_BRANCH" || die "Could not fetch branch '$MASTER_BRANCH' from remote '$ORIGIN'."
-		git fetch -q "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not fetch branch '$DEVELOP_BRANCH' from remote '$ORIGIN'."
+		git_fetch_branch "$ORIGIN" "$MASTER_BRANCH"
+		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
+	fi
+
+	# Check if the local branches have all the commits from the remote branches
+	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
 	fi
 	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
 		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
@@ -303,7 +324,16 @@ cmd_finish() {
 		if [ "$BRANCH" = "$(git_current_branch)" ]; then
 			git checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
 		fi
-		git branch -d "$BRANCH"
+		if noflag keeplocal; then
+			git branch -d "$BRANCH"
+		fi
+		if noflag keepremote;then
+			local remotebranch=0
+			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+				remotebranch=1
+				git_remote_branch_delete "$BRANCH"
+			fi
+		fi
 	fi
 
 	if flag push; then
@@ -312,7 +342,6 @@ cmd_finish() {
 		if noflag notag; then
 			git push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
 		fi
-		git push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
 	fi
 
 	echo
@@ -329,14 +358,27 @@ cmd_finish() {
 	[ "$commit" = "$MASTER_BRANCH" ] && echo "- Master branch '$MASTER_BRANCH' has been back-merged into '$DEVELOP_BRANCH'"
 	[ "$commit" = "$VERSION_PREFIX$VERSION" ] && echo "- Release tag '$VERSION_PREFIX$VERSION' has been back-merged into '$DEVELOP_BRANCH'"
 	[ "$commit" = "$BRANCH" ] && echo "- Release branch '$BRANCH' has been merged into '$DEVELOP_BRANCH'"
-	if flag keep; then
-		echo "- Release branch '$BRANCH' is still available"
-	elif noflag inplace; then
-		echo "- Release branch '$BRANCH' has been deleted"
+
+	if noflag keep; then
+		keepmsg="'has been deleted"
+		if flag keeplocal; then
+			 local keepmsg="is locally still available."
+			 if [ $remotebranch -eq 1 ]; then
+				 keepmsg=$keepmsg" It is deleted from '$ORIGIN'."
+			 fi
+		 fi
+		 if flag keepremote ; then
+			 if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			 	keepmsg="is remotely still available. It is deleted locally."
+			 fi
+		 fi
+	else
+		keepmsg="is still available"
 	fi
+	echo "- Release branch '$BRANCH' "$keepmsg
+
 	if flag push; then
 		echo "- '$DEVELOP_BRANCH', '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
-		echo "- Release branch '$BRANCH' in '$ORIGIN' has been deleted."
 	fi
 	echo
 }

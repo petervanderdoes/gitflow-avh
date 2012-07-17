@@ -111,6 +111,15 @@ git_remote_branch_exists() {
 	[ -n "$(git for-each-ref --format='%(refname:short)' refs/remotes/$1)" ]
 }
 
+git_remote_branch_delete() {
+	[ -n "$1" ] || die "Missing branch name"
+	if git_remote_branch_exists "$ORIGIN/$1"; then
+		git push "$ORIGIN" :"$1" || die "Could not delete the remote $1 in $ORIGIN."
+	else
+		warn "Trying to delete the remote branch $1, but it does not exists in $ORIGIN"
+	fi
+}
+
 git_branch_exists() {
 	[ -n "$1" ] || die "Missing branch name"
 	git_local_branch_exists "$1" || git_remote_branch_exists "$ORIGIN/$1"
@@ -175,6 +184,25 @@ git_is_ancestor() {
 	git_tag_exists "$1" && git_is_branch_merged_into "$1"^0 "$2" \
 	    || git_is_branch_merged_into "$1" "$2"
 }
+
+#
+# git_fetch_branch()
+#
+# $1 Origin - Where to fetch from
+# $2 Branch - Which branch to fetch
+#
+# This fetches the given branch from the given origin.
+# Instead of storing it in FETCH_HEAD it will be stored in
+# refs/remotes/<origin>/<branch>
+#
+git_fetch_branch() {
+	[ -n "$1" ] || die "Missing origin"
+	[ -n "$2" ] || die "Missing branch name"
+	local origin="$1"
+	local branch="$2"
+	git fetch -q "$origin" "$branch":refs/remotes/"$origin"/"$branch" || die "Could not fetch $branch from $origin."
+}
+
 #
 # gitflow specific common functionality
 #

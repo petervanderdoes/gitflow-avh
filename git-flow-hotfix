@@ -145,7 +145,7 @@ cmd_start() {
 
  	# Update the local repo with remote changes, if asked
 	if flag fetch; then
-		git fetch -q "$ORIGIN" "$MASTER_BRANCH" || die "Could not fetch branch '$MASTER_BRANCH' from remote '$ORIGIN'."
+		git_fetch_branch "$ORIGIN" "$MASTER_BRANCH"
 	fi
 
 	# Run filter on the version
@@ -218,6 +218,7 @@ cmd_publish() {
 }
 
 cmd_finish() {
+
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	DEFINE_boolean sign false "sign the release tag cryptographically" s
 	DEFINE_string signingkey "" "use the given GPG-key for the digital signature (implies -s)" u
@@ -225,6 +226,8 @@ cmd_finish() {
 	DEFINE_string messagefile "" "use the contents of the given file as tag message" f
 	DEFINE_boolean push false "push to $ORIGIN after performing finish" p
 	DEFINE_boolean keep false "keep branch after performing finish" k
+	DEFINE_boolean keepremote false "keep the remote branch"
+	DEFINE_boolean keeplocal false "keep the local branch"
 	DEFINE_boolean notag false "don't tag this release" n
 	DEFINE_boolean nobackmerge false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
 
@@ -236,12 +239,31 @@ cmd_finish() {
 		FLAGS_sign=$FLAGS_TRUE
 	fi
 
+	# Keeping both branches implies the --keep flag to be true.
+	if flag keepremote && flag keeplocal; then
+		 FLAGS_keep=$FLAGS_TRUE
+	fi
+
 	# Sanity checks
 	require_branch "$BRANCH"
 	require_clean_working_tree
+
+	# We always fetch the Branch from Origin
+	# This is done to avoid possible commits on the remote that are not
+	# merged into the local branch
+	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			git_fetch_branch "$ORIGIN" "$BRANCH"
+	fi
+
+	# Update local branches with remote branches
 	if flag fetch; then
-		git fetch -q "$ORIGIN" "$MASTER_BRANCH" || die "Could not fetch branch '$MASTER_BRANCH' from remote '$ORIGIN'."
-		git fetch -q "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not fetch branch '$DEVELOP_BRANCH' from remote '$ORIGIN'."
+		git_fetch_branch "$ORIGIN" "$MASTER_BRANCH"
+		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
+	fi
+
+	# Check if the local branches have all the commits from the remote branches
+	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
 	fi
 	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
 		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
@@ -250,6 +272,10 @@ cmd_finish() {
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
 	fi
 
+	# Check if the hotfix branch:
+	# - has commits: No reason to finish a hotfix without commits
+	# - Is ahead of the master: If it's not a good idea to merge
+	# - Can be merged: If there's no common ancestor we can't merge the hotfix
 	git_compare_branches "$BRANCH" "$MASTER_BRANCH"
 	case $? in
 		0) die "You need some commits in the hotfix branch '$BRANCH'"
@@ -324,7 +350,16 @@ cmd_finish() {
 
 	# Delete branch
 	if noflag keep; then
-		git branch -d "$BRANCH"
+		if noflag keeplocal; then
+			git branch -d "$BRANCH"
+		fi
+		if noflag keepremote;then
+			local remotebranch=0
+			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+				remotebranch=1
+				git_remote_branch_delete "$BRANCH"
+			fi
+		fi
 	fi
 
 	if flag push; then
@@ -347,11 +382,23 @@ cmd_finish() {
 	[ "$commit" = "$MASTER_BRANCH" ] && echo "- Master branch '$MASTER_BRANCH' has been back-merged into '$DEVELOP_BRANCH'"
 	[ "$commit" = "$VERSION_PREFIX$VERSION" ] && echo "- Hotfix tag '$VERSION_PREFIX$VERSION' has been back-merged into '$DEVELOP_BRANCH'"
 	[ "$commit" = "$BRANCH" ] && echo "- Hotfix branch '$BRANCH' has been merged into '$DEVELOP_BRANCH'"
-	if flag keep; then
-		echo "- Hotfix branch '$BRANCH' is still available"
+	if noflag keep; then
+		local keepmsg="'has been deleted"
+		if flag keeplocal; then
+			 keepmsg="is locally still available."
+			 if [ $remotebranch -eq 1 ]; then
+				 keepmsg=$keepmsg" It is deleted from '$ORIGIN'."
+			 fi
+		 fi
+		 if flag keepremote ; then
+			 if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			 	keepmsg="is remotely still available. It is deleted locally."
+			 fi
+		 fi
 	else
-		echo "- Hotfix branch '$BRANCH' has been deleted"
+		keepmsg="is still available"
 	fi
+	echo "- Hotfix branch '$BRANCH' "$keepmsg
 	if flag push; then
 		echo "- '$DEVELOP_BRANCH', '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
 	fi

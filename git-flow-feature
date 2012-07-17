@@ -190,7 +190,7 @@ cmd_start() {
 
 	# Update the local repo with remote changes, if asked
 	if flag fetch; then
-		git fetch -q "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not fetch branch '$DEVELOP_BRANCH' from remote '$ORIGIN'."
+		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
 	fi
 
 	# Sanity checks
@@ -221,14 +221,22 @@ cmd_start() {
 }
 
 cmd_finish() {
+
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	DEFINE_boolean rebase false "rebase instead of merge" r
 	DEFINE_boolean keep false "keep branch after performing finish" k
+	DEFINE_boolean keepremote false "keep the remote branch"
+	DEFINE_boolean keeplocal false "keep the local branch"
 	DEFINE_boolean force_delete false "force delete feature branch after finish" D
 	DEFINE_boolean squash false "squash feature during merge" S
 
 	parse_args "$@"
 	expand_nameprefix_arg_or_current
+
+	# Keeping both branches implies the --keep flag to be true.
+	if flag keepremote && flag keeplocal; then
+		 FLAGS_keep=$FLAGS_TRUE
+	fi
 
 	# Sanity checks
 	require_branch "$BRANCH"
@@ -277,16 +285,21 @@ cmd_finish() {
 	# Sanity checks
 	require_clean_working_tree
 
-	# Update local repo with remote changes first, if asked
+	# We always fetch the Branch from Origin
+	# This is done to avoid possible commits on the remote that are not
+	# merged into the local branch
 	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-		if flag fetch; then
-			git fetch -q "$ORIGIN" "$BRANCH" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
-			git fetch -q "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not fetch branch '$DEVELOP_BRANCH' from remote '$ORIGIN'."
-		fi
+		git_fetch_branch "$ORIGIN" "$BRANCH"
 	fi
 
-	if git_remote_branch_exists  "$ORIGIN/$BRANCH"; then
-		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
+	# Update local branches with remote branches
+	if flag fetch; then
+		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
+	fi
+
+	# Check if the local branches have all the commits from the remote branches
+	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
 	fi
 	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
@@ -347,29 +360,45 @@ helper_finish_cleanup() {
 	require_branch "$BRANCH"
 	require_clean_working_tree
 
-	# Delete branch
-	if flag fetch; then
-		git push "$ORIGIN" ":refs/heads/$BRANCH"
-	fi
-
-
 	if noflag keep; then
-		if flag force_delete; then
-			git branch -D "$BRANCH"
-		else
-			git branch -d "$BRANCH"
+		if noflag keeplocal; then
+			if flag force_delete; then
+				git branch -D "$BRANCH"
+			else
+				git branch -d "$BRANCH"
+			fi
 		fi
+		if noflag keepremote;then
+			local remotebranch=0
+			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+				remotebranch=1
+				git_remote_branch_delete "$BRANCH"
+			fi
+		fi
+
 	fi
 
 	echo
 	echo "Summary of actions:"
 	echo "- The feature branch '$BRANCH' was merged into '$DEVELOP_BRANCH'"
 	#echo "- Merge conflicts were resolved"		# TODO: Add this line when it's supported
-	if flag keep; then
-		echo "- Feature branch '$BRANCH' is still available"
+	if noflag keep; then
+		local keepmsg="'has been deleted"
+		if flag keeplocal; then
+		 	keepmsg="is locally still available."
+			if [ $remotebranch -eq 1 ]; then
+				keepmsg=$keepmsg" It is deleted from '$ORIGIN'."
+			fi
+		fi
+		if flag keepremote ; then
+			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+				keepmsg="is remotely still available. It is deleted locally."
+			fi
+		fi
 	else
-		echo "- Feature branch '$BRANCH' has been removed"
+		keepmsg="is still available"
 	fi
+	echo "- Feature branch '$BRANCH' "$keepmsg
 	echo "- You are now on branch '$DEVELOP_BRANCH'"
 	echo
 }
@@ -571,8 +600,8 @@ cmd_delete() {
 			fi
 		else
 			 die "Feature branch '$BRANCH' has been not been merged yet. Use -f to force the deletion."
-		 fi
-	 fi
+		fi
+	fi
 
 	 run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
 

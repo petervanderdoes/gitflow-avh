@@ -12,8 +12,12 @@
 
 # Changelog
 
-#### 1.0.100-avh
+#### 1.0.103-avh
+
 [Peter van der Does][petervanderdoes]
+* Add the ability to keep/delete local/remote branches on finish.  
+  When finishing a release/hotfix/feature you now can keep/delete the 
+  local/remote release/hotfix/feature branch.
 * Do not display object fetch summary if flag was not set. 
   Thanks to [Daniel Dehennin][baby-gnu]
 * Bugfix: Checking if branch exists will fail for remote branches.
