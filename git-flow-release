@@ -155,7 +155,7 @@ cmd_start() {
 	require_branch_absent "$BRANCH"
 	require_tag_absent "$VERSION_PREFIX$VERSION"
 	if flag fetch; then
-		git fetch -q "$ORIGIN" "$DEVELOP_BRANCH"
+		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
 	fi
 	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
@@ -226,8 +226,8 @@ cmd_finish() {
 	require_branch "$BRANCH"
 	require_clean_working_tree
 	if flag fetch; then
-		git fetch -q "$ORIGIN" "$MASTER_BRANCH" || die "Could not fetch $MASTER_BRANCH from $ORIGIN."
-		git fetch -q "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
+		git_fetch_branch "$ORIGIN" "$MASTER_BRANCH"
+		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
 	fi
 	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
 		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"

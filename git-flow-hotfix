@@ -145,7 +145,7 @@ cmd_start() {
 
  	# Update the local repo with remote changes, if asked
 	if flag fetch; then
-		git fetch -q "$ORIGIN" "$MASTER_BRANCH"
+		git_fetch_branch "$ORIGIN" "$MASTER_BRANCH"
 	fi
 
 	# Run filter on the version
@@ -247,8 +247,8 @@ cmd_finish() {
 	require_branch "$BRANCH"
 	require_clean_working_tree
 	if flag fetch; then
-		git fetch -q "$ORIGIN" "$MASTER_BRANCH" || die "Could not fetch $MASTER_BRANCH from $ORIGIN."
-		git fetch -q "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
+		git_fetch_branch "$ORIGIN" "$MASTER_BRANCH"
+		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
 	fi
 	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
 		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"

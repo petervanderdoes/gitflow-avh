@@ -183,6 +183,25 @@ git_is_branch_merged_into() {
 git_is_ancestor() {
 	git_is_branch_merged_into $1 $2
 }
+
+#
+# git_fetch_branch()
+#
+# $1 Origin - Where to fetch from
+# $2 Branch - Which branch to fetch
+#
+# This fetches the given branch from the given origin.
+# Instead of storing it in FETCH_HEAD it will be stored in
+# refs/remotes/<origin>/<branch>
+#
+git_fetch_branch() {
+	[ -n "$1" ] || die "Missing origin"
+	[ -n "$2" ] || die "Missing branch name"
+	local orgin="$1"
+	local branch="$2"
+	git fetch -q "$origin" "$branch":refs/remotes/"$origin"/"$branch" || die "Could not fetch $branch from $origin."
+}
+
 #
 # gitflow specific common functionality
 #

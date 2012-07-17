@@ -190,7 +190,7 @@ cmd_start() {
 
 	# Update the local repo with remote changes, if asked
 	if flag fetch; then
-		git fetch -q "$ORIGIN" "$DEVELOP_BRANCH"
+		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
 	fi
 
 	# Sanity checks
@@ -287,8 +287,8 @@ cmd_finish() {
 	# Update local repo with remote changes first, if asked
 	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 		if flag fetch; then
-			git fetch -q "$ORIGIN" "$BRANCH"
-			git fetch -q "$ORIGIN" "$DEVELOP_BRANCH"
+			git_fetch_branch "$ORIGIN" "$BRANCH"
+			git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
 		fi
 	fi
 
