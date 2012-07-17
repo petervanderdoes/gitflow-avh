@@ -232,14 +232,15 @@ cmd_finish() {
 			git_fetch_branch "$ORIGIN" "$BRANCH"
 		fi
 	fi
+
+	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
+	fi
 	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
 		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
 	fi
 	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
-	fi
-	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
 	fi
 
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"

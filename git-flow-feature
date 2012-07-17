@@ -296,9 +296,7 @@ cmd_finish() {
 	fi
 
 	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-		if flag keepremote || flag keep; then
 			require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
-		fi
 	fi
 	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
