@@ -138,6 +138,7 @@ require_no_existing_release_branches() {
 cmd_start() {
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	parse_args "$@"
+	eval set -- "${FLAGS_ARGV}"
 	BASE=${2:-$DEVELOP_BRANCH}
 
 	# Run filter on the version

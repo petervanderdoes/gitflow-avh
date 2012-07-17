@@ -138,6 +138,7 @@ require_no_existing_hotfix_branches() {
 cmd_start() {
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	parse_args "$@"
+	eval set -- "${FLAGS_ARGV}"
 	BASE=${2:-$MASTER_BRANCH}
 
 	# No need to continue if not clean
