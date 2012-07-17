@@ -221,6 +221,7 @@ cmd_start() {
 }
 
 cmd_finish() {
+
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	DEFINE_boolean rebase false "rebase instead of merge" r
 	DEFINE_boolean keep false "keep branch after performing finish" k
@@ -290,21 +291,19 @@ cmd_finish() {
 	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 			git_fetch_branch "$ORIGIN" "$BRANCH"
 	fi
-	# Update local repo with remote changes first, if asked
-	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-		if flag fetch; then
-			git_fetch_branch "$ORIGIN" "$BRANCH"
-			git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
-		fi
+
+	# Update local branches with remote branches
+	if flag fetch; then
+		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
 	fi
 
+	# Check if the local branches have all the commits from the remote branches
 	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 			require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
 	fi
 	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
 	fi
-
 
     run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
 

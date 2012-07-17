@@ -198,7 +198,6 @@ cmd_finish() {
 	DEFINE_boolean squash false "squash release during merge" S
 	DEFINE_boolean inplace false "Release directly on the development branch" i
 
-
 	parse_args "$@"
 	# Run filter on the version
 	VERSION=$(run_filter_hook release-finish-version $VERSION)
@@ -232,11 +231,14 @@ cmd_finish() {
 	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 			git_fetch_branch "$ORIGIN" "$BRANCH"
 	fi
+
+	# Update local branches with remote branches
 	if flag fetch; then
 		git_fetch_branch "$ORIGIN" "$MASTER_BRANCH"
 		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
 	fi
 
+	# Check if the local branches have all the commits from the remote branches
 	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
 	fi
