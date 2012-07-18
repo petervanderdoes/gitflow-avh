@@ -215,7 +215,7 @@ cmd_default() {
 		created_gitflow_branch=1
 	fi
 
-	# Assert the gitflow repo has been correctly initialized
+	# Assert the git-flow repo has been correctly initialized
 	gitflow_is_initialized
 
 	# Switch to develop branch if its newly created

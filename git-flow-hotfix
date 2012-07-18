@@ -317,8 +317,8 @@ cmd_finish() {
 		fi
 	fi
 
-	# By default we backmerge the $MASTER_BRANCH unless the user explicitly
-	# stated not to do a back merge, in that case we use the $BRANCH.
+	# By default we back-merge the $MASTER_BRANCH unless the user explicitly
+	# stated not to do a back-merge, in that case we use the $BRANCH.
 	if noflag nobackmerge; then
 		MERGE_BRANCH="$MASTER_BRANCH"
 	else

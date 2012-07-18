@@ -164,7 +164,7 @@ git_compare_branches() {
 #
 # git_is_branch_merged_into()
 #
-# Checks whether branch $1 is succesfully merged into $2
+# Checks whether branch $1 is successfully merged into $2
 #
 git_is_branch_merged_into() {
 	local merge_hash=$(git merge-base $1 $2)
@@ -177,8 +177,8 @@ git_is_branch_merged_into() {
 #
 # git_is_ancestor()
 #
-# This is the same fucntion as git_is_branch_merged_into but
-# for readibilty given a different name.
+# This is the same function as git_is_branch_merged_into but
+# for readability given a different name.
 #
 git_is_ancestor() {
 	git_tag_exists "$1" && git_is_branch_merged_into "$1"^0 "$2" \
@@ -231,7 +231,7 @@ gitflow_require_base_arg() {
 	fi
 }
 
-# Check if this repo has been inited for gitflow
+# Function used to check if the repository is git-flow enabled.
 gitflow_has_master_configured() {
 	local master=$(git config --get gitflow.branch.master)
 	[ "$master" != "" ] && git_local_branch_exists "$master"
