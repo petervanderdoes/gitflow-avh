@@ -129,8 +129,6 @@ parse_args() {
 	BRANCH=$PREFIX$VERSION
 }
 
-
-
 cmd_start() {
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	parse_args "$@"

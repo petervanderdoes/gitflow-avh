@@ -262,7 +262,6 @@ cmd_default() {
 		git config gitflow.prefix.release "$prefix"
 	fi
 
-
 	# Hotfix branches
 	if ! git config --get gitflow.prefix.hotfix >/dev/null 2>&1 || flag force; then
 		default_suggestion=$(git config --get gitflow.prefix.hotfix || echo hotfix/)
@@ -275,7 +274,6 @@ cmd_default() {
 		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
 		git config gitflow.prefix.hotfix "$prefix"
 	fi
-
 
 	# Support branches
 	if ! git config --get gitflow.prefix.support >/dev/null 2>&1 || flag force; then
@@ -290,7 +288,6 @@ cmd_default() {
 		git config gitflow.prefix.support "$prefix"
 	fi
 
-
 	# Version tag prefix
 	if ! git config --get gitflow.prefix.versiontag >/dev/null 2>&1 || flag force; then
 		default_suggestion=$(git config --get gitflow.prefix.versiontag || echo "")
@@ -303,7 +300,6 @@ cmd_default() {
 		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
 		git config gitflow.prefix.versiontag "$prefix"
 	fi
-
 
 	# TODO: what to do with origin?
 }

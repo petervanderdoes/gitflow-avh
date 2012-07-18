@@ -222,7 +222,6 @@ cmd_start() {
 }
 
 cmd_finish() {
-
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	DEFINE_boolean rebase false "rebase instead of merge" r
 	DEFINE_boolean keep false "keep branch after performing finish" k
