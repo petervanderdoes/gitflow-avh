@@ -359,7 +359,7 @@ cmd_finish() {
 	[ "$commit" = "$VERSION_PREFIX$VERSION" ] && echo "- Release tag '$VERSION_PREFIX$VERSION' has been back-merged into '$DEVELOP_BRANCH'"
 	[ "$commit" = "$BRANCH" ] && echo "- Release branch '$BRANCH' has been merged into '$DEVELOP_BRANCH'"
 
-	if noflag keep; then
+	if noflag keep && noflag inplace; then
 		keepmsg="'has been deleted"
 		if flag keeplocal; then
 			 local keepmsg="is locally still available."
