@@ -12,98 +12,84 @@
 
 # Changelog
 
-#### 1.0.123-avh
-[Daniel Dehennin][baby-gnu]
-* Bugfix: release/feature/hotfix start -F fails  
-  Usage of positional parameters requires to eval ${FLAGS_ARGV}. The "eval set" 
-  in function call does not propagate to the caller.  
-  
-#### 1.0.103-avh
+#### 1.1.0-avh
 [Peter van der Does][petervanderdoes]
 * Add the ability to keep/delete local/remote branches on finish.  
   When finishing a release/hotfix/feature you now can keep/delete the 
   local/remote release/hotfix/feature branch.
+  
 * Do not display object fetch summary if flag was not set.  
-  Thanks to [Daniel Dehennin][baby-gnu]
+  Thanks to [Daniel Dehennin][baby-gnu].
+  
 * Bugfix: Checking if branch exists will fail for remote branches.
+
 * Make die output consistent for each die case.
 
-[Daniel Dehennin][baby-gnu]
-* Accept tags as base for hotfix/release/support start.  
-  Commit pointed by tags are reachable with ^0\[1\].
-
-#### 1.0.79-avh
-[Daniel Dehennin][baby-gnu]
-* Check for parameter existence for branch and tag existence helpers
-* Do not finish hotfixes if they have no commits  
-  A hotfix branch must have some commits and be ahead of master.
-* Implement in-place release with -i/--inplace option  
-  This implement a solution to "Add ability to release directly from develop".
-
-#### 1.0.70-avh
-[Peter van der Does][petervanderdoes]
-* Bugfix: When running git flow version an error message pops up.
-
-[Daniel Dehennin][baby-gnu]
-* Reorder fetch and sanity checks  
-  When a user requests a fetch for git flow {feature|hotfix|support} start, do 
-  this before some sanity checks to avoid any conflict in branch names 
-  and/or version.
-
-#### 1.0.67-avh
-[Peter van der Does][petervanderdoes]
 * Bugfix: When running git flow init an error message pops up.
 
-#### 1.0.65-avh
-[Peter van der Does][petervanderdoes]
 * Show correct help for subactions.  
   When requesting help with -h for the subactions, the help would show the 
   incorrect command line.
+  
 * Support reading the tag message from a file in release/hotfix finish.  
   Add the option -f,--messagefile to release and hotfix finish. Thanks to 
   [Steve Streeting][sinbad] for the original coding.
-* Bugfix: git_current_branch fails for git prior 1.7.10  
+  
+* Bugfix: git_current_branch fails for git prior 1.7.10.  
   git symbolic-ref does not have the --short option prior to version 1.7.10.
-  Bug found by [Daniel Dehennin][baby-gnu]
-
-[Myke Hines][mykehsd]
-
-* Feature and Release squashing options  
-  This allows a -S option to both feature and releasing finishing actions so 
-  that developers can squash commits into one large one.
-
-#### 1.0.44-avh
-[Peter Ragone][pcragone]
-
-* Add init to git-flow-{feature,release,hotfix,support}   
-  Fixes the relatively minor issue where 'git flow subcommand help' 
-  gives "Not a gitflow-enabled repo yet"
-
-#### 1.0.41-avh
-[Daniel Dehennin][baby-gnu]
-
-* Fix flag test in cmd_delete()
-
-#### 1.0.35-avh
-[Peter van der Does][petervanderdoes]
-
-* Clean up code  
+  Bug found by [Daniel Dehennin][baby-gnu].
+  
+* Clean up code.  
   Remove all porcelain commands.    
-  Refactor code    
-
-#### 1.0.6-avh
-[Peter van der Does][petervanderdoes]
-
+  Refactor code.
+  
 * Improve the back-merge functionality.  
   Adds an command line option (-b), which the user can utilize if the user
   doesn't want to back-merge but rather merge the release branch into
   develop.
+  
 * Add the sub-action delete to sub-commands feature, release and hotfix.    
   The sub-commands feature, release and hotfix now have a new sub-action, 
   delete. With that action you can delete the branches, locally and remote.
   The action has two options, -f and -r. With -f you can force the deletion,
   even when the to be deleted branch was not merged yet. With -r the remote 
-  branch will also be deleted.  
+  branch will also be deleted.
+
+[Daniel Dehennin][baby-gnu]
+* Bugfix: release/feature/hotfix start -F fails.  
+  Usage of positional parameters requires to eval ${FLAGS_ARGV}. The "eval set" 
+  in function call does not propagate to the caller.
+  
+* Accept tags as base for hotfix/release/support start.  
+  Commit pointed by tags are reachable with ^0\[1\].
+  
+* Check for parameter existence for branch and tag existence helpers.
+
+* Do not finish hotfixes if they have no commits.  
+  A hotfix branch must have some commits and be ahead of master.
+  
+* Implement in-place release with -i/--inplace option.  
+  This implement a solution to "Add ability to release directly from develop".
+  
+* Bugfix: When running git flow version an error message pops up.
+
+* Reorder fetch and sanity checks.  
+  When a user requests a fetch for git flow {feature|hotfix|support} start, do 
+  this before some sanity checks to avoid any conflict in branch names 
+  and/or version.
+  
+* Fix flag test in cmd_delete().
+
+[Myke Hines][mykehsd]
+* Feature and Release squashing options.  
+  This allows a -S option to both feature and releasing finishing actions so 
+  that developers can squash commits into one large one.
+
+[Peter Ragone][pcragone]
+* Add init to git-flow-{feature,release,hotfix,support}.   
+  Fixes the relatively minor issue where 'git flow subcommand help' 
+  gives "Not a gitflow-enabled repo yet".
+  
 * Special thanks to the following individual:    
   [Gert Van Gool][gvangool]
   
@@ -111,16 +97,22 @@
 [Peter van der Does][petervanderdoes]
 
 * Remove trailing whitespace.
+
 * Updated from latest develop branch from nvie.    
   Some features were still missing.
+  
 * Remove the submodule shFlags.  
   Instead of the submodule we'll just use the file.
+  
 * When finishing a release or hotfix, use tag for back-merging if available.    
   When a release or hotfix branch is tagged, the tag is never merged into the
   develop branch, it is preferable to have the tag in the develop branch as
   well, for use with git describe for example.
+  
 * Update license info.
+
 * Bugfix: Typo when pulling existing feature from remote.Thanks to [John Harrison][bloomonkey],  [Miltos][mallamanis], [Kostas][kperi] and [memleak][memleak].
+
 * Wrong variable names in the bare-bones.  
   The wrong variable name is set, this can lead to confusing on what's 
   passed to the script,
@@ -137,8 +129,10 @@
 [Peter van der Does][petervanderdoes]
 
 * Start of the git flow AVH release.
+
 * Adds support for the version filter in the commands `git flow release start`
 and `git flow hotfix start`
+
 * Adds support for hooks in various commands.
 
 [Ben Loveridge][bloveridge]
