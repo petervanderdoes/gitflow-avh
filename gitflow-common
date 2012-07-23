@@ -316,6 +316,25 @@ gitflow_resolve_nameprefix() {
 }
 
 #
+# Check if the given branch is a git-flow branch
+#
+gitflow_is_prefixed_branch() {
+	local branch=$1
+	case $branch in
+	$(git config --get gitflow.prefix.feature)* | \
+	$(git config --get gitflow.prefix.release)* | \
+	$(git config --get gitflow.prefix.hotfix)*  | \
+	$(git config --get gitflow.prefix.support)* )
+		return=0
+		;;
+	*)
+		return=1
+		;;
+	esac
+	return $return
+}
+
+#
 # Assertions for use in git-flow subcommands
 #
 
