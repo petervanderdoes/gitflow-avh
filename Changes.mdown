@@ -12,7 +12,7 @@
 
 # Changelog
 
-#### 1.1.0-avh
+#### 1.1.0-avh201207231916
 [Peter van der Does][petervanderdoes]
 * Add the ability to keep/delete local/remote branches on finish.  
   When finishing a release/hotfix/feature you now can keep/delete the 
