@@ -196,7 +196,6 @@ cmd_finish() {
 	DEFINE_boolean notag false "don't tag this release" n
 	DEFINE_boolean nobackmerge false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
 	DEFINE_boolean squash false "squash release during merge" S
-	DEFINE_boolean inplace false "Release directly on the development branch" i
 
 	parse_args "$@"
 	# Run filter on the version
@@ -204,10 +203,6 @@ cmd_finish() {
 
 	# As VERSION might have changed reset BRANCH with new VERSION
 	BRANCH=$PREFIX$VERSION
-
-	if flag inplace; then
-		BRANCH="$(git_current_branch)"
-	fi
 
 	gitflow_require_version_arg
 
@@ -251,19 +246,17 @@ cmd_finish() {
 
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
 
-	if noflag inplace; then
-		# Try to merge into master.
-		# In case a previous attempt to finish this release branch has failed,
-		# but the merge into master was successful, we skip it now
-		if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
-				git checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
-				if noflag squash; then
-					git merge --no-ff "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
-				else
-					git merge --squash "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
-					git commit
-				fi
-		fi
+	# Try to merge into master.
+	# In case a previous attempt to finish this release branch has failed,
+	# but the merge into master was successful, we skip it now
+	if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
+			git checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
+			if noflag squash; then
+				git merge --no-ff "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+			else
+				git merge --squash "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+				git commit
+			fi
 	fi
 
 	if noflag notag; then
@@ -320,7 +313,7 @@ cmd_finish() {
 	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
 
 	# Delete branch
-	if noflag keep && noflag inplace; then
+	if noflag keep; then
 		if [ "$BRANCH" = "$(git_current_branch)" ]; then
 			git checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
 		fi
@@ -349,9 +342,7 @@ cmd_finish() {
 	if flag fetch; then
 		echo "- Latest objects have been fetched from '$ORIGIN'"
 	fi
-	if noflag inplace; then
-		echo "- Release branch '$BRANCH' has been merged into '$MASTER_BRANCH'"
-	fi
+	echo "- Release branch '$BRANCH' has been merged into '$MASTER_BRANCH'"
 	if noflag notag; then
 		echo "- The release was tagged '$VERSION_PREFIX$VERSION'"
 	fi
@@ -379,6 +370,119 @@ cmd_finish() {
 
 	if flag push; then
 		echo "- '$DEVELOP_BRANCH', '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
+	fi
+	echo
+}
+
+cmd_branch() {
+	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
+	DEFINE_boolean sign false "sign the release tag cryptographically" s
+	DEFINE_string signingkey "" "use the given GPG-key for the digital signature (implies -s)" u
+	DEFINE_string message "" "use the given tag message" m
+	DEFINE_string messagefile "" "use the contents of the given file as a tag message" f
+	DEFINE_boolean push false "push to $ORIGIN after performing finish" p
+	DEFINE_boolean notag false "don't tag this release" n
+	DEFINE_boolean squash false "squash release during merge" S
+
+	# Parse options
+	FLAGS "$@" || exit $?
+	eval set -- "${FLAGS_ARGV}"
+
+	# Read arguments into global variables
+	VERSION=$1
+	BRANCH=${2:-$DEVELOP_BRANCH}
+
+	# Run filter on the version
+	VERSION=$(run_filter_hook branch-finish-version $VERSION)
+
+	gitflow_require_version_arg
+
+	# Handle flags that imply other flags
+	if [ "$FLAGS_signingkey" != "" ]; then
+		FLAGS_sign=$FLAGS_TRUE
+	fi
+
+	# Sanity checks
+	if gitflow_is_prefixed_branch "$BRANCH"; then
+		die "Branch '$BRANCH' seems to be a git-flow branch. It's not allowed to release this directly."
+	fi
+
+	require_branch "$BRANCH"
+	require_clean_working_tree
+
+	# We always fetch the Branch from Origin
+	# This is done to avoid possible commits on the remote that are not
+	# merged into the local branch
+	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			git_fetch_branch "$ORIGIN" "$BRANCH"
+	fi
+
+	# Update local branches with remote branches
+	if flag fetch; then
+		git_fetch_branch "$ORIGIN" "$MASTER_BRANCH"
+	fi
+
+	# Check if the local branches have all the commits from the remote branches
+	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
+	fi
+	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
+		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
+	fi
+
+	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+
+	# Try to merge into master.
+	# In case a previous attempt to finish this release branch has failed,
+	# but the merge into master was successful, we skip it now
+	if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
+			git checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
+			if noflag squash; then
+				git merge --no-ff "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+			else
+				git merge --squash "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+				git commit
+			fi
+	fi
+
+	if noflag notag; then
+		# Try to tag the release.
+		# In case a previous attempt to finish this release branch has failed,
+		# but the tag was set successful, we skip it now
+		if ! git_tag_exists "$VERSION_PREFIX$VERSION"; then
+			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
+				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
+			fi
+			local opts="-a"
+			flag sign && opts="$opts -s"
+			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
+			[ "$FLAGS_message" != "" ] && opts="$opts -m '$FLAGS_message'"
+			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
+			eval git tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
+		fi
+	fi
+
+	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+
+	if flag push; then
+		git push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push branch '$MASTER_BRANCH' to remote '$ORIGIN'."
+		if noflag notag; then
+			git push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
+		fi
+	fi
+
+	echo
+	echo "Summary of actions:"
+	if flag fetch; then
+		echo "- Latest objects have been fetched from '$ORIGIN'"
+	fi
+	echo "- Branch '$BRANCH' has been merged into '$MASTER_BRANCH'"
+	if noflag notag; then
+		echo "- The release was tagged '$VERSION_PREFIX$VERSION'"
+	fi
+
+	if flag push; then
+		echo "- '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
 	fi
 	echo
 }

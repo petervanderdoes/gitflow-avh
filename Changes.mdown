@@ -12,11 +12,16 @@
 
 # Changelog
 
-#### 1.1.0-avh
+#### 1.1.0-avh201207231916
 [Peter van der Does][petervanderdoes]
 * Add the ability to keep/delete local/remote branches on finish.  
   When finishing a release/hotfix/feature you now can keep/delete the 
   local/remote release/hotfix/feature branch.
+
+* New command: git flow release branch  
+  With this command you can directly release a given branch. There is no need 
+  to start a new release and finish it. You can not use this command on the 
+  git-flow branches feature/hotfix/release/support.
   
 * Do not display object fetch summary if flag was not set.  
   Thanks to [Daniel Dehennin][baby-gnu].
@@ -67,9 +72,6 @@
 
 * Do not finish hotfixes if they have no commits.  
   A hotfix branch must have some commits and be ahead of master.
-  
-* Implement in-place release with -i/--inplace option.  
-  This implement a solution to "Add ability to release directly from develop".
   
 * Bugfix: When running git flow version an error message pops up.
 
