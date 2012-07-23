@@ -17,6 +17,11 @@
 * Add the ability to keep/delete local/remote branches on finish.  
   When finishing a release/hotfix/feature you now can keep/delete the 
   local/remote release/hotfix/feature branch.
+
+* New command: git flow release branch  
+  With this command you can directly release a given branch. There is no need 
+  to start a new release and finish it. You can not use this command on the 
+  git-flow branches feature/hotfix/release/support.
   
 * Do not display object fetch summary if flag was not set.  
   Thanks to [Daniel Dehennin][baby-gnu].
