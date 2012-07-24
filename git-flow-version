@@ -42,7 +42,7 @@ usage() {
 }
 
 cmd_default() {
-	echo "$GITFLOW_VERSION"
+	echo "$GITFLOW_VERSION (AVH Edition)"
 }
 
 cmd_help() {
