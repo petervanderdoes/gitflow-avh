@@ -426,7 +426,7 @@ cmd_branch() {
 	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
 	fi
-	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
+	if [ "$BRANCH" != "$MASTER_BRANCH" ] && git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
 		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
 	fi
 
@@ -476,7 +476,9 @@ cmd_branch() {
 	if flag fetch; then
 		echo "- Latest objects have been fetched from '$ORIGIN'"
 	fi
-	echo "- Branch '$BRANCH' has been merged into '$MASTER_BRANCH'"
+	if [ "$BRANCH" != "$MASTER_BRANCH" ]; then
+		echo "- Branch '$BRANCH' has been merged into '$MASTER_BRANCH'"
+	fi
 	if noflag notag; then
 		echo "- The release was tagged '$VERSION_PREFIX$VERSION'"
 	fi
