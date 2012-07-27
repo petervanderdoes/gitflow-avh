@@ -153,6 +153,6 @@ cmd_start() {
 	echo
 	echo "Summary of actions:"
 	echo "- A new branch '$BRANCH' was created, based on '$BASE'"
-	echo "- You are now on branch '$BRANCH'"
+	echo "- You are now on branch '$(git_current_branch)'"
 	echo
 }
