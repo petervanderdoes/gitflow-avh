@@ -109,6 +109,12 @@ main() {
 	fi
 
 	# Run the specified action
+	if [ $SUBACTION != "help" ] && [ $SUBCOMMAND != "init" ] && [ $SUBCOMMAND != "version" ]; then
+		init
+  	fi
+  	if [ $SUBACTION != 'default' ]; then
+  		FLAGS_PARENT="git flow $SUBCOMMAND $SUBACTION"
+  	fi
 	cmd_$SUBACTION "$@"
 }
 

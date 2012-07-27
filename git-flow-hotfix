@@ -35,17 +35,20 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-require_git_repo
-require_gitflow_initialized
-gitflow_load_settings
-VERSION_PREFIX=$(eval "echo `git config --get gitflow.prefix.versiontag`")
-PREFIX=$(git config --get gitflow.prefix.hotfix)
+init() {
+	require_git_repo
+	require_gitflow_initialized
+	gitflow_load_settings
+	VERSION_PREFIX=$(git config --get gitflow.prefix.versiontag)
+	PREFIX=$(git config --get gitflow.prefix.hotfix)
+}
 
 usage() {
 	echo "usage: git flow hotfix [list] [-v]"
 	echo "       git flow hotfix start [-F] <version> [<base>]"
-	echo "       git flow hotfix finish [-Fsumpkn] <version>"
+	echo "       git flow hotfix finish [-Fsumpknbf] <version>"
 	echo "       git flow hotfix publish <version>"
+	echo "       git flow hotfix delete [-fr] <version>"
 }
 
 cmd_default() {
@@ -58,8 +61,7 @@ cmd_list() {
 
 	local hotfix_branches
 	local current_branch
-	local short_names
-	hotfix_branches=$(echo "$(git_local_branches)" | grep "^$PREFIX")
+	hotfix_branches=$(git_local_branches_prefixed "$PREFIX")
 	if [ -z "$hotfix_branches" ]; then
 		warn "No hotfix branches exist."
                 warn ""
@@ -69,31 +71,29 @@ cmd_list() {
                 warn ""
 		exit 0
 	fi
-	current_branch=$(git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g')
-	short_names=$(echo "$hotfix_branches" | sed "s ^$PREFIX  g")
+	current_branch=$(git_current_branch)
 
 	# Determine column width first
 	local width=0
 	local branch
-	for branch in $short_names; do
+	for branch in $hotfix_branches; do
 		local len=${#branch}
 		width=$(max $width $len)
 	done
-	width=$(($width+3))
+	width=$(($width+3-${#PREFIX}))
 
 	local branch
-	for branch in $short_names; do
-		local fullname=$PREFIX$branch
-		local base=$(git merge-base "$fullname" "$MASTER_BRANCH")
+	for branch in $hotfix_branches; do
+		local base=$(git merge-base "$branch" "$MASTER_BRANCH")
 		local master_sha=$(git rev-parse "$MASTER_BRANCH")
-		local branch_sha=$(git rev-parse "$fullname")
-		if [ "$fullname" = "$current_branch" ]; then
+		local branch_sha=$(git rev-parse "$branch")
+		if [ "$branch" = "$current_branch" ]; then
 			printf "* "
 		else
 			printf "  "
 		fi
 		if flag verbose; then
-			printf "%-${width}s" "$branch"
+			printf "%-${width}s" "${branch#$PREFIX}"
 			if [ "$branch_sha" = "$master_sha" ]; then
 				printf "(no commits yet)"
 			else
@@ -107,7 +107,7 @@ cmd_list() {
 				printf "(based on $nicename)"
 			fi
 		else
-			printf "%s" "$branch"
+			printf "%s" "${branch#$PREFIX}"
 		fi
 		echo
 	done
@@ -128,60 +128,48 @@ parse_args() {
 	BRANCH=$PREFIX$VERSION
 }
 
-require_version_arg() {
-	if [ "$VERSION" = "" ]; then
-		warn "Missing argument <version>"
-		usage
-		exit 1
-	fi
-}
-
-require_base_is_on_master() {
-	if ! git branch --no-color --contains "$BASE" 2>/dev/null \
-			| sed 's/[* ] //g' \
-	  		| grep -q "^$MASTER_BRANCH\$"; then
-		die "fatal: Given base '$BASE' is not a valid commit on '$MASTER_BRANCH'."
-	fi
-}
-
 require_no_existing_hotfix_branches() {
-	local hotfix_branches=$(echo "$(git_local_branches)" | grep "^$PREFIX")
+	local hotfix_branches=$(git_local_branches_prefixed "$PREFIX")
 	local first_branch=$(echo ${hotfix_branches} | head -n1)
 	first_branch=${first_branch#$PREFIX}
-	[ -z "$hotfix_branches" ] || \
-		die "There is an existing hotfix branch ($first_branch). Finish that one first."
+	[ -z "$hotfix_branches" ] || die "There is an existing hotfix branch '$first_branch'. Finish that one first."
 }
 
 cmd_start() {
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	parse_args "$@"
+	eval set -- "${FLAGS_ARGV}"
 	BASE=${2:-$MASTER_BRANCH}
 
+	# No need to continue if not clean
+	require_clean_working_tree
+
+ 	# Update the local repo with remote changes, if asked
+	if flag fetch; then
+		git_fetch_branch "$ORIGIN" "$MASTER_BRANCH"
+	fi
+
 	# Run filter on the version
-	VERSION=`run_filter_hook hotfix-start-version $VERSION`
+	VERSION=$(run_filter_hook hotfix-start-version $VERSION)
 
 	# As VERSION might have changed reset BRANCH with new VERSION
 	BRANCH=$PREFIX$VERSION
 
-	require_version_arg
-	require_base_is_on_master
+	gitflow_require_version_arg
+	git_is_ancestor "$BASE" "$MASTER_BRANCH" || die "Given base '$BASE' is not a valid commit on '$MASTER_BRANCH'."
 	require_no_existing_hotfix_branches
 
 	# Sanity checks
-	require_clean_working_tree
 	require_branch_absent "$BRANCH"
 	require_tag_absent "$VERSION_PREFIX$VERSION"
-	if flag fetch; then
-		git fetch -q "$ORIGIN" "$MASTER_BRANCH"
-	fi
-	if has "$ORIGIN/$MASTER_BRANCH" $(git_remote_branches); then
+	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
 		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
 	fi
 
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$BASE"
 
 	# Create branch
-	git checkout -b "$BRANCH" "$BASE"
+	git checkout -b "$BRANCH" "$BASE"  || die "Could not create hotfix branch '$BRANCH'."
 
 	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$BASE"
 
@@ -201,24 +189,24 @@ cmd_start() {
 
 cmd_publish() {
 	parse_args "$@"
-	require_version_arg
+	gitflow_require_version_arg
 
 	# Sanity checks
 	require_clean_working_tree
 	require_branch "$BRANCH"
-	git fetch -q "$ORIGIN"
+	git fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 	require_branch_absent "$ORIGIN/$BRANCH"
 
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
 
 	# Create remote branch
 	git push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH"
-	git fetch -q "$ORIGIN"
+	git fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from '$ORIGIN'."
 
 	# Configure remote tracking
 	git config "branch.$BRANCH.remote" "$ORIGIN"
 	git config "branch.$BRANCH.merge" "refs/heads/$BRANCH"
-	git checkout "$BRANCH"
+	git checkout "$BRANCH" || die "Could not check out branch '$BRANCH'."
 
 	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
 
@@ -235,32 +223,69 @@ cmd_finish() {
 	DEFINE_boolean sign false "sign the release tag cryptographically" s
 	DEFINE_string signingkey "" "use the given GPG-key for the digital signature (implies -s)" u
 	DEFINE_string message "" "use the given tag message" m
+	DEFINE_string messagefile "" "use the contents of the given file as tag message" f
 	DEFINE_boolean push false "push to $ORIGIN after performing finish" p
 	DEFINE_boolean keep false "keep branch after performing finish" k
+	DEFINE_boolean keepremote false "keep the remote branch"
+	DEFINE_boolean keeplocal false "keep the local branch"
 	DEFINE_boolean notag false "don't tag this release" n
+	DEFINE_boolean nobackmerge false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
+
 	parse_args "$@"
-	require_version_arg
+	gitflow_require_version_arg
 
 	# Handle flags that imply other flags
 	if [ "$FLAGS_signingkey" != "" ]; then
 		FLAGS_sign=$FLAGS_TRUE
 	fi
 
+	# Keeping both branches implies the --keep flag to be true.
+	if flag keepremote && flag keeplocal; then
+		 FLAGS_keep=$FLAGS_TRUE
+	fi
+
 	# Sanity checks
 	require_branch "$BRANCH"
 	require_clean_working_tree
-	if flag fetch; then
-		git fetch -q "$ORIGIN" "$MASTER_BRANCH" || \
-		  die "Could not fetch $MASTER_BRANCH from $ORIGIN."
-		git fetch -q "$ORIGIN" "$DEVELOP_BRANCH" || \
-		  die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
+
+	# We always fetch the Branch from Origin
+	# This is done to avoid possible commits on the remote that are not
+	# merged into the local branch
+	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			git_fetch_branch "$ORIGIN" "$BRANCH"
 	fi
-	if has "$ORIGIN/$MASTER_BRANCH" $(git_remote_branches); then
+
+	# Update local branches with remote branches
+	if flag fetch; then
+		git_fetch_branch "$ORIGIN" "$MASTER_BRANCH"
+		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
+	fi
+
+	# Check if the local branches have all the commits from the remote branches
+	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
+	fi
+	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
 		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
 	fi
-	if has "$ORIGIN/$DEVELOP_BRANCH" $(git_remote_branches); then
+	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
 	fi
+
+	# Check if the hotfix branch:
+	# - has commits: No reason to finish a hotfix without commits
+	# - Is ahead of the master: If it's not a good idea to merge
+	# - Can be merged: If there's no common ancestor we can't merge the hotfix
+	git_compare_branches "$BRANCH" "$MASTER_BRANCH"
+	case $? in
+		0) die "You need some commits in the hotfix branch '$BRANCH'"
+		   ;;
+		1) die "The hotfix branch '$BRANCH' is not ahead of branch '$MASTER_BRANCH'"
+		   ;;
+		4) die "The hotfix branch '$BRANCH' has no common ancestor with branch '$MASTER_BRANCH'"
+		   ;;
+		*) ;;
+	esac
 
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
 
@@ -268,40 +293,55 @@ cmd_finish() {
 	# In case a previous attempt to finish this release branch has failed,
 	# but the merge into master was successful, we skip it now
 	if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
-		git checkout "$MASTER_BRANCH" || \
-		  die "Could not check out $MASTER_BRANCH."
-		git merge --no-ff "$BRANCH" || \
-		  die "There were merge conflicts."
+		git checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
+		git merge --no-ff "$BRANCH" || die "There were merge conflicts."
 		  # TODO: What do we do now?
 	fi
 
-	local commit="$BRANCH"
 	if noflag notag; then
 		# Try to tag the release.
 		# In case a previous attempt to finish this release branch has failed,
 		# but the tag was set successful, we skip it now
 		if ! git_tag_exists "$VERSION_PREFIX$VERSION"; then
+			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
+				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
+			fi
 			local opts="-a"
 			flag sign && opts="$opts -s"
 			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
 			[ "$FLAGS_message" != "" ] && opts="$opts -m '$FLAGS_message'"
-			eval git tag $opts "$VERSION_PREFIX$VERSION" || \
-			die "Tagging failed. Please run finish again to retry."
-			commit="$VERSION_PREFIX$VERSION"
+			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
+			eval git tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
 		fi
+	fi
+
+	# By default we back-merge the $MASTER_BRANCH unless the user explicitly
+	# stated not to do a back-merge, in that case we use the $BRANCH.
+	if noflag nobackmerge; then
+		MERGE_BRANCH="$MASTER_BRANCH"
+	else
+		MERGE_BRANCH="$BRANCH"
 	fi
 
 	# Try to merge into develop.
 	# In case a previous attempt to finish this release branch has failed,
 	# but the merge into develop was successful, we skip it now
-	if ! git_is_branch_merged_into "$BRANCH" "$DEVELOP_BRANCH"; then
-		git checkout "$DEVELOP_BRANCH" || \
-		  die "Could not check out $DEVELOP_BRANCH."
+	if ! git_is_branch_merged_into "$MERGE_BRANCH" "$DEVELOP_BRANCH"; then
+		git checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
 
-		# Accounting for 'git describe', if a release is tagged
-		# we use the tag commit instead of the branch.
-		git merge --no-ff "$commit" || \
-		  die "There were merge conflicts."
+		if noflag nobackmerge; then
+			# Accounting for 'git describe', if a release is tagged
+			# we use the tag commit instead of the branch.
+			if noflag notag; then
+				commit="$VERSION_PREFIX$VERSION"
+			else
+				commit="$MASTER_BRANCH"
+			fi
+		else
+			commit="$BRANCH"
+		fi
+
+		git merge --no-ff "$commit" || die "There were merge conflicts."
 		  # TODO: What do we do now?
 	fi
 
@@ -309,36 +349,100 @@ cmd_finish() {
 
 	# Delete branch
 	if noflag keep; then
-		git branch -d "$BRANCH"
+		if noflag keeplocal; then
+			git branch -d "$BRANCH"
+		fi
+		if noflag keepremote;then
+			local remotebranch=0
+			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+				remotebranch=1
+				git_remote_branch_delete "$BRANCH"
+			fi
+		fi
 	fi
 
 	if flag push; then
-		git push "$ORIGIN" "$DEVELOP_BRANCH" || \
-			die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
-		git push "$ORIGIN" "$MASTER_BRANCH" || \
-			die "Could not push to $MASTER_BRANCH from $ORIGIN."
+		git push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
+		git push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push branch '$MASTER_BRANCH' to remote '$ORIGIN'."
 		if noflag notag; then
-			git push --tags "$ORIGIN" || \
-				die "Could not push tags to $ORIGIN."
+			git push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
 		fi
 	fi
 
 	echo
 	echo "Summary of actions:"
-	echo "- Latest objects have been fetched from '$ORIGIN'"
+	if flag fetch; then
+		echo "- Latest objects have been fetched from '$ORIGIN'"
+	fi
 	echo "- Hotfix branch '$BRANCH'has been merged into '$MASTER_BRANCH'"
 	if noflag notag; then
 		echo "- The hotfix was tagged '$VERSION_PREFIX$VERSION'"
 	fi
-	[ "$commit" = "$BRANCH" ] && echo "- Hotfix branch '$BRANCH' has been back-merged into '$DEVELOP_BRANCH'"
+	[ "$commit" = "$MASTER_BRANCH" ] && echo "- Master branch '$MASTER_BRANCH' has been back-merged into '$DEVELOP_BRANCH'"
 	[ "$commit" = "$VERSION_PREFIX$VERSION" ] && echo "- Hotfix tag '$VERSION_PREFIX$VERSION' has been back-merged into '$DEVELOP_BRANCH'"
-	if flag keep; then
-		echo "- Hotfix branch '$BRANCH' is still available"
+	[ "$commit" = "$BRANCH" ] && echo "- Hotfix branch '$BRANCH' has been merged into '$DEVELOP_BRANCH'"
+	if noflag keep; then
+		local keepmsg="'has been deleted"
+		if flag keeplocal; then
+			 keepmsg="is locally still available."
+			 if [ $remotebranch -eq 1 ]; then
+				 keepmsg=$keepmsg" It is deleted from '$ORIGIN'."
+			 fi
+		 fi
+		 if flag keepremote ; then
+			 if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			 	keepmsg="is remotely still available. It is deleted locally."
+			 fi
+		 fi
 	else
-		echo "- Hotfix branch '$BRANCH' has been deleted"
+		keepmsg="is still available"
 	fi
+	echo "- Hotfix branch '$BRANCH' "$keepmsg
 	if flag push; then
 		echo "- '$DEVELOP_BRANCH', '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
 	fi
+	echo
+}
+
+cmd_delete() {
+	DEFINE_boolean force false "force deletion" f
+	DEFINE_boolean remote false "delete remote branch" r
+	parse_args "$@"
+	gitflow_require_version_arg
+
+	# Sanity checks
+	require_branch "$BRANCH"
+
+	run_pre_hook "$VERSION" "$ORIGIN" "$BRANCH"
+
+	local current_branch=$(git_current_branch)
+	# We can't delete a branch we are on, switch to the master branch.
+	if [ "$BRANCH" = "$current_branch" ]; then
+		require_clean_working_tree
+		git checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
+	fi
+
+	if ( git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH" && git_is_branch_merged_into "$BRANCH" "$DEVELOP_BRANCH" ); then
+		git branch -d "$BRANCH" || die "Could not delete the $BRANCH."
+		if flag remote; then
+			git push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
+		fi
+	else
+		if flag force; then
+			git branch -D "$BRANCH" || die "Could not delete the $BRANCH."
+			if flag remote; then
+				git push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
+			fi
+		else
+			 die "Hotfix branch '$BRANCH' has been not been merged in branch '$MASTER_BRANCH' and/or branch '$DEVELOP_BRANCH'. Use -f to force the deletion."
+		 fi
+	 fi
+
+	 run_post_hook "$VERSION" "$ORIGIN" "$BRANCH"
+
+	echo
+	echo "Summary of actions:"
+	echo "- Hotfix branch '$BRANCH' has been deleted."
+	flag remote && echo "- Hotfix branch '$BRANCH' in '$ORIGIN' has been deleted."
 	echo
 }

@@ -5,8 +5,8 @@
 # Positional arguments:
 # $1    Version
 #
-# Return VERSION - When VERSION is returned empty gitflow 
-#	will stop as the version is necessary
+# Return VERSION - When VERSION is returned empty, git-flow will stop as the
+# version is necessary
 #
 VERSION=$1
 

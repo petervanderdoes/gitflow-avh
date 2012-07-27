@@ -35,14 +35,14 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-GITFLOW_VERSION=1.0-avh
+GITFLOW_VERSION=1.1.0
 
 usage() {
 	echo "usage: git flow version"
 }
 
 cmd_default() {
-	echo "$GITFLOW_VERSION"
+	echo "$GITFLOW_VERSION (AVH Edition)"
 }
 
 cmd_help() {

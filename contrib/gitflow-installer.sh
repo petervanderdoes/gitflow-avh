@@ -32,7 +32,7 @@ SCRIPT_FILES="git-flow-init git-flow-feature git-flow-hotfix git-flow-release gi
 HOOK_FILES="$REPO_NAME/hooks/*"
 
 
-echo "### gitflow no-make installer ###"
+echo "### git-flow no-make installer ###"
 
 case "$1" in
 	uninstall)

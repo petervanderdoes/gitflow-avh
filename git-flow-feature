@@ -35,21 +35,24 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-require_git_repo
-require_gitflow_initialized
-gitflow_load_settings
-PREFIX=$(git config --get gitflow.prefix.feature)
+init() {
+	require_git_repo
+	require_gitflow_initialized
+	gitflow_load_settings
+	PREFIX=$(git config --get gitflow.prefix.feature)
+}
 
 usage() {
 	echo "usage: git flow feature [list] [-v]"
 	echo "       git flow feature start [-F] <name> [<base>]"
-	echo "       git flow feature finish [-rFkD] [<name|nameprefix>]"
+	echo "       git flow feature finish [-rFkDS] [<name|nameprefix>]"
 	echo "       git flow feature publish <name>"
 	echo "       git flow feature track <name>"
 	echo "       git flow feature diff [<name|nameprefix>]"
 	echo "       git flow feature rebase [-i] [<name|nameprefix>]"
 	echo "       git flow feature checkout [<name|nameprefix>]"
 	echo "       git flow feature pull [-r] <remote> [<name>]"
+	echo "       git flow feature delete [-fr] <name|nameprefix>"
 }
 
 cmd_default() {
@@ -62,8 +65,7 @@ cmd_list() {
 
 	local feature_branches
 	local current_branch
-	local short_names
-	feature_branches=$(echo "$(git_local_branches)" | grep "^$PREFIX")
+	feature_branches=$(git_local_branches_prefixed "$PREFIX")
 	if [ -z "$feature_branches" ]; then
 		warn "No feature branches exist."
 		warn ""
@@ -73,31 +75,29 @@ cmd_list() {
 		warn ""
 		exit 0
 	fi
-	current_branch=$(git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g')
-	short_names=$(echo "$feature_branches" | sed "s ^$PREFIX  g")
+	current_branch=$(git_current_branch)
 
 	# Determine column width first
 	local width=0
 	local branch
-	for branch in $short_names; do
+	for branch in $feature_branches; do
 		local len=${#branch}
 		width=$(max $width $len)
 	done
-	width=$(($width+3))
+	width=$(($width+3-${#PREFIX}))
 
 	local branch
-	for branch in $short_names; do
-		local fullname=$PREFIX$branch
-		local base=$(git merge-base "$fullname" "$DEVELOP_BRANCH")
+	for branch in $feature_branches; do
+		local base=$(git merge-base "$branch" "$DEVELOP_BRANCH")
 		local develop_sha=$(git rev-parse "$DEVELOP_BRANCH")
-		local branch_sha=$(git rev-parse "$fullname")
-		if [ "$fullname" = "$current_branch" ]; then
+		local branch_sha=$(git rev-parse "$branch")
+		if [ "$branch" = "$current_branch" ]; then
 			printf "* "
 		else
 			printf "  "
 		fi
 		if flag verbose; then
-			printf "%-${width}s" "$branch"
+			printf "%-${width}s" "${branch#$PREFIX}"
 			if [ "$branch_sha" = "$develop_sha" ]; then
 				printf "(no commits yet)"
 			elif [ "$base" = "$branch_sha" ]; then
@@ -108,7 +108,7 @@ cmd_list() {
 				printf "(may be rebased)"
 			fi
 		else
-			printf "%s" "$branch"
+			printf "%s" "${branch#$PREFIX}"
 		fi
 		echo
 	done
@@ -119,16 +119,8 @@ cmd_help() {
 	exit 0
 }
 
-require_name_arg() {
-	if [ "$NAME" = "" ]; then
-		warn "Missing argument <name>"
-		usage
-		exit 1
-	fi
-}
-
 expand_nameprefix_arg() {
-	require_name_arg
+	gitflow_require_name_arg
 
 	local expanded_name
 	local exitcode
@@ -193,29 +185,28 @@ parse_remote_name() {
 cmd_start() {
 	DEFINE_boolean fetch false 'fetch from origin before performing local operation' F
 	parse_args "$@"
+	eval set -- "${FLAGS_ARGV}"
 	BASE=${2:-$DEVELOP_BRANCH}
-	require_name_arg
+	gitflow_require_name_arg
+
+	# Update the local repo with remote changes, if asked
+	if flag fetch; then
+		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
+	fi
 
 	# Sanity checks
 	require_branch_absent "$BRANCH"
 
-	# Update the local repo with remote changes, if asked
-	if flag fetch; then
-		git fetch -q "$ORIGIN" "$DEVELOP_BRANCH"
-	fi
-
 	# If the origin branch counterpart exists, assert that the local branch
 	# isn't behind it (to avoid unnecessary rebasing)
-	if git_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
+	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
 	fi
 
 	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH" "$BASE"
 
 	# create branch
-	if ! git checkout -b "$BRANCH" "$BASE"; then
-		die "Could not create feature branch '$BRANCH'"
-	fi
+	git checkout -b "$BRANCH" "$BASE" || die "Could not create feature branch '$BRANCH'."
 
 	run_post_hook "$NAME" "$ORIGIN" "$BRANCH" "$BASE"
 
@@ -234,9 +225,18 @@ cmd_finish() {
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	DEFINE_boolean rebase false "rebase instead of merge" r
 	DEFINE_boolean keep false "keep branch after performing finish" k
+	DEFINE_boolean keepremote false "keep the remote branch"
+	DEFINE_boolean keeplocal false "keep the local branch"
 	DEFINE_boolean force_delete false "force delete feature branch after finish" D
+	DEFINE_boolean squash false "squash feature during merge" S
+
 	parse_args "$@"
 	expand_nameprefix_arg_or_current
+
+	# Keeping both branches implies the --keep flag to be true.
+	if flag keepremote && flag keeplocal; then
+		 FLAGS_keep=$FLAGS_TRUE
+	fi
 
 	# Sanity checks
 	require_branch "$BRANCH"
@@ -285,18 +285,23 @@ cmd_finish() {
 	# Sanity checks
 	require_clean_working_tree
 
-	# Update local repo with remote changes first, if asked
-	if has "$ORIGIN/$BRANCH" $(git_remote_branches); then
-		if flag fetch; then
-			git fetch -q "$ORIGIN" "$BRANCH"
-			git fetch -q "$ORIGIN" "$DEVELOP_BRANCH"
-		fi
+	# We always fetch the Branch from Origin
+	# This is done to avoid possible commits on the remote that are not
+	# merged into the local branch
+	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+		git_fetch_branch "$ORIGIN" "$BRANCH"
 	fi
 
-	if has "$ORIGIN/$BRANCH" $(git_remote_branches); then
-		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
+	# Update local branches with remote branches
+	if flag fetch; then
+		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
 	fi
-	if has "$ORIGIN/$DEVELOP_BRANCH" $(git_remote_branches); then
+
+	# Check if the local branches have all the commits from the remote branches
+	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
+	fi
+	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
 	fi
 
@@ -314,11 +319,16 @@ cmd_finish() {
 	fi
 
 	# Merge into BASE
-	git checkout "$DEVELOP_BRANCH"
+	git checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
 	if [ "$(git rev-list -n2 "$DEVELOP_BRANCH..$BRANCH" | wc -l)" -eq 1 ]; then
 		git merge --ff "$BRANCH"
 	else
-		git merge --no-ff "$BRANCH"
+		if noflag squash; then
+			git merge --no-ff "$BRANCH"
+		else
+			git merge --squash "$BRANCH"
+			git commit
+		fi
 	fi
 
 	if [ $? -ne 0 ]; then
@@ -349,29 +359,45 @@ helper_finish_cleanup() {
 	require_branch "$BRANCH"
 	require_clean_working_tree
 
-	# Delete branch
-	if flag fetch; then
-		git push "$ORIGIN" ":refs/heads/$BRANCH"
-	fi
-
-
 	if noflag keep; then
-		if flag force_delete; then
-			git branch -D "$BRANCH"
-		else
-			git branch -d "$BRANCH"
+		if noflag keeplocal; then
+			if flag force_delete; then
+				git branch -D "$BRANCH"
+			else
+				git branch -d "$BRANCH"
+			fi
 		fi
+		if noflag keepremote;then
+			local remotebranch=0
+			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+				remotebranch=1
+				git_remote_branch_delete "$BRANCH"
+			fi
+		fi
+
 	fi
 
 	echo
 	echo "Summary of actions:"
 	echo "- The feature branch '$BRANCH' was merged into '$DEVELOP_BRANCH'"
 	#echo "- Merge conflicts were resolved"		# TODO: Add this line when it's supported
-	if flag keep; then
-		echo "- Feature branch '$BRANCH' is still available"
+	if noflag keep; then
+		local keepmsg="'has been deleted"
+		if flag keeplocal; then
+		 	keepmsg="is locally still available."
+			if [ $remotebranch -eq 1 ]; then
+				keepmsg=$keepmsg" It is deleted from '$ORIGIN'."
+			fi
+		fi
+		if flag keepremote ; then
+			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+				keepmsg="is remotely still available. It is deleted locally."
+			fi
+		fi
 	else
-		echo "- Feature branch '$BRANCH' has been removed"
+		keepmsg="is still available"
 	fi
+	echo "- Feature branch '$BRANCH' "$keepmsg
 	echo "- You are now on branch '$DEVELOP_BRANCH'"
 	echo
 }
@@ -383,19 +409,19 @@ cmd_publish() {
 	# Sanity checks
 	require_clean_working_tree
 	require_branch "$BRANCH"
-	git fetch -q "$ORIGIN"
+	git fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 	require_branch_absent "$ORIGIN/$BRANCH"
 
 	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
 
 	# Create remote branch
 	git push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH"
-	git fetch -q "$ORIGIN"
+	git fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 
 	# Configure remote tracking
 	git config "branch.$BRANCH.remote" "$ORIGIN"
 	git config "branch.$BRANCH.merge" "refs/heads/$BRANCH"
-	git checkout "$BRANCH"
+	git checkout "$BRANCH" || die "Could not check out branch '$BRANCH'."
 
 	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
 
@@ -409,7 +435,7 @@ cmd_publish() {
 
 cmd_track() {
 	parse_args "$@"
-	require_name_arg
+	gitflow_require_name_arg
 
 	# Sanity checks
 	require_clean_working_tree
@@ -417,11 +443,11 @@ cmd_track() {
 
 	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
 
-	git fetch -q "$ORIGIN"
+	git fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 	require_branch "$ORIGIN/$BRANCH"
 
 	# Create tracking branch
-	git checkout -b "$BRANCH" "$ORIGIN/$BRANCH"
+	git checkout -b "$BRANCH" "$ORIGIN/$BRANCH" || die "Could not create '$BRANCH'."
 
 	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
 
@@ -454,7 +480,7 @@ cmd_checkout() {
 
 	if [ "$NAME" != "" ]; then
 		expand_nameprefix_arg
-		git checkout "$BRANCH"
+		git checkout "$BRANCH"  || die "Could not check out branch '$BRANCH'."
 	else
 		die "Name a feature branch explicitly."
 	fi
@@ -473,7 +499,7 @@ cmd_rebase() {
 	require_clean_working_tree
 	require_branch "$BRANCH"
 
-	git checkout -q "$BRANCH"
+	git checkout -q "$BRANCH"  || die "Could not check out branch '$BRANCH'."
 	local OPTS=
 	if flag interactive; then
 		OPTS="$OPTS -i"
@@ -533,11 +559,54 @@ cmd_pull() {
 		echo "Pulled $REMOTE's changes into $BRANCH."
 	else
 		# Setup the local branch clone for the first time
-		git fetch -q "$REMOTE" "$BRANCH" || die "Fetch failed."     # Stores in FETCH_HEAD
+		git fetch -q "$REMOTE" "$BRANCH" ||  die "Could not fetch branch '$BRANCH' from remote '$REMOTE'."     # Stores in FETCH_HEAD
 		git branch --no-track "$BRANCH" FETCH_HEAD || die "Branch failed."
-		git checkout -q "$BRANCH" || die "Checking out new local branch failed."
+		git checkout -q "$BRANCH" || die "Could not check out branch '$BRANCH'."
 		echo "Created local branch $BRANCH based on $REMOTE's $BRANCH."
 	fi
 
 	run_post_hook "$NAME" "$REMOTE" "$BRANCH"
+}
+
+cmd_delete() {
+	DEFINE_boolean force false "force deletion" f
+	DEFINE_boolean remote false "delete remote branch" r
+	parse_args "$@"
+	expand_nameprefix_arg
+
+	# Sanity checks
+	require_branch "$BRANCH"
+
+	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
+
+	local current_branch=$(git_current_branch)
+	# We can't delete a branch we are on, switch to the develop branch.
+	if [ "$BRANCH" = "$current_branch" ]; then
+		require_clean_working_tree
+		git checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
+	fi
+
+	if git_is_branch_merged_into "$BRANCH" "$DEVELOP_BRANCH"; then
+		git branch -d "$BRANCH" || die "Could not delete the $BRANCH."
+		if flag remote; then
+			git push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
+		fi
+	else
+		if flag force; then
+			git branch -D "$BRANCH" || die "Could not delete the $BRANCH."
+			if flag remote; then
+				git push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
+			fi
+		else
+			 die "Feature branch '$BRANCH' has been not been merged yet. Use -f to force the deletion."
+		fi
+	fi
+
+	 run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
+
+	echo
+	echo "Summary of actions:"
+	echo "- Feature branch '$BRANCH' has been deleted."
+	flag remote && echo "- Feature branch '$BRANCH' in '$ORIGIN' has been deleted."
+	echo
 }

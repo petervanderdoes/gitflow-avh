@@ -41,7 +41,7 @@
 
 # Shell output
 warn() { echo "$@" >&2; }
-die() { warn "$@"; exit 1; }
+die() { warn "Fatal: $@"; exit 1; }
 
 escape() {
 	echo "$1" | sed 's/\([\.\$\*]\)/\\\1/g'
@@ -69,23 +69,32 @@ noflag() { local FLAG; eval FLAG='$FLAGS_'$1; [ $FLAG -ne $FLAGS_TRUE ]; }
 # Git specific common functionality
 #
 
-git_local_branches() { git branch --no-color | sed 's/^[* ] //'; }
-git_remote_branches() { git branch -r --no-color | sed 's/^[* ] //'; }
-git_all_branches() { ( git branch --no-color; git branch -r --no-color) | sed 's/^[* ] //'; }
-git_all_tags() { git tag; }
+git_local_branches() { git for-each-ref --format='%(refname:short)' refs/heads; }
+git_remote_branches() { git for-each-ref --format='%(refname:short)' refs/remotes; }
+git_all_branches() { git for-each-ref --format='%(refname:short)' refs/remotes refs/heads; }
+git_all_tags() { git for-each-ref --format='%(refname:short)' refs/tags; }
 
+git_local_branches_prefixed() {
+	[ -z $1 ] && die "Prefix parameter missing." # This should never happen.
+	git for-each-ref --format='%(refname:short)' refs/heads/$1 ;
+}
 git_current_branch() {
-	git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'
+	local branch_name="$(git symbolic-ref --quiet HEAD)"
+	[ -z $branch_name ] && branch_name="(unnamed branch)" || branch_name="$(git for-each-ref --format='%(refname:short)' $branch_name)"
+	echo "$branch_name"
 }
 
 git_is_clean_working_tree() {
-	if ! git diff --no-ext-diff --ignore-submodules --quiet --exit-code; then
-		return 1
-	elif ! git diff-index --cached --quiet --ignore-submodules HEAD --; then
-		return 2
-	else
-		return 0
-	fi
+	git rev-parse --verify HEAD >/dev/null || exit 1
+	git update-index -q --ignore-submodules --refresh
+
+	# Check for unstaged changes
+	git diff-files --quiet --ignore-submodules || return 1
+
+	# Check for Uncommited changes
+	git diff-index --cached --quiet --ignore-submodules HEAD -- || return 2
+
+	return 0
 }
 
 git_repo_is_headless() {
@@ -93,19 +102,32 @@ git_repo_is_headless() {
 }
 
 git_local_branch_exists() {
-	has $1 $(git_local_branches)
+	[ -n "$1" ] || die "Missing branch name"
+	[ -n "$(git for-each-ref --format='%(refname:short)' refs/heads/$1)" ]
 }
 
 git_remote_branch_exists() {
-	has $1 $(git_remote_branches)
+	[ -n "$1" ] || die "Missing branch name"
+	[ -n "$(git for-each-ref --format='%(refname:short)' refs/remotes/$1)" ]
+}
+
+git_remote_branch_delete() {
+	[ -n "$1" ] || die "Missing branch name"
+	if git_remote_branch_exists "$ORIGIN/$1"; then
+		git push "$ORIGIN" :"$1" || die "Could not delete the remote $1 in $ORIGIN."
+	else
+		warn "Trying to delete the remote branch $1, but it does not exists in $ORIGIN"
+	fi
 }
 
 git_branch_exists() {
-	has $1 $(git_all_branches)
+	[ -n "$1" ] || die "Missing branch name"
+	git_local_branch_exists "$1" || git_remote_branch_exists "$ORIGIN/$1"
 }
 
 git_tag_exists() {
-	has $1 $(git_all_tags)
+	[ -n "$1" ] || die "Missing tag name"
+	[ -n "$(git for-each-ref --format='%(refname:short)' refs/tags/$1)" ]
 }
 
 #
@@ -142,20 +164,74 @@ git_compare_branches() {
 #
 # git_is_branch_merged_into()
 #
-# Checks whether branch $1 is succesfully merged into $2
+# Checks whether branch $1 is successfully merged into $2
 #
 git_is_branch_merged_into() {
-	local subject=$1
-	local base=$2
-	local all_merges="$(git branch --no-color --contains $subject | sed 's/^[* ] //')"
-	has $base $all_merges
+	local merge_hash=$(git merge-base $1 $2)
+	local base_hash=$(git rev-parse $1)
+
+	# If the hashes are equal, the branches are merged.
+	[ "$merge_hash" = "$base_hash" ]
+}
+
+#
+# git_is_ancestor()
+#
+# This is the same function as git_is_branch_merged_into but
+# for readability given a different name.
+#
+git_is_ancestor() {
+	git_tag_exists "$1" && git_is_branch_merged_into "$1"^0 "$2" \
+	    || git_is_branch_merged_into "$1" "$2"
+}
+
+#
+# git_fetch_branch()
+#
+# $1 Origin - Where to fetch from
+# $2 Branch - Which branch to fetch
+#
+# This fetches the given branch from the given origin.
+# Instead of storing it in FETCH_HEAD it will be stored in
+# refs/remotes/<origin>/<branch>
+#
+git_fetch_branch() {
+	[ -n "$1" ] || die "Missing origin"
+	[ -n "$2" ] || die "Missing branch name"
+	local origin="$1"
+	local branch="$2"
+	git fetch -q "$origin" "$branch":refs/remotes/"$origin"/"$branch" || die "Could not fetch $branch from $origin."
 }
 
 #
 # gitflow specific common functionality
 #
 
-# Check if this repo has been inited for gitflow
+gitflow_require_version_arg() {
+	if [ "$VERSION" = "" ]; then
+		warn "Missing argument <version>"
+		usage
+		exit 1
+	fi
+}
+
+gitflow_require_name_arg() {
+	if [ "$NAME" = "" ]; then
+		warn "Missing argument <name>"
+		usage
+		exit 1
+	fi
+}
+
+gitflow_require_base_arg() {
+	if [ "$BASE" = "" ]; then
+		warn "Missing argument <base>"
+		usage
+		exit 1
+	fi
+}
+
+# Function used to check if the repository is git-flow enabled.
 gitflow_has_master_configured() {
 	local master=$(git config --get gitflow.branch.master)
 	[ "$master" != "" ] && git_local_branch_exists "$master"
@@ -177,8 +253,7 @@ gitflow_has_prefixes_configured() {
 gitflow_is_initialized() {
 	gitflow_has_master_configured                    && \
 	gitflow_has_develop_configured                   && \
-	[ "$(git config --get gitflow.branch.master)" !=    \
-	  "$(git config --get gitflow.branch.develop)" ] && \
+	[ "$(git config --get gitflow.branch.master)" != "$(git config --get gitflow.branch.develop)" ] && \
 	gitflow_has_prefixes_configured
 }
 
@@ -241,62 +316,65 @@ gitflow_resolve_nameprefix() {
 }
 
 #
+# Check if the given branch is a git-flow branch
+#
+gitflow_is_prefixed_branch() {
+	local branch=$1
+	case $branch in
+	$(git config --get gitflow.prefix.feature)* | \
+	$(git config --get gitflow.prefix.release)* | \
+	$(git config --get gitflow.prefix.hotfix)*  | \
+	$(git config --get gitflow.prefix.support)* )
+		return=0
+		;;
+	*)
+		return=1
+		;;
+	esac
+	return $return
+}
+
+#
 # Assertions for use in git-flow subcommands
 #
 
 require_git_repo() {
-	if ! git rev-parse --git-dir >/dev/null 2>&1; then
-		die "fatal: Not a git repository"
-	fi
+	git rev-parse 2>/dev/null || die "Not a git repository"
 }
 
 require_gitflow_initialized() {
-	if ! gitflow_is_initialized; then
-		die "fatal: Not a gitflow-enabled repo yet. Please run \"git flow init\" first."
-	fi
+	 gitflow_is_initialized || die "Not a gitflow-enabled repo yet. Please run 'git flow init' first."
 }
 
 require_clean_working_tree() {
 	git_is_clean_working_tree
 	local result=$?
 	if [ $result -eq 1 ]; then
-		die "fatal: Working tree contains unstaged changes. Aborting."
+		die "Working tree contains unstaged changes. Aborting."
 	fi
 	if [ $result -eq 2 ]; then
-		die "fatal: Index contains uncommited changes. Aborting."
+		die "Index contains uncommited changes. Aborting."
 	fi
 }
 
 require_local_branch() {
-	if ! git_local_branch_exists $1; then
-		die "fatal: Local branch '$1' does not exist and is required."
-	fi
+	git_local_branch_exists "$1" || die "Local branch '$1' does not exist and is required."
 }
 
 require_remote_branch() {
-	if ! has $1 $(git_remote_branches); then
-		die "Remote branch '$1' does not exist and is required."
-	fi
+	git_remote_branch_exists "$1" || die "Remote branch '$1' does not exist and is required."
 }
 
 require_branch() {
-	if ! has $1 $(git_all_branches); then
-		die "Branch '$1' does not exist and is required."
-	fi
+	git_branch_exists "$1" || die "Branch '$1' does not exist and is required."
 }
 
 require_branch_absent() {
-	if has $1 $(git_all_branches); then
-		die "Branch '$1' already exists. Pick another name."
-	fi
+	git_branch_exists "$1" && die "Branch '$1' already exists. Pick another name."
 }
 
 require_tag_absent() {
-	for tag in $(git_all_tags); do
-		if [ "$1" = "$tag" ]; then
-			die "Tag '$1' already exists. Pick another name."
-		fi
-	done
+	git_tag_exists "$1" && die "Tag '$1' already exists. Pick another name."
 }
 
 require_branches_equal() {
@@ -358,7 +436,7 @@ run_pre_hook() {
 		exitcode=$?
 
 		if [ $exitcode -gt 0 ]; then
-			die "fatal: Hook command $scriptfile ended with exit code $exitcode."
+			die "Hook command $scriptfile ended with exit code $exitcode."
 		fi
 	fi
 }
