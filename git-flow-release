@@ -407,6 +407,10 @@ cmd_branch() {
 		die "Branch '$BRANCH' seems to be a git-flow branch. It's not allowed to release this directly."
 	fi
 
+	if [ "$BRANCH" = "$MASTER_BRANCH" ]; then
+		die "Can not release from the the master branch"
+	fi
+
 	require_branch "$BRANCH"
 	require_clean_working_tree
 
