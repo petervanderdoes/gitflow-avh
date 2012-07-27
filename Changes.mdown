@@ -12,7 +12,7 @@
 
 # Changelog
 
-#### 1.2.0-dev.1
+#### 1.2.0-dev.5
 * Preparation for new development cycle.
 
 #### 1.1.0
