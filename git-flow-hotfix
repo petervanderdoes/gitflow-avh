@@ -401,6 +401,7 @@ cmd_finish() {
 	if flag push; then
 		echo "- '$DEVELOP_BRANCH', '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
 	fi
+	echo "- You are now on branch '$(git_current_branch)'"
 	echo
 }
 
@@ -444,5 +445,6 @@ cmd_delete() {
 	echo "Summary of actions:"
 	echo "- Hotfix branch '$BRANCH' has been deleted."
 	flag remote && echo "- Hotfix branch '$BRANCH' in '$ORIGIN' has been deleted."
+	echo "- You are now on branch '$(git_current_branch)'"
 	echo
 }

@@ -608,5 +608,6 @@ cmd_delete() {
 	echo "Summary of actions:"
 	echo "- Feature branch '$BRANCH' has been deleted."
 	flag remote && echo "- Feature branch '$BRANCH' in '$ORIGIN' has been deleted."
+	echo "- You are now on branch '$(git_current_branch)'"
 	echo
 }
