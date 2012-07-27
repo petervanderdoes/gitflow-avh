@@ -2,12 +2,14 @@ git-flow AVH Authors
 
 This software consists of voluntary contributions made by many
 individuals. For exact contribution history, see the revision history
-and logs, available at http://github.com/petervanderdoes/gitflow.
+(Changes.mdown) and logs, available at 
+http://github.com/petervanderdoes/gitflow.
 
 
 Vincent Driessen
 Peter van der Does
 Benedikt Böhm
+Daniel Dehennin
 Felipe Talavera
 Randy Merrill
 Daniel Truemper
