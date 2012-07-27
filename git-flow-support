@@ -59,6 +59,13 @@ cmd_list() {
 	DEFINE_boolean verbose false 'verbose (more) output' v
 	parse_args "$@"
 
+	# Handle disabled master
+	if gitflow_has_master_disabled; then
+		UPSTREAM_BRANCH="$DEVELOP_BRANCH"
+	else
+		UPSTREAM_BRANCH="$MASTER_BRANCH"
+	fi
+
 	local support_branches
 	local current_branch
 	support_branches=$(git_local_branches_prefixed "$PREFIX")
@@ -84,8 +91,8 @@ cmd_list() {
 
 	local branch
 	for branch in $support_branches; do
-		local base=$(git merge-base "$branch" "$MASTER_BRANCH")
-		local master_sha=$(git rev-parse "$MASTER_BRANCH")
+		local base=$(git merge-base "$branch" "$UPSTREAM_BRANCH")
+		local upstream_sha=$(git rev-parse "$UPSTREAM_BRANCH")
 		local branch_sha=$(git rev-parse "$branch")
 		if [ "$branch" = "$current_branch" ]; then
 			printf "* "
@@ -94,7 +101,7 @@ cmd_list() {
 		fi
 		if flag verbose; then
 			printf "%-${width}s" "${branch#$PREFIX}"
-			if [ "$branch_sha" = "$master_sha" ]; then
+			if [ "$branch_sha" = "$upstream_sha" ]; then
 				printf "(no commits yet)"
 			else
 				local tagname=$(git name-rev --tags --no-undefined --name-only "$base")
@@ -138,12 +145,19 @@ cmd_start() {
 	# Sanity checks
 	require_clean_working_tree
 
+	# Handle disabled master
+	if gitflow_has_master_disabled; then
+		UPSTREAM_BRANCH="$DEVELOP_BRANCH"
+	else
+		UPSTREAM_BRANCH="$MASTER_BRANCH"
+	fi
+
 	# Fetch remote changes
 	if flag fetch; then
 		git_fetch_branch "$ORIGIN" "$BASE"
 	fi
 
-	git_is_ancestor "$BASE" "$MASTER_BRANCH" || die "Given base '$BASE' is not a valid commit on '$MASTER_BRANCH'."
+	git_is_ancestor "$BASE" "$UPSTREAM_BRANCH" || die "Given base '$BASE' is not a valid commit on '$UPSTREAM_BRANCH'."
 
 	require_branch_absent "$BRANCH"
 

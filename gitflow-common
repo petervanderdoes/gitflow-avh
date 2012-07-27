@@ -237,6 +237,10 @@ gitflow_has_master_configured() {
 	[ "$master" != "" ] && git_local_branch_exists "$master"
 }
 
+gitflow_has_master_disabled() {
+	local disabled=$(git config --bool --get gitflow.branch.master.disabled)
+	[ "$disabled" = "true" ]
+}
 gitflow_has_develop_configured() {
 	local develop=$(git config --get gitflow.branch.develop)
 	[ "$develop" != "" ] && git_local_branch_exists "$develop"
@@ -251,10 +255,11 @@ gitflow_has_prefixes_configured() {
 }
 
 gitflow_is_initialized() {
-	gitflow_has_master_configured                    && \
-	gitflow_has_develop_configured                   && \
-	[ "$(git config --get gitflow.branch.master)" != "$(git config --get gitflow.branch.develop)" ] && \
-	gitflow_has_prefixes_configured
+	( gitflow_has_master_disabled || gitflow_has_master_configured ) && \
+	gitflow_has_develop_configured                                   && \
+	gitflow_has_prefixes_configured                                  && \
+	( gitflow_has_master_disabled || \
+	  [ "$(git config --get gitflow.branch.master)" != "$(git config --get gitflow.branch.develop)" ] )
 }
 
 # Loading settings that can be overridden using git config
