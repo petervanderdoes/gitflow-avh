@@ -235,7 +235,7 @@ cmd_finish() {
 
 	# Keeping both branches implies the --keep flag to be true.
 	if flag keepremote && flag keeplocal; then
-		 FLAGS_keep=$FLAGS_TRUE
+		FLAGS_keep=$FLAGS_TRUE
 	fi
 
 	# Sanity checks
@@ -264,7 +264,7 @@ cmd_finish() {
 				exit 0
 			else
 				# If the user cancelled the merge and decided to wait until
- 	 	 	 	# later,that's fine. But we have to acknowledge this by
+				# later,that's fine. But we have to acknowledge this by
 				# removing the MERGE_BASE file and continuing normal execution
 				# of the finish
 				rm -f "$DOT_GIT_DIR/.gitflow/MERGE_BASE"
@@ -305,7 +305,7 @@ cmd_finish() {
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
 	fi
 
-    run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
+	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
 
 	# If the user wants to rebase, do that first
 	if flag rebase; then
@@ -348,7 +348,7 @@ cmd_finish() {
 		exit 1
 	fi
 
-    run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
+	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
 
 	# When no merge conflict is detected, just clean up the feature branch
 	helper_finish_cleanup
@@ -380,11 +380,11 @@ helper_finish_cleanup() {
 	echo
 	echo "Summary of actions:"
 	echo "- The feature branch '$BRANCH' was merged into '$DEVELOP_BRANCH'"
-	#echo "- Merge conflicts were resolved"		# TODO: Add this line when it's supported
+	#echo "- Merge conflicts were resolved" # TODO: Add this line when it's supported
 	if noflag keep; then
 		local keepmsg="'has been deleted"
 		if flag keeplocal; then
-		 	keepmsg="is locally still available."
+			keepmsg="is locally still available."
 			if [ $remotebranch -eq 1 ]; then
 				keepmsg=$keepmsg" It is deleted from '$ORIGIN'."
 			fi
