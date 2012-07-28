@@ -261,6 +261,8 @@ gitflow_is_initialized() {
 gitflow_load_settings() {
 	export DOT_GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
 	export HOOKS_DIR="$DOT_GIT_DIR"/hooks
+	export GITFLOW_HOOKS_DIR_USER=$(git config --get gitflow.hooks-dir.user)
+	export GITFLOW_HOOKS_DIR_SYSTEM=$(git config --get gitflow.hooks-dir.system)
 	export MASTER_BRANCH=$(git config --get gitflow.branch.master)
 	export DEVELOP_BRANCH=$(git config --get gitflow.branch.develop)
 	export ORIGIN=$(git config --get gitflow.origin || echo origin)
@@ -408,12 +410,15 @@ require_branches_equal() {
 run_filter_hook() {
 	local command=$1
 	shift
-	local scriptfile="${HOOKS_DIR}/filter-flow-${command}"
-	if [ -x $scriptfile ]; then
-		echo `$scriptfile "$@"`
-	else
-		echo "$@"
-        fi
+	local scriptfile="filter-flow-${command}"
+
+	for hook_dir in "${HOOKS_DIR}" "${GITFLOW_HOOKS_DIR_USER}" "${GITFLOW_HOOKS_DIR_SYSTEM}"; do
+		if [ -x "${hook_dir}/${scriptfile}" ]; then
+			echo `${hook_dir}/${scriptfile} "$@"`
+			return $?
+		fi
+	done
+	echo "$@"
 }
 
 #
@@ -428,17 +433,20 @@ run_filter_hook() {
 # aborted.
 #
 run_pre_hook() {
-	local scriptfile="${HOOKS_DIR}/pre-flow-${SUBCOMMAND}-${SUBACTION}"
+	local scriptfile="pre-flow-${SUBCOMMAND}-${SUBACTION}"
 	local exitcode=0
 
-	if [ -x $scriptfile ]; then
-		$scriptfile "$@"
-		exitcode=$?
-
-		if [ $exitcode -gt 0 ]; then
-			die "Hook command $scriptfile ended with exit code $exitcode."
+	for hook_dir in "${HOOKS_DIR}" "${GITFLOW_HOOKS_DIR_USER}" "${GITFLOW_HOOKS_DIR_SYSTEM}"; do
+		if [ -x "${hook_dir}/${scriptfile}" ]; then
+			${hook_dir}/${scriptfile} "$@"
+			exitcode=$?
+			
+			if [ $exitcode -gt 0 ]; then
+				die "fatal: Hook command $scriptfile ended with exit code $exitcode."
+			fi
+			return ${exitcode}
 		fi
-	fi
+	done
 }
 
 #
@@ -452,8 +460,12 @@ run_pre_hook() {
 # positional arguments.  Its return code is ignored.
 #
 run_post_hook() {
-	local scriptfile="${HOOKS_DIR}/post-flow-${SUBCOMMAND}-${SUBACTION}"
-	if [ -x $scriptfile ]; then
-		$scriptfile "$@"
-	fi
+	local scriptfile="post-flow-${SUBCOMMAND}-${SUBACTION}"
+
+	for hook_dir in "${HOOKS_DIR}" "${GITFLOW_HOOKS_DIR_USER}" "${GITFLOW_HOOKS_DIR_SYSTEM}"; do
+		if [ -x "${hook_dir}/${scriptfile}" ]; then
+			${hook_dir}/${scriptfile} "$@"
+			return $?
+		fi
+	done
 }
