@@ -68,9 +68,9 @@ cmd_default() {
 	local branch_count
 	local answer
 
-    if flag defaults; then
-        warn "Using default branch names."
-    fi
+	if flag defaults; then
+		warn "Using default branch names."
+	fi
 
 	# Add a master branch if no such branch exists yet
 	local master_branch

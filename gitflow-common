@@ -413,7 +413,7 @@ run_filter_hook() {
 		echo `$scriptfile "$@"`
 	else
 		echo "$@"
-        fi
+	fi
 }
 
 #

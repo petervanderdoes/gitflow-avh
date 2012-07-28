@@ -64,11 +64,11 @@ cmd_list() {
 	hotfix_branches=$(git_local_branches_prefixed "$PREFIX")
 	if [ -z "$hotfix_branches" ]; then
 		warn "No hotfix branches exist."
-                warn ""
-                warn "You can start a new hotfix branch:"
-                warn ""
-                warn "    git flow hotfix start <version> [<base>]"
-                warn ""
+		warn ""
+		warn "You can start a new hotfix branch:"
+		warn ""
+		warn "    git flow hotfix start <version> [<base>]"
+		warn ""
 		exit 0
 	fi
 	current_branch=$(git_current_branch)
@@ -144,7 +144,7 @@ cmd_start() {
 	# No need to continue if not clean
 	require_clean_working_tree
 
- 	# Update the local repo with remote changes, if asked
+	# Update the local repo with remote changes, if asked
 	if flag fetch; then
 		git_fetch_branch "$ORIGIN" "$MASTER_BRANCH"
 	fi
@@ -342,7 +342,7 @@ cmd_finish() {
 		fi
 
 		git merge --no-ff "$commit" || die "There were merge conflicts."
-		  # TODO: What do we do now?
+		# TODO: What do we do now?
 	fi
 
 	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
@@ -384,16 +384,16 @@ cmd_finish() {
 	if noflag keep; then
 		local keepmsg="'has been deleted"
 		if flag keeplocal; then
-			 keepmsg="is locally still available."
-			 if [ $remotebranch -eq 1 ]; then
-				 keepmsg=$keepmsg" It is deleted from '$ORIGIN'."
-			 fi
-		 fi
-		 if flag keepremote ; then
-			 if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-			 	keepmsg="is remotely still available. It is deleted locally."
-			 fi
-		 fi
+			keepmsg="is locally still available."
+			if [ $remotebranch -eq 1 ]; then
+				keepmsg=$keepmsg" It is deleted from '$ORIGIN'."
+			fi
+		fi
+		if flag keepremote ; then
+			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+				keepmsg="is remotely still available. It is deleted locally."
+			fi
+		fi
 	else
 		keepmsg="is still available"
 	fi
@@ -435,11 +435,11 @@ cmd_delete() {
 				git push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
 			fi
 		else
-			 die "Hotfix branch '$BRANCH' has been not been merged in branch '$MASTER_BRANCH' and/or branch '$DEVELOP_BRANCH'. Use -f to force the deletion."
-		 fi
-	 fi
+			die "Hotfix branch '$BRANCH' has been not been merged in branch '$MASTER_BRANCH' and/or branch '$DEVELOP_BRANCH'. Use -f to force the deletion."
+		fi
+	fi
 
-	 run_post_hook "$VERSION" "$ORIGIN" "$BRANCH"
+	run_post_hook "$VERSION" "$ORIGIN" "$BRANCH"
 
 	echo
 	echo "Summary of actions:"
