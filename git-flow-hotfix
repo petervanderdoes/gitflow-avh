@@ -276,7 +276,7 @@ cmd_finish() {
 	# - has commits: No reason to finish a hotfix without commits
 	# - Is ahead of the master: If it's not a good idea to merge
 	# - Can be merged: If there's no common ancestor we can't merge the hotfix
-	git_compare_branches "$BRANCH" "$MASTER_BRANCH"
+	git_compare_refs "$BRANCH" "$MASTER_BRANCH"
 	case $? in
 		0) die "You need some commits in the hotfix branch '$BRANCH'"
 		   ;;
