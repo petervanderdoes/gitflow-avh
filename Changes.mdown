@@ -12,7 +12,7 @@
 
 # Changelog
 
-#### 1.2.0-dev.8
+#### 1.2.0-dev.11
 [Daniel Dehennin][baby-gnu]
 * Display where user is on finish.  
   Some commands did not display the branch you are on after the command 
