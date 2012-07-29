@@ -3,13 +3,11 @@
 # Runs at the end of git flow hotfix delete
 #
 # Positional arguments:
-# $1    The version (including the version prefix)
-# $2    The origin remote
-# $3    The full branch name (including the feature prefix)
+# $1    The origin remote
+# $2    The full branch name (including the hotfix prefix)
 #
-VERSION=$1
-ORIGIN=$2
-BRANCH=$3
+ORIGIN=$1
+BRANCH=$2
 
 # Implement your script here.
 

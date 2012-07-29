@@ -45,11 +45,11 @@ init() {
 
 usage() {
 	echo "usage: git flow release [list] [-v]"
-	echo "       git flow release start [-F] <version> [<base>]"
-	echo "       git flow release finish [-FsumpknbSf] <version>"
+	echo "       git flow release start [-F] <name> [<base>]"
+	echo "       git flow release finish [-FsumpknbSf] <version> [<name>]"
 	echo "       git flow release publish <name>"
 	echo "       git flow release track <name>"
-	echo "       git flow release delete [-fr] <version>"
+	echo "       git flow release delete [-fr] <name>"
 }
 
 cmd_default() {
@@ -124,8 +124,8 @@ parse_args() {
 	eval set -- "${FLAGS_ARGV}"
 
 	# Read arguments into global variables
-	VERSION=$1
-	BRANCH=$PREFIX$VERSION
+	NAME=$1
+	BRANCH=$PREFIX$NAME
 }
 
 require_no_existing_release_branches() {
@@ -141,20 +141,13 @@ cmd_start() {
 	eval set -- "${FLAGS_ARGV}"
 	BASE=${2:-$DEVELOP_BRANCH}
 
-	# Run filter on the version
-	VERSION=$(run_filter_hook release-start-version $VERSION)
-
-	# As VERSION might have changed reset BRANCH with new VERSION
-	BRANCH=$PREFIX$VERSION
-
-	gitflow_require_version_arg
+	gitflow_require_name_arg
 	git_is_ancestor "$BASE" "$DEVELOP_BRANCH"  || die "Given base '$BASE' is not a valid commit on '$DEVELOP_BRANCH'."
 	require_no_existing_release_branches
 
 	# Sanity checks
 	require_clean_working_tree
 	require_branch_absent "$BRANCH"
-	require_tag_absent "$VERSION_PREFIX$VERSION"
 	if flag fetch; then
 		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
 	fi
@@ -162,12 +155,12 @@ cmd_start() {
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
 	fi
 
-	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$BASE"
+	run_pre_hook "$ORIGIN" "$BRANCH" "$BASE"
 
 	# Create branch
 	git checkout -b "$BRANCH" "$BASE" || die "Could not create release branch '$BRANCH'."
 
-	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$BASE"
+	run_post_hook "$ORIGIN" "$BRANCH" "$BASE"
 
 	echo
 	echo "Summary of actions:"
@@ -179,7 +172,7 @@ cmd_start() {
 	echo "- Start committing last-minute fixes in preparing your release"
 	echo "- When done, run:"
 	echo
-	echo "     git flow release finish '$VERSION'"
+	echo "     git flow release finish '<version>'"
 	echo
 }
 
@@ -198,6 +191,11 @@ cmd_finish() {
 	DEFINE_boolean squash false "squash release during merge" S
 
 	parse_args "$@"
+	eval set -- "${FLAGS_ARGV}"
+
+	# The first argument is version, not name
+	VERSION="$1"
+
 	# Run filter on the version
 	VERSION=$(run_filter_hook release-finish-version $VERSION)
 
@@ -495,7 +493,7 @@ cmd_branch() {
 
 cmd_publish() {
 	parse_args "$@"
-	gitflow_require_version_arg
+	gitflow_require_name_arg
 
 	# Sanity checks
 	require_clean_working_tree
@@ -503,7 +501,7 @@ cmd_publish() {
 	git fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 	require_branch_absent "$ORIGIN/$BRANCH"
 
-	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
+	run_pre_hook "$ORIGIN" "$BRANCH"
 
 	# Create remote branch
 	git push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH"
@@ -514,7 +512,7 @@ cmd_publish() {
 	git config "branch.$BRANCH.merge" "refs/heads/$BRANCH"
 	git checkout "$BRANCH" || die "Could not check out branch '$BRANCH'."
 
-	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
+	run_post_hook "$ORIGIN" "$BRANCH"
 
 	echo
 	echo "Summary of actions:"
@@ -526,7 +524,7 @@ cmd_publish() {
 
 cmd_track() {
 	parse_args "$@"
-	gitflow_require_version_arg
+	gitflow_require_name_arg
 
 	# Sanity checks
 	require_clean_working_tree
@@ -534,12 +532,12 @@ cmd_track() {
 	git fetch -q "$ORIGIN"  || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 	require_branch "$ORIGIN/$BRANCH"
 
-	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
+	run_pre_hook "$ORIGIN" "$BRANCH"
 
 	# Create tracking branch
 	git checkout -b "$BRANCH" "$ORIGIN/$BRANCH" || die "Could not create branch '$BRANCH'."
 
-	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
+	run_post_hook "$ORIGIN" "$BRANCH"
 
 	echo
 	echo "Summary of actions:"
@@ -552,12 +550,12 @@ cmd_delete() {
 	DEFINE_boolean force false "force deletion" f
 	DEFINE_boolean remote false "delete remote branch" r
 	parse_args "$@"
-	gitflow_require_version_arg
+	gitflow_require_name_arg
 
 	# Sanity checks
 	require_branch "$BRANCH"
 
-	run_pre_hook "$VERSION" "$ORIGIN" "$BRANCH"
+	run_pre_hook "$ORIGIN" "$BRANCH"
 
 	local current_branch=$(git_current_branch)
 	# We can't delete a branch we are on, switch to the develop branch.
@@ -582,7 +580,7 @@ cmd_delete() {
 		fi
 	fi
 
-	run_post_hook "$VERSION" "$ORIGIN" "$BRANCH"
+	run_post_hook "$ORIGIN" "$BRANCH"
 
 	echo
 	echo "Summary of actions:"
