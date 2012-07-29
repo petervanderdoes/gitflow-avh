@@ -64,11 +64,11 @@ cmd_list() {
 	support_branches=$(git_local_branches_prefixed "$PREFIX")
 	if [ -z "$support_branches" ]; then
 		warn "No support branches exist."
-                warn ""
-                warn "You can start a new support branch:"
-                warn ""
-                warn "    git flow support start <name> <base>"
-                warn ""
+		warn ""
+		warn "You can start a new support branch:"
+		warn ""
+		warn "    git flow support start <name> <base>"
+		warn ""
 		exit 0
 	fi
 	current_branch=$(git_current_branch)
