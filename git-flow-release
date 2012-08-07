@@ -320,7 +320,7 @@ cmd_finish() {
 		if noflag keeplocal; then
 			git branch -d "$BRANCH"
 		fi
-		if noflag keepremote;then
+		if noflag keepremote; then
 			local remotebranch=0
 			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 				remotebranch=1
@@ -358,7 +358,7 @@ cmd_finish() {
 				keepmsg=$keepmsg" It is deleted from '$ORIGIN'."
 			fi
 		fi
-		if flag keepremote ; then
+		if flag keepremote; then
 			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 				keepmsg="is remotely still available. It is deleted locally."
 			fi
