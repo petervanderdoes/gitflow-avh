@@ -36,7 +36,13 @@
 #
 
 usage() {
-	echo "usage: git flow init [-fd]"
+	OPTIONS_SPEC="\
+git flow init
+
+For more specific help type the command followed by --help
+--
+"
+flags_help
 }
 
 parse_args() {

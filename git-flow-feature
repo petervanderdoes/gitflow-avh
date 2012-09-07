@@ -43,16 +43,22 @@ init() {
 }
 
 usage() {
-	echo "usage: git flow feature [list] [-v]"
-	echo "       git flow feature start [-F] <name> [<base>]"
-	echo "       git flow feature finish [-rFkDS] [<name|nameprefix>]"
-	echo "       git flow feature publish <name>"
-	echo "       git flow feature track <name>"
-	echo "       git flow feature diff [<name|nameprefix>]"
-	echo "       git flow feature rebase [-i] [<name|nameprefix>]"
-	echo "       git flow feature checkout [<name|nameprefix>]"
-	echo "       git flow feature pull [-r] <remote> [<name>]"
-	echo "       git flow feature delete [-fr] <name|nameprefix>"
+	OPTIONS_SPEC="\
+git flow feature [list] [-v]
+git flow feature start
+git flow feature finish
+git flow feature publish
+git flow feature track
+git flow feature diff
+git flow feature rebase
+git flow feature checkout
+git flow feature pull
+git flow feature delete
+
+For more specific help type the command followed by --help
+--
+"
+flags_help
 }
 
 cmd_default() {

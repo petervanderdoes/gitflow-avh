@@ -44,12 +44,18 @@ init() {
 }
 
 usage() {
-	echo "usage: git flow release [list] [-v]"
-	echo "       git flow release start [-F] <version> [<base>]"
-	echo "       git flow release finish [-FsumpknbSf] <version>"
-	echo "       git flow release publish <name>"
-	echo "       git flow release track <name>"
-	echo "       git flow release delete [-fr] <version>"
+		OPTIONS_SPEC="\
+git flow release [list]
+git flow release start
+git flow release finish
+git flow release publish
+git flow release track
+git flow release delete
+
+For more specific help type the command followed by --help
+--
+"
+flags_help
 }
 
 cmd_default() {

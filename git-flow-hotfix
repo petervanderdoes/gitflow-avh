@@ -44,11 +44,17 @@ init() {
 }
 
 usage() {
-	echo "usage: git flow hotfix [list] [-v]"
-	echo "       git flow hotfix start [-F] <version> [<base>]"
-	echo "       git flow hotfix finish [-Fsumpknbf] <version>"
-	echo "       git flow hotfix publish <version>"
-	echo "       git flow hotfix delete [-fr] <version>"
+OPTIONS_SPEC="\
+git flow hotfix [list]
+git flow hotfix start
+git flow hotfix finish
+git flow hotfix publish
+git flow hotfix delete
+
+For more specific help type the command followed by --help
+--
+"
+flags_help
 }
 
 cmd_default() {
