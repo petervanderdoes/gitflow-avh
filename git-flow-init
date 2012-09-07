@@ -36,7 +36,15 @@
 #
 
 usage() {
-	echo "usage: git flow init [-fd]"
+	OPTIONS_SPEC="\
+git flow init
+
+Initialize a new git repo with support for the branching model.
+
+For more specific help type the command followed by --help
+--
+"
+flags_help
 }
 
 parse_args() {
@@ -47,6 +55,15 @@ parse_args() {
 
 # Default entry when no SUBACTION is given
 cmd_default() {
+	OPTIONS_SPEC="\
+git flow init [-h] [-d] [-f]
+
+Setup a git repository for git flow usage. Can also be used to start a git repository.
+--
+h,help!           Show this help
+d,defaults        Use default branch naming conventions
+f,force     Force setting of gitflow branches, even if already configured
+"
 	DEFINE_boolean force false 'force setting of gitflow branches, even if already configured' f
 	DEFINE_boolean defaults false 'use default branch naming conventions' d
 	parse_args "$@"
@@ -307,4 +324,8 @@ cmd_default() {
 cmd_help() {
 	usage
 	exit 0
+}
+
+flags_help() {
+	eval "$( echo "$OPTIONS_SPEC" | git rev-parse --parseopt -- "-h" || echo exit $? )"
 }

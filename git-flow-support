@@ -47,8 +47,17 @@ warn "note: The support subcommand is still very EXPERIMENTAL!"
 warn "note: DO NOT use it in a production situation."
 
 usage() {
-	echo "usage: git flow support [list] [-v]"
-	echo "       git flow support start [-F] <version> <base>"
+		OPTIONS_SPEC="\
+git flow support [list]
+git flow support start
+
+Manage your hotfix branches.
+
+For more specific help type the command followed by --help
+--
+"
+flags_help
+
 }
 
 cmd_default() {
@@ -56,6 +65,14 @@ cmd_default() {
 }
 
 cmd_list() {
+	OPTIONS_SPEC="\
+git flow support [list] [-h] [-v]
+
+List all local support branches
+--
+h,help!           Show this help
+v,verbose         Verbose (more) output
+"
 	DEFINE_boolean verbose false 'verbose (more) output' v
 	parse_args "$@"
 
@@ -130,6 +147,14 @@ parse_args() {
 }
 
 cmd_start() {
+	OPTIONS_SPEC="\
+git flow support start [-h] [-F] <version> <base>
+
+Start a new support branch name <version> based on <base>
+--
+h,help!           Show this help
+F,fetch           Fetch from origin before performing finish
+"
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	parse_args "$@"
 	gitflow_require_version_arg
@@ -155,4 +180,8 @@ cmd_start() {
 	echo "- A new branch '$BRANCH' was created, based on '$BASE'"
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo
+}
+
+flags_help() {
+	eval "$( echo "$OPTIONS_SPEC" | git rev-parse --parseopt -- "-h" || echo exit $? )"
 }

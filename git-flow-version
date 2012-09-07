@@ -35,10 +35,19 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-GITFLOW_VERSION=1.2.0-dev.17
+GITFLOW_VERSION=1.2.0-dev.30
 
 usage() {
-	echo "usage: git flow version"
+		OPTIONS_SPEC="\
+git flow version
+
+Shows version information.
+
+For more specific help type the command followed by --help
+--
+"
+flags_help
+
 }
 
 cmd_default() {
@@ -48,4 +57,9 @@ cmd_default() {
 cmd_help() {
 	usage
 	exit 0
+}
+
+
+flags_help() {
+	eval "$( echo "$OPTIONS_SPEC" | git rev-parse --parseopt -- "-h" || echo exit $? )"
 }
