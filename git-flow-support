@@ -56,6 +56,14 @@ cmd_default() {
 }
 
 cmd_list() {
+	OPTIONS_SPEC="\
+git flow support [list] [-h] [-v]
+
+List all local support branches
+--
+h,help!           Show this help
+v,verbose         Verbose (more) output
+"
 	DEFINE_boolean verbose false 'verbose (more) output' v
 	parse_args "$@"
 
@@ -130,6 +138,14 @@ parse_args() {
 }
 
 cmd_start() {
+	OPTIONS_SPEC="\
+git flow support start [-h] [-F] <version> <base>
+
+Start a new support branch name <version> based on <base>
+--
+h,help!           Show this help
+F,fetch           Fetch from origin before performing finish
+"
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	parse_args "$@"
 	gitflow_require_version_arg
