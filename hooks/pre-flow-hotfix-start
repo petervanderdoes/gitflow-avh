@@ -8,6 +8,11 @@
 # $3    The full branch name (including the feature prefix)
 # $4    The base from which this feature is started
 #
+# The following variables are available as they are exported by git-flow:
+#
+# MASTER_BRANCH - The branch defined as Master
+# DEVELOP_BRANCH - The branch defined as Develop
+#
 VERSION=$1
 ORIGIN=$2
 BRANCH=$3
