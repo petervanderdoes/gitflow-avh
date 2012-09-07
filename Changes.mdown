@@ -16,7 +16,6 @@
 [Peter van der Does][petervanderdoes]
 * Improve the help output of the commands.
 
-
 [Daniel Dehennin][baby-gnu]
 * Display where user is on finish.  
   Some commands did not display the branch you are on after the command 
