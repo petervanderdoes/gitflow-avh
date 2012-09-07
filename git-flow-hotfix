@@ -56,6 +56,14 @@ cmd_default() {
 }
 
 cmd_list() {
+	OPTIONS_SPEC="\
+git flow hotfix [list] [-h] [-v]
+
+Lists all local hotfix branches
+--
+h,help!           Show this help
+v,verbose!        Verbose (more) output
+"
 	DEFINE_boolean verbose false 'verbose (more) output' v
 	parse_args "$@"
 
@@ -136,6 +144,14 @@ require_no_existing_hotfix_branches() {
 }
 
 cmd_start() {
+	OPTIONS_SPEC="\
+git flow hotfix start [-h] [-F] <version> [<base>]
+
+Start new hotfix branch named <version>, optionally base it on <base> instead of the <master> branch
+--
+h,help!           Show this help
+F,fetch           Fetch from origin before performing local operation
+"
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	parse_args "$@"
 	eval set -- "${FLAGS_ARGV}"
@@ -188,6 +204,13 @@ cmd_start() {
 }
 
 cmd_publish() {
+	OPTIONS_SPEC="\
+it flow hotfix publish [-h] <name>
+
+Start sharing hotfix <name> on $ORIGIN
+--
+h,help!           Show this help
+"
 	parse_args "$@"
 	gitflow_require_version_arg
 
@@ -219,6 +242,24 @@ cmd_publish() {
 }
 
 cmd_finish() {
+	OPTIONS_SPEC="\
+git flow hotfix finish [-h] [-F] [-s] [-u] [-m | -f ] [-p] [-k] [-n] [-b] <version>
+
+Finish hotfix branch <version>
+--
+h,help!           Show this help
+F,fetch           Fetch from origin before performing finish
+s,sign            Sign the release tag cryptographically
+u,signingkey      Use the given GPG-key for the digital signature (implies -s)
+m,message         Use the given tag message
+f,messagefile=    Use the contents of the given file as tag message
+p,push            Push to origin after performing finish
+k,keep            Keep branch after performing finish
+keepremote        Keep the remote branch
+keeplocal         Keep the local branch
+n,notag           Don't tag this release
+b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
+"
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	DEFINE_boolean sign false "sign the release tag cryptographically" s
 	DEFINE_string signingkey "" "use the given GPG-key for the digital signature (implies -s)" u
@@ -278,13 +319,13 @@ cmd_finish() {
 	# - Can be merged: If there's no common ancestor we can't merge the hotfix
 	git_compare_refs "$BRANCH" "$MASTER_BRANCH"
 	case $? in
-	0)	die "You need some commits in the hotfix branch '$BRANCH'"
+		0) die "You need some commits in the hotfix branch '$BRANCH'"
 		;;
-	1)	die "The hotfix branch '$BRANCH' is not ahead of branch '$MASTER_BRANCH'"
+		1) die "The hotfix branch '$BRANCH' is not ahead of branch '$MASTER_BRANCH'"
 		;;
-	4)	die "The hotfix branch '$BRANCH' has no common ancestor with branch '$MASTER_BRANCH'"
+		4) die "The hotfix branch '$BRANCH' has no common ancestor with branch '$MASTER_BRANCH'"
 		;;
-	*) ;;
+		*) ;;
 	esac
 
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
@@ -406,6 +447,16 @@ cmd_finish() {
 }
 
 cmd_delete() {
+	OPTIONS_SPEC="\
+git flow hotfix delete [-h] [-f] [-r] <name>
+
+List existing release branches
+--
+h,help!           Show this help
+f,force           Force deletion
+r,remote          Delete remote branch
+
+"
 	DEFINE_boolean force false "force deletion" f
 	DEFINE_boolean remote false "delete remote branch" r
 	parse_args "$@"
