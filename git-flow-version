@@ -41,6 +41,8 @@ usage() {
 		OPTIONS_SPEC="\
 git flow version
 
+Shows version information.
+
 For more specific help type the command followed by --help
 --
 "

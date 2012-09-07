@@ -51,6 +51,8 @@ git flow hotfix finish
 git flow hotfix publish
 git flow hotfix delete
 
+Manage your hotfix branches.
+
 For more specific help type the command followed by --help
 --
 "

@@ -39,6 +39,8 @@ usage() {
 	OPTIONS_SPEC="\
 git flow init
 
+Initialize a new git repo with support for the branching model.
+
 For more specific help type the command followed by --help
 --
 "

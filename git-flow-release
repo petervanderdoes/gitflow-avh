@@ -52,6 +52,8 @@ git flow release publish
 git flow release track
 git flow release delete
 
+Manage your feature branches.
+
 For more specific help type the command followed by --help
 --
 "
