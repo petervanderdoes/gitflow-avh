@@ -60,6 +60,15 @@ cmd_default() {
 }
 
 cmd_list() {
+	OPTIONS_SPEC="\
+git flow feature [list] [-h] [-v]
+
+Lists all the existing feature branches in the local repository.
+--
+h,help!     Show this help
+v,verbose   Verbose (more) output
+
+"
 	DEFINE_boolean verbose false 'verbose (more) output' v
 	parse_args "$@"
 
@@ -127,10 +136,10 @@ expand_nameprefix_arg() {
 	expanded_name=$(gitflow_resolve_nameprefix "$NAME" "$PREFIX")
 	exitcode=$?
 	case $exitcode in
-	0)	NAME=$expanded_name
+		0) NAME=$expanded_name
 		BRANCH=$PREFIX$NAME
-	;;
-	*) exit 1 ;;
+		;;
+		*) exit 1 ;;
 	esac
 }
 
@@ -183,6 +192,14 @@ parse_remote_name() {
 }
 
 cmd_start() {
+	OPTIONS_SPEC="\
+git flow feature start [-h] [-F] <name> [<base>]
+
+Start new feature <name>, optionally basing it on <base> instead of <develop>
+--
+h,help! Show this help
+F,fetch Fetch from origin before performing local operation
+"
 	DEFINE_boolean fetch false 'fetch from origin before performing local operation' F
 	parse_args "$@"
 	eval set -- "${FLAGS_ARGV}"
@@ -222,6 +239,20 @@ cmd_start() {
 }
 
 cmd_finish() {
+	OPTIONS_SPEC="\
+git flow feature finish [-h] [-F] [-r] [-k] [-D] [-S] <name|nameprefix>
+
+Finish feature <name>
+--
+h,help!        Show this help
+F,fetch        Fetch from origin before performing finish
+r,rebase       Rebase instead of merge
+k,keep         Keep branch after performing finish
+keepremote!    Keep the remote branch
+keeplocal!     Keep the local branch
+D,force_delete Force delete feature branch after finish
+S,squash       Squash feature during merge
+"
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	DEFINE_boolean rebase false "rebase instead of merge" r
 	DEFINE_boolean keep false "keep branch after performing finish" k
@@ -403,6 +434,13 @@ helper_finish_cleanup() {
 }
 
 cmd_publish() {
+	OPTIONS_SPEC="\
+git flow feature publish [-h] <name>
+
+Publish feature branch <name> on $ORIGIN
+--
+h,help!           Show this help
+"
 	parse_args "$@"
 	expand_nameprefix_arg
 
@@ -434,6 +472,13 @@ cmd_publish() {
 }
 
 cmd_track() {
+	OPTIONS_SPEC="\
+git flow feature track [-h] <name>
+
+Start tracking feature <name> that is shared on $ORIGIN
+--
+h,help!           Show this help
+"
 	parse_args "$@"
 	gitflow_require_name_arg
 
@@ -459,6 +504,13 @@ cmd_track() {
 }
 
 cmd_diff() {
+	OPTIONS_SPEC="\
+git flow feature diff [-h] [<name|nameprefix>]
+
+Show all changes in <name> that are not in <develop>
+--
+h,help!           Show this help
+"
 	parse_args "$@"
 
 	if [ "$NAME" != "" ]; then
@@ -476,6 +528,13 @@ cmd_diff() {
 }
 
 cmd_checkout() {
+	OPTIONS_SPEC="\
+git flow feature checkout [-h] [<name|nameprefix>]
+
+Switch to feature branch <name>
+--
+h,help!           Show this help
+"
 	parse_args "$@"
 
 	if [ "$NAME" != "" ]; then
@@ -492,6 +551,14 @@ cmd_co() {
 }
 
 cmd_rebase() {
+	OPTIONS_SPEC="\
+git flow feature rebase [-h] [-i] [<name|nameprefix>]
+
+Rebase <name> on <develop>
+--
+h,help!           Show this help
+i,interactive     Do an interactive rebase
+"
 	DEFINE_boolean interactive false 'do an interactive rebase' i
 	parse_args "$@"
 	expand_nameprefix_arg_or_current
@@ -518,6 +585,13 @@ avoid_accidental_cross_branch_action() {
 }
 
 cmd_pull() {
+	OPTIONS_SPEC="\
+git flow feature pull [-h] <remote> [<name>]
+
+Pull feature <name> from <remote>
+--
+h,help!           Show this help
+"
 	#DEFINE_string prefix false 'alternative remote feature branch name prefix' p
 	DEFINE_boolean rebase false "pull with rebase" r
 	parse_remote_name "$@"
@@ -569,6 +643,15 @@ cmd_pull() {
 }
 
 cmd_delete() {
+	OPTIONS_SPEC="\
+git flow feature delete [-h] [-f] [-r] <name>
+
+Delete a given feature branch
+--
+h,help!           Show this help
+f,force           Force deletion
+r,remote          Delete remote branch
+"
 	DEFINE_boolean force false "force deletion" f
 	DEFINE_boolean remote false "delete remote branch" r
 	parse_args "$@"
