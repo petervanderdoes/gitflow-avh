@@ -44,7 +44,7 @@ init() {
 
 usage() {
 	OPTIONS_SPEC="\
-git flow feature [list] [-v]
+git flow feature [list]
 git flow feature start
 git flow feature finish
 git flow feature publish
