@@ -12,7 +12,7 @@
 
 # Changelog
 
-#### 1.2.0-dev.33
+#### 1.2.0-dev.36
 [Peter van der Does][petervanderdoes]
 * Improve the help output of the commands.
 
