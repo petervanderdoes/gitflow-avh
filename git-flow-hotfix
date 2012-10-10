@@ -35,7 +35,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-init() {
+initialize() {
 	require_git_repo
 	require_gitflow_initialized
 	gitflow_load_settings
