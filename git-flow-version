@@ -37,6 +37,11 @@
 
 GITFLOW_VERSION=1.2.0-dev.33
 
+initialize() {
+	# A function can not be empty. Comments count as empty.
+	local FOO=''
+}
+
 usage() {
 		OPTIONS_SPEC="\
 git flow version

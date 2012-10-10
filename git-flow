@@ -109,7 +109,7 @@ main() {
 	fi
 
 	# Run the specified action
-	if [ $SUBACTION != "help" ] && [ $SUBCOMMAND != "init" ] && [ $SUBCOMMAND != "version" ]; then
+	if [ $SUBACTION != "help" ] && [ $SUBCOMMAND != "init" ]; then
 		initialize
 	fi
 	if [ $SUBACTION != 'default' ]; then
