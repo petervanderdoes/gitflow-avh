@@ -224,7 +224,7 @@ cmd_finish() {
 	DEFINE_boolean nobackmerge false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
 	DEFINE_boolean squash false "squash release during merge" S
 
-		OPTIONS_SPEC="\
+	OPTIONS_SPEC="\
 git flow release finish [-h] [-F] [-s] [-u] [-m | -f] [-p] [-k] [-n] [-b] [-S] <version>
 
 
@@ -432,7 +432,23 @@ cmd_branch() {
 	DEFINE_boolean push false "push to $ORIGIN after performing finish" p
 	DEFINE_boolean notag false "don't tag this release" n
 	DEFINE_boolean squash false "squash release during merge" S
+OPTIONS_SPEC="\
+git flow release branch [-h] [-F] [-s] [-u] [-m] [-f] [-p] [-n] [-S] <version> [<name>]
 
+
+Release a branch [<name>], if a name is not given it defaults to the develop branch, and use the given version <version>
+--
+h,help          Show this help
+showcommands!    Show git commands while executing them
+F,fetch 		Fetch from origin before performing finish
+s,sign!         Sign the release tag cryptographically
+u,signingkey! 	Use the given GPG-key for the digital signature (implies -s)
+m,message! 		Use the given tag message
+f,messagefile= 	Use the contents of the given file as a tag message
+p,push 			Push to origin after performing finish
+n,tag 			Don't tag this release
+S,squash 		Squash release during merge
+"
 	# Parse options
 	FLAGS "$@" || exit $?
 	eval set -- "${FLAGS_ARGV}"
