@@ -36,7 +36,15 @@
 #
 
 usage() {
-	echo "usage: git flow init [-fd]"
+	OPTIONS_SPEC="\
+git flow init
+
+Initialize a new git repo with support for the branching model.
+
+For more specific help type the command followed by --help
+--
+"
+flags_help
 }
 
 parse_args() {
@@ -47,12 +55,22 @@ parse_args() {
 
 # Default entry when no SUBACTION is given
 cmd_default() {
+	OPTIONS_SPEC="\
+git flow init [-h] [-d] [-f]
+
+Setup a git repository for git flow usage. Can also be used to start a git repository.
+--
+h,help!           Show this help
+showcommands!    Show git commands while executing them
+d,defaults        Use default branch naming conventions
+f,force     Force setting of gitflow branches, even if already configured
+"
 	DEFINE_boolean force false 'force setting of gitflow branches, even if already configured' f
 	DEFINE_boolean defaults false 'use default branch naming conventions' d
 	parse_args "$@"
 
 	if ! git rev-parse --git-dir >/dev/null 2>&1; then
-		git init
+		git_do init
 	else
 		# Assure that we are not working in a repo with local changes
 		git_repo_is_headless || require_clean_working_tree
@@ -68,9 +86,9 @@ cmd_default() {
 	local branch_count
 	local answer
 
-    if flag defaults; then
-        warn "Using default branch names."
-    fi
+	if flag defaults; then
+		warn "Using default branch names."
+	fi
 
 	# Add a master branch if no such branch exists yet
 	local master_branch
@@ -118,14 +136,14 @@ cmd_default() {
 			# If no local branch exists and a remote branch of the same
 			# name exists, checkout that branch and use it for master
 			if ! git_local_branch_exists "$master_branch" && git_remote_branch_exists "origin/$master_branch"; then
-				git branch "$master_branch" "origin/$master_branch" >/dev/null 2>&1
+				git_do branch "$master_branch" "origin/$master_branch" >/dev/null 2>&1
 			elif ! git_local_branch_exists "$master_branch"; then
 				die "Local branch '$master_branch' does not exist."
 			fi
 		fi
 
 		# Store the name of the master branch
-		git config gitflow.branch.master "$master_branch"
+		git_do config gitflow.branch.master "$master_branch"
 	fi
 
 	# Add a develop branch if no such branch exists yet
@@ -180,7 +198,7 @@ cmd_default() {
 		fi
 
 		# Store the name of the develop branch
-		git config gitflow.branch.develop "$develop_branch"
+		git_do config gitflow.branch.develop "$develop_branch"
 	fi
 
 	# Creation of HEAD
@@ -189,8 +207,8 @@ cmd_default() {
 	# it to be able to create new branches.
 	local created_gitflow_branch=0
 	if ! git rev-parse --quiet --verify HEAD >/dev/null 2>&1; then
-		git symbolic-ref HEAD "refs/heads/$master_branch"
-		git commit --allow-empty --quiet -m "Initial commit"
+		git_do symbolic-ref HEAD "refs/heads/$master_branch"
+		git_do commit --allow-empty --quiet -m "Initial commit"
 		created_gitflow_branch=1
 	fi
 
@@ -208,9 +226,9 @@ cmd_default() {
 	# the develop branch now in that case (we base it on master, of course)
 	if ! git_local_branch_exists "$develop_branch"; then
 		if git_remote_branch_exists "origin/$develop_branch"; then
-			git branch "$develop_branch" "origin/$develop_branch" >/dev/null 2>&1
+			git_do branch "$develop_branch" "origin/$develop_branch" >/dev/null 2>&1
 		else
-			git branch --no-track "$develop_branch" "$master_branch"
+			git_do branch --no-track "$develop_branch" "$master_branch"
 		fi
 		created_gitflow_branch=1
 	fi
@@ -220,16 +238,16 @@ cmd_default() {
 
 	# Switch to develop branch if its newly created
 	if [ $created_gitflow_branch -eq 1 ]; then
-		git checkout -q "$develop_branch" || die "Could not check out branch '$develop_branch'."
+		git_do checkout -q "$develop_branch" || die "Could not check out branch '$develop_branch'."
 	fi
 
 	# Ask the user for naming conventions (branch and tag prefixes )
 	if flag force || \
-	   ! git config --get gitflow.prefix.feature >/dev/null 2>&1 ||
-	   ! git config --get gitflow.prefix.release >/dev/null 2>&1 ||
-	   ! git config --get gitflow.prefix.hotfix >/dev/null 2>&1 ||
-	   ! git config --get gitflow.prefix.support >/dev/null 2>&1 ||
-	   ! git config --get gitflow.prefix.versiontag >/dev/null 2>&1; then
+		! git config --get gitflow.prefix.feature >/dev/null 2>&1 ||
+		! git config --get gitflow.prefix.release >/dev/null 2>&1 ||
+		! git config --get gitflow.prefix.hotfix >/dev/null 2>&1 ||
+		! git config --get gitflow.prefix.support >/dev/null 2>&1 ||
+		! git config --get gitflow.prefix.versiontag >/dev/null 2>&1; then
 		echo
 		echo "How to name your supporting branch prefixes?"
 	fi
@@ -246,7 +264,7 @@ cmd_default() {
 			printf "\n"
 		fi
 		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
-		git config gitflow.prefix.feature "$prefix"
+		git_do config gitflow.prefix.feature "$prefix"
 	fi
 
 	# Release branches
@@ -259,7 +277,7 @@ cmd_default() {
 			printf "\n"
 		fi
 		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
-		git config gitflow.prefix.release "$prefix"
+		git_do config gitflow.prefix.release "$prefix"
 	fi
 
 	# Hotfix branches
@@ -272,7 +290,7 @@ cmd_default() {
 			printf "\n"
 		fi
 		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
-		git config gitflow.prefix.hotfix "$prefix"
+		git_do config gitflow.prefix.hotfix "$prefix"
 	fi
 
 	# Support branches
@@ -285,7 +303,7 @@ cmd_default() {
 			printf "\n"
 		fi
 		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
-		git config gitflow.prefix.support "$prefix"
+		git_do config gitflow.prefix.support "$prefix"
 	fi
 
 	# Version tag prefix
@@ -298,7 +316,7 @@ cmd_default() {
 			printf "\n"
 		fi
 		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
-		git config gitflow.prefix.versiontag "$prefix"
+		git_do config gitflow.prefix.versiontag "$prefix"
 	fi
 
 	# TODO: what to do with origin?

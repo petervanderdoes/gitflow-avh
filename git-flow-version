@@ -35,10 +35,24 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-GITFLOW_VERSION=1.1.0
+GITFLOW_VERSION=1.2.0
+
+initialize() {
+	# A function can not be empty. Comments count as empty.
+	local FOO=''
+}
 
 usage() {
-	echo "usage: git flow version"
+		OPTIONS_SPEC="\
+git flow version
+
+Shows version information.
+
+For more specific help type the command followed by --help
+--
+"
+flags_help
+
 }
 
 cmd_default() {

@@ -35,7 +35,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-init() {
+initialize() {
 	require_git_repo
 	require_gitflow_initialized
 	gitflow_load_settings
@@ -47,8 +47,17 @@ warn "note: The support subcommand is still very EXPERIMENTAL!"
 warn "note: DO NOT use it in a production situation."
 
 usage() {
-	echo "usage: git flow support [list] [-v]"
-	echo "       git flow support start [-F] <version> <base>"
+		OPTIONS_SPEC="\
+git flow support [list]
+git flow support start
+
+Manage your hotfix branches.
+
+For more specific help type the command followed by --help
+--
+"
+flags_help
+
 }
 
 cmd_default() {
@@ -56,6 +65,14 @@ cmd_default() {
 }
 
 cmd_list() {
+	OPTIONS_SPEC="\
+git flow support [list] [-h] [-v]
+
+List all local support branches
+--
+h,help!           Show this help
+v,verbose         Verbose (more) output
+"
 	DEFINE_boolean verbose false 'verbose (more) output' v
 	parse_args "$@"
 
@@ -64,11 +81,11 @@ cmd_list() {
 	support_branches=$(git_local_branches_prefixed "$PREFIX")
 	if [ -z "$support_branches" ]; then
 		warn "No support branches exist."
-                warn ""
-                warn "You can start a new support branch:"
-                warn ""
-                warn "    git flow support start <name> <base>"
-                warn ""
+		warn ""
+		warn "You can start a new support branch:"
+		warn ""
+		warn "    git flow support start <name> <base>"
+		warn ""
 		exit 0
 	fi
 	current_branch=$(git_current_branch)
@@ -130,6 +147,15 @@ parse_args() {
 }
 
 cmd_start() {
+	OPTIONS_SPEC="\
+git flow support start [-h] [-F] <version> <base>
+
+Start a new support branch name <version> based on <base>
+--
+h,help!           Show this help
+showcommands!    Show git commands while executing them
+F,fetch           Fetch from origin before performing finish
+"
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	parse_args "$@"
 	gitflow_require_version_arg
@@ -148,11 +174,11 @@ cmd_start() {
 	require_branch_absent "$BRANCH"
 
 	# Create branch
-	git checkout -b "$BRANCH" "$BASE" || die "Could not create support branch '$BRANCH'."
+	git_do checkout -b "$BRANCH" "$BASE" || die "Could not create support branch '$BRANCH'."
 
 	echo
 	echo "Summary of actions:"
 	echo "- A new branch '$BRANCH' was created, based on '$BASE'"
-	echo "- You are now on branch '$BRANCH'"
+	echo "- You are now on branch '$(git_current_branch)'"
 	echo
 }

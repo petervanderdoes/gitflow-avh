@@ -69,9 +69,6 @@ main() {
 		exit 1
 	fi
 
-	# Load common functionality
-	. "$GITFLOW_DIR/gitflow-common"
-
 	# This environmental variable fixes non-POSIX getopt style argument
 	# parsing, effectively breaking git-flow subcommand parsing on several
 	# Linux platforms.
@@ -80,6 +77,14 @@ main() {
 	# Use the shFlags project to parse the command line arguments
 	. "$GITFLOW_DIR/gitflow-shFlags"
 	FLAGS_PARENT="git flow"
+
+		# Load common functionality
+	. "$GITFLOW_DIR/gitflow-common"
+
+	# allow user to request git action logging
+	DEFINE_boolean showcommands true 'Show actions taken (git commands)'
+
+	# do actual parsing
 	FLAGS "$@" || exit $?
 	eval set -- "${FLAGS_ARGV}"
 
@@ -109,13 +114,12 @@ main() {
 	fi
 
 	# Run the specified action
-	if [ $SUBACTION != "help" ] && [ $SUBCOMMAND != "init" ] && [ $SUBCOMMAND != "version" ]; then
-		init
-  	fi
-  	if [ $SUBACTION != 'default' ]; then
-  		FLAGS_PARENT="git flow $SUBCOMMAND $SUBACTION"
-  	fi
+	if [ $SUBACTION != "help" ] && [ $SUBCOMMAND != "init" ]; then
+		initialize
+	fi
+	if [ $SUBACTION != 'default' ]; then
+		FLAGS_PARENT="git flow $SUBCOMMAND $SUBACTION"
+	fi
 	cmd_$SUBACTION "$@"
 }
-
 main "$@"

@@ -114,7 +114,7 @@ git_remote_branch_exists() {
 git_remote_branch_delete() {
 	[ -n "$1" ] || die "Missing branch name"
 	if git_remote_branch_exists "$ORIGIN/$1"; then
-		git push "$ORIGIN" :"$1" || die "Could not delete the remote $1 in $ORIGIN."
+		git_do push "$ORIGIN" :"$1" || die "Could not delete the remote $1 in $ORIGIN."
 	else
 		warn "Trying to delete the remote branch $1, but it does not exists in $ORIGIN"
 	fi
@@ -131,20 +131,20 @@ git_tag_exists() {
 }
 
 #
-# git_compare_branches()
+# git_compare_refs()
 #
-# Tests whether branches and their "origin" counterparts have diverged and need
-# merging first. It returns error codes to provide more detail, like so:
+# Tests whether two references have diverged and need merging
+# first. It returns error codes to provide more detail, like so:
 #
-# 0    Branch heads point to the same commit
-# 1    First given branch needs fast-forwarding
-# 2    Second given branch needs fast-forwarding
-# 3    Branch needs a real merge
-# 4    There is no merge base, i.e. the branches have no common ancestors
+# 0    References point to the same commit
+# 1    First given reference needs fast-forwarding
+# 2    Second given reference needs fast-forwarding
+# 3    References need a real merge
+# 4    There is no merge base, i.e. the references have no common ancestors
 #
-git_compare_branches() {
-	local commit1=$(git rev-parse "$1")
-	local commit2=$(git rev-parse "$2")
+git_compare_refs() {
+	local commit1=$(git rev-parse "$1"^{})
+	local commit2=$(git rev-parse "$2"^{})
 	if [ "$commit1" != "$commit2" ]; then
 		local base=$(git merge-base "$commit1" "$commit2")
 		if [ $? -ne 0 ]; then
@@ -167,8 +167,8 @@ git_compare_branches() {
 # Checks whether branch $1 is successfully merged into $2
 #
 git_is_branch_merged_into() {
-	local merge_hash=$(git merge-base $1 $2)
-	local base_hash=$(git rev-parse $1)
+	local merge_hash=$(git merge-base "$1"^{} "$2"^{})
+	local base_hash=$(git rev-parse "$1"^{})
 
 	# If the hashes are equal, the branches are merged.
 	[ "$merge_hash" = "$base_hash" ]
@@ -181,8 +181,7 @@ git_is_branch_merged_into() {
 # for readability given a different name.
 #
 git_is_ancestor() {
-	git_tag_exists "$1" && git_is_branch_merged_into "$1"^0 "$2" \
-	    || git_is_branch_merged_into "$1" "$2"
+	git_is_branch_merged_into "$1" "$2"
 }
 
 #
@@ -200,7 +199,7 @@ git_fetch_branch() {
 	[ -n "$2" ] || die "Missing branch name"
 	local origin="$1"
 	local branch="$2"
-	git fetch -q "$origin" "$branch":refs/remotes/"$origin"/"$branch" || die "Could not fetch $branch from $origin."
+	git_do fetch -q "$origin" "$branch":refs/remotes/"$origin"/"$branch" || die "Could not fetch $branch from $origin."
 }
 
 #
@@ -210,7 +209,7 @@ git_fetch_branch() {
 gitflow_require_version_arg() {
 	if [ "$VERSION" = "" ]; then
 		warn "Missing argument <version>"
-		usage
+		flags_help
 		exit 1
 	fi
 }
@@ -218,7 +217,7 @@ gitflow_require_version_arg() {
 gitflow_require_name_arg() {
 	if [ "$NAME" = "" ]; then
 		warn "Missing argument <name>"
-		usage
+		flags_help
 		exit 1
 	fi
 }
@@ -226,7 +225,7 @@ gitflow_require_name_arg() {
 gitflow_require_base_arg() {
 	if [ "$BASE" = "" ]; then
 		warn "Missing argument <base>"
-		usage
+		flags_help
 		exit 1
 	fi
 }
@@ -343,7 +342,7 @@ require_git_repo() {
 }
 
 require_gitflow_initialized() {
-	 gitflow_is_initialized || die "Not a gitflow-enabled repo yet. Please run 'git flow init' first."
+	gitflow_is_initialized || die "Not a gitflow-enabled repo yet. Please run 'git flow init' first."
 }
 
 require_clean_working_tree() {
@@ -380,7 +379,7 @@ require_tag_absent() {
 require_branches_equal() {
 	require_local_branch "$1"
 	require_remote_branch "$2"
-	git_compare_branches "$1" "$2"
+	git_compare_refs "$1" "$2"
 	local status=$?
 	if [ $status -gt 0 ]; then
 		warn "Branches '$1' and '$2' have diverged."
@@ -393,6 +392,17 @@ require_branches_equal() {
 			die "Branches need merging first."
 		fi
 	fi
+}
+
+#
+# Show commands if flag is set.
+#
+git_do() {
+	if flag showcommands; then
+		echo "git $@" >&2
+	fi
+
+	git "$@"
 }
 
 #
@@ -413,7 +423,7 @@ run_filter_hook() {
 		echo `$scriptfile "$@"`
 	else
 		echo "$@"
-        fi
+	fi
 }
 
 #
@@ -456,4 +466,8 @@ run_post_hook() {
 	if [ -x $scriptfile ]; then
 		$scriptfile "$@"
 	fi
+}
+
+flags_help() {
+	eval "$( echo "$OPTIONS_SPEC" | git rev-parse --parseopt -- "-h" || echo exit $? )"
 }

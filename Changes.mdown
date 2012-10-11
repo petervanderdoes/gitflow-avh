@@ -9,8 +9,24 @@
 [baby-gnu]: https://github.com/baby-gnu
 [pcragone]: https://github.com/pcragone
 [mykehsd]: https://github.com/mykehsd
+[jeromebaum]: https://github.com/jeromebaum 
 
 # Changelog
+
+#### 1.2.0
+[Peter van der Does][petervanderdoes]
+* Improve the help output of the commands.
+* Fix problem with init function on BSD systems.
+* Add initialize function to git flow version.
+* Add parameter --showcommands to all commands.  
+  This will show the git commands performed while executing the command. Thanks
+  to [Jerome Baum][jeromebaum] for the original implementation.
+
+[Daniel Dehennin][baby-gnu]
+* Display where user is on finish.  
+  Some commands did not display the branch you are on after the command 
+  finished.
+* When finishing a hotfix/release and it's to be tagged, the tag must not exist.
 
 #### 1.1.0
 [Peter van der Does][petervanderdoes]
