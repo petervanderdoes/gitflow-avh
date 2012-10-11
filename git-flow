@@ -80,6 +80,11 @@ main() {
 	# Use the shFlags project to parse the command line arguments
 	. "$GITFLOW_DIR/gitflow-shFlags"
 	FLAGS_PARENT="git flow"
+
+	# allow user to request git action logging
+	DEFINE_integer show_commands 0 'show actions taken (git commands)' g
+
+	# do actual parsing
 	FLAGS "$@" || exit $?
 	eval set -- "${FLAGS_ARGV}"
 

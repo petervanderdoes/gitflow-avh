@@ -395,6 +395,20 @@ require_branches_equal() {
 }
 
 #
+# Show commands if flag is set.
+#
+git_do() {
+	# equivalent to git, used to indicate actions that make modifications
+	if [ $FLAGS_show_commands -gt 0 ]; then
+		echo "git $@" >&2
+	fi
+
+	if [ $FLAGS_show_commands -lt 2 ]; then
+		git "$@"
+	fi
+}
+
+#
 # run_filter_hook
 #
 # Looks for a Git hook script called as defined by the first variable
