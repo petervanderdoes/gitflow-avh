@@ -467,3 +467,7 @@ run_post_hook() {
 		$scriptfile "$@"
 	fi
 }
+
+flags_help() {
+	eval "$( echo "$OPTIONS_SPEC" | git rev-parse --parseopt -- "-h" || echo exit $? )"
+}

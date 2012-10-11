@@ -326,7 +326,3 @@ cmd_help() {
 	usage
 	exit 0
 }
-
-flags_help() {
-	eval "$( echo "$OPTIONS_SPEC" | git rev-parse --parseopt -- "-h" || echo exit $? )"
-}

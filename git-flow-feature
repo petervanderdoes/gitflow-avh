@@ -711,7 +711,3 @@ r,remote          Delete remote branch
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo
 }
-
-flags_help() {
-	eval "$( echo "$OPTIONS_SPEC" | git rev-parse --parseopt -- "-h" || echo exit $? )"
-}
