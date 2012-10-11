@@ -398,14 +398,11 @@ require_branches_equal() {
 # Show commands if flag is set.
 #
 git_do() {
-	# equivalent to git, used to indicate actions that make modifications
-	if [ $FLAGS_show_commands -gt 0 ]; then
+	if flag showcommands; then
 		echo "git $@" >&2
 	fi
 
-	if [ $FLAGS_show_commands -lt 2 ]; then
-		git "$@"
-	fi
+	git "$@"
 }
 
 #

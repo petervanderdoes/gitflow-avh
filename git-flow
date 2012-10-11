@@ -82,7 +82,7 @@ main() {
 	FLAGS_PARENT="git flow"
 
 	# allow user to request git action logging
-	DEFINE_integer show_commands 0 'show actions taken (git commands)' g
+	DEFINE_boolean showcommands true 'Show actions taken (git commands)'
 
 	# do actual parsing
 	FLAGS "$@" || exit $?
