@@ -158,6 +158,7 @@ git flow hotfix start [-h] [-F] <version> [<base>]
 Start new hotfix branch named <version>, optionally base it on <base> instead of the <master> branch
 --
 h,help!           Show this help
+showcommands!    Show git commands while executing them
 F,fetch           Fetch from origin before performing local operation
 "
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
@@ -218,6 +219,7 @@ it flow hotfix publish [-h] <name>
 Start sharing hotfix <name> on $ORIGIN
 --
 h,help!           Show this help
+showcommands!    Show git commands while executing them
 "
 	parse_args "$@"
 	gitflow_require_version_arg
@@ -256,6 +258,7 @@ git flow hotfix finish [-h] [-F] [-s] [-u] [-m | -f ] [-p] [-k] [-n] [-b] <versi
 Finish hotfix branch <version>
 --
 h,help!           Show this help
+showcommands!    Show git commands while executing them
 F,fetch           Fetch from origin before performing finish
 s,sign            Sign the release tag cryptographically
 u,signingkey      Use the given GPG-key for the digital signature (implies -s)
@@ -461,6 +464,7 @@ git flow hotfix delete [-h] [-f] [-r] <name>
 List existing release branches
 --
 h,help!           Show this help
+showcommands!    Show git commands while executing them
 f,force           Force deletion
 r,remote          Delete remote branch
 

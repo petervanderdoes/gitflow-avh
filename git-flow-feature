@@ -206,6 +206,7 @@ git flow feature start [-h] [-F] <name> [<base>]
 Start new feature <name>, optionally basing it on <base> instead of <develop>
 --
 h,help! Show this help
+showcommands!    Show git commands while executing them
 F,fetch Fetch from origin before performing local operation
 "
 	DEFINE_boolean fetch false 'fetch from origin before performing local operation' F
@@ -253,6 +254,7 @@ git flow feature finish [-h] [-F] [-r] [-k] [-D] [-S] <name|nameprefix>
 Finish feature <name>
 --
 h,help!        Show this help
+showcommands!    Show git commands while executing them
 F,fetch        Fetch from origin before performing finish
 r,rebase       Rebase instead of merge
 k,keep         Keep branch after performing finish
@@ -448,6 +450,7 @@ git flow feature publish [-h] <name>
 Publish feature branch <name> on $ORIGIN
 --
 h,help!           Show this help
+showcommands!    Show git commands while executing them
 "
 	parse_args "$@"
 	expand_nameprefix_arg
@@ -486,6 +489,7 @@ git flow feature track [-h] <name>
 Start tracking feature <name> that is shared on $ORIGIN
 --
 h,help!           Show this help
+showcommands!    Show git commands while executing them
 "
 	parse_args "$@"
 	gitflow_require_name_arg
@@ -518,6 +522,7 @@ git flow feature diff [-h] [<name|nameprefix>]
 Show all changes in <name> that are not in <develop>
 --
 h,help!           Show this help
+showcommands!    Show git commands while executing them
 "
 	parse_args "$@"
 
@@ -542,6 +547,7 @@ git flow feature checkout [-h] [<name|nameprefix>]
 Switch to feature branch <name>
 --
 h,help!           Show this help
+showcommands!    Show git commands while executing them
 "
 	parse_args "$@"
 
@@ -565,6 +571,7 @@ git flow feature rebase [-h] [-i] [<name|nameprefix>]
 Rebase <name> on <develop>
 --
 h,help!           Show this help
+showcommands!    Show git commands while executing them
 i,interactive     Do an interactive rebase
 "
 	DEFINE_boolean interactive false 'do an interactive rebase' i
@@ -599,6 +606,7 @@ git flow feature pull [-h] <remote> [<name>]
 Pull feature <name> from <remote>
 --
 h,help!           Show this help
+showcommands!    Show git commands while executing them
 "
 	#DEFINE_string prefix false 'alternative remote feature branch name prefix' p
 	DEFINE_boolean rebase false "pull with rebase" r
@@ -657,6 +665,7 @@ git flow feature delete [-h] [-f] [-r] <name>
 Delete a given feature branch
 --
 h,help!           Show this help
+showcommands!    Show git commands while executing them
 f,force           Force deletion
 r,remote          Delete remote branch
 "

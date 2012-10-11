@@ -153,6 +153,7 @@ git flow support start [-h] [-F] <version> <base>
 Start a new support branch name <version> based on <base>
 --
 h,help!           Show this help
+showcommands!    Show git commands while executing them
 F,fetch           Fetch from origin before performing finish
 "
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F

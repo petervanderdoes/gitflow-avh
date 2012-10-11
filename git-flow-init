@@ -61,6 +61,7 @@ git flow init [-h] [-d] [-f]
 Setup a git repository for git flow usage. Can also be used to start a git repository.
 --
 h,help!           Show this help
+showcommands!    Show git commands while executing them
 d,defaults        Use default branch naming conventions
 f,force     Force setting of gitflow branches, even if already configured
 "
