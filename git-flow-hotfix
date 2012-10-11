@@ -193,7 +193,7 @@ F,fetch           Fetch from origin before performing local operation
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$BASE"
 
 	# Create branch
-	git checkout -b "$BRANCH" "$BASE"  || die "Could not create hotfix branch '$BRANCH'."
+	git_do checkout -b "$BRANCH" "$BASE"  || die "Could not create hotfix branch '$BRANCH'."
 
 	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$BASE"
 
@@ -225,19 +225,19 @@ h,help!           Show this help
 	# Sanity checks
 	require_clean_working_tree
 	require_branch "$BRANCH"
-	git fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
+	git_do fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 	require_branch_absent "$ORIGIN/$BRANCH"
 
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
 
 	# Create remote branch
-	git push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH"
-	git fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from '$ORIGIN'."
+	git_do push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH"
+	git_do fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from '$ORIGIN'."
 
 	# Configure remote tracking
-	git config "branch.$BRANCH.remote" "$ORIGIN"
-	git config "branch.$BRANCH.merge" "refs/heads/$BRANCH"
-	git checkout "$BRANCH" || die "Could not check out branch '$BRANCH'."
+	git_do config "branch.$BRANCH.remote" "$ORIGIN"
+	git_do config "branch.$BRANCH.merge" "refs/heads/$BRANCH"
+	git_do checkout "$BRANCH" || die "Could not check out branch '$BRANCH'."
 
 	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
 
@@ -342,8 +342,8 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 	# In case a previous attempt to finish this release branch has failed,
 	# but the merge into master was successful, we skip it now
 	if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
-		git checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
-		git merge --no-ff "$BRANCH" || die "There were merge conflicts."
+		git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
+		git_do merge --no-ff "$BRANCH" || die "There were merge conflicts."
 		# TODO: What do we do now?
 	fi
 
@@ -360,7 +360,7 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
 			[ "$FLAGS_message" != "" ] && opts="$opts -m '$FLAGS_message'"
 			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
-			eval git tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
+			eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
 		fi
 	fi
 
@@ -376,7 +376,7 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 	# In case a previous attempt to finish this release branch has failed,
 	# but the merge into develop was successful, we skip it now
 	if ! git_is_branch_merged_into "$MERGE_BRANCH" "$DEVELOP_BRANCH"; then
-		git checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
+		git_do checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
 
 		if noflag nobackmerge; then
 			# Accounting for 'git describe', if a release is tagged
@@ -390,7 +390,7 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 			commit="$BRANCH"
 		fi
 
-		git merge --no-ff "$commit" || die "There were merge conflicts."
+		git_do merge --no-ff "$commit" || die "There were merge conflicts."
 		# TODO: What do we do now?
 	fi
 
@@ -399,7 +399,7 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 	# Delete branch
 	if noflag keep; then
 		if noflag keeplocal; then
-			git branch -d "$BRANCH"
+			git_do branch -d "$BRANCH"
 		fi
 		if noflag keepremote;then
 			local remotebranch=0
@@ -411,10 +411,10 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 	fi
 
 	if flag push; then
-		git push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
-		git push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push branch '$MASTER_BRANCH' to remote '$ORIGIN'."
+		git_do push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
+		git_do push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push branch '$MASTER_BRANCH' to remote '$ORIGIN'."
 		if noflag notag; then
-			git push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
+			git_do push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
 		fi
 	fi
 
@@ -479,19 +479,19 @@ r,remote          Delete remote branch
 	# We can't delete a branch we are on, switch to the master branch.
 	if [ "$BRANCH" = "$current_branch" ]; then
 		require_clean_working_tree
-		git checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
+		git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
 	fi
 
 	if ( git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH" && git_is_branch_merged_into "$BRANCH" "$DEVELOP_BRANCH" ); then
-		git branch -d "$BRANCH" || die "Could not delete the $BRANCH."
+		git_do branch -d "$BRANCH" || die "Could not delete the $BRANCH."
 		if flag remote; then
-			git push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
+			git_do push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
 		fi
 	else
 		if flag force; then
-			git branch -D "$BRANCH" || die "Could not delete the $BRANCH."
+			git_do branch -D "$BRANCH" || die "Could not delete the $BRANCH."
 			if flag remote; then
-				git push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
+				git_do push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
 			fi
 		else
 			die "Hotfix branch '$BRANCH' has been not been merged in branch '$MASTER_BRANCH' and/or branch '$DEVELOP_BRANCH'. Use -f to force the deletion."
