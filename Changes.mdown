@@ -13,7 +13,7 @@
 
 # Changelog
 
-#### 1.2.0-dev.54
+#### 1.2.0-rc.1
 [Peter van der Does][petervanderdoes]
 * Improve the help output of the commands.
 * Fix problem with init function on BSD systems.
