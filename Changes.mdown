@@ -26,6 +26,7 @@
 * Display where user is on finish.  
   Some commands did not display the branch you are on after the command 
   finished.
+* When finishing a hotfix/release and it's to be tagged, the tag must not exist.
 
 #### 1.1.0
 [Peter van der Does][petervanderdoes]
