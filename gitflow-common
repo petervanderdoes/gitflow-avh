@@ -209,7 +209,7 @@ git_fetch_branch() {
 gitflow_require_version_arg() {
 	if [ "$VERSION" = "" ]; then
 		warn "Missing argument <version>"
-		usage
+		flags_help
 		exit 1
 	fi
 }
@@ -217,7 +217,7 @@ gitflow_require_version_arg() {
 gitflow_require_name_arg() {
 	if [ "$NAME" = "" ]; then
 		warn "Missing argument <name>"
-		usage
+		flags_help
 		exit 1
 	fi
 }
@@ -225,7 +225,7 @@ gitflow_require_name_arg() {
 gitflow_require_base_arg() {
 	if [ "$BASE" = "" ]; then
 		warn "Missing argument <base>"
-		usage
+		flags_help
 		exit 1
 	fi
 }
