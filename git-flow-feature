@@ -206,6 +206,7 @@ git flow feature start [-h] [-F] <name> [<base>]
 Start new feature <name>, optionally basing it on <base> instead of <develop>
 --
 h,help! Show this help
+showcommands!    Show git commands while executing them
 F,fetch Fetch from origin before performing local operation
 "
 	DEFINE_boolean fetch false 'fetch from origin before performing local operation' F
@@ -231,7 +232,7 @@ F,fetch Fetch from origin before performing local operation
 	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH" "$BASE"
 
 	# create branch
-	git checkout -b "$BRANCH" "$BASE" || die "Could not create feature branch '$BRANCH'."
+	git_do checkout -b "$BRANCH" "$BASE" || die "Could not create feature branch '$BRANCH'."
 
 	run_post_hook "$NAME" "$ORIGIN" "$BRANCH" "$BASE"
 
@@ -253,6 +254,7 @@ git flow feature finish [-h] [-F] [-r] [-k] [-D] [-S] <name|nameprefix>
 Finish feature <name>
 --
 h,help!        Show this help
+showcommands!    Show git commands while executing them
 F,fetch        Fetch from origin before performing finish
 r,rebase       Rebase instead of merge
 k,keep         Keep branch after performing finish
@@ -358,15 +360,15 @@ S,squash       Squash feature during merge
 	fi
 
 	# Merge into BASE
-	git checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
+	git_do checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
 	if [ "$(git rev-list -n2 "$DEVELOP_BRANCH..$BRANCH" | wc -l)" -eq 1 ]; then
-		git merge --ff "$BRANCH"
+		git_do merge --ff "$BRANCH"
 	else
 		if noflag squash; then
-			git merge --no-ff "$BRANCH"
+			git_do merge --no-ff "$BRANCH"
 		else
-			git merge --squash "$BRANCH"
-			git commit
+			git_do merge --squash "$BRANCH"
+			git_do commit
 		fi
 	fi
 
@@ -401,9 +403,9 @@ helper_finish_cleanup() {
 	if noflag keep; then
 		if noflag keeplocal; then
 			if flag force_delete; then
-				git branch -D "$BRANCH"
+				git_do branch -D "$BRANCH"
 			else
-				git branch -d "$BRANCH"
+				git_do branch -d "$BRANCH"
 			fi
 		fi
 		if noflag keepremote;then
@@ -448,6 +450,7 @@ git flow feature publish [-h] <name>
 Publish feature branch <name> on $ORIGIN
 --
 h,help!           Show this help
+showcommands!    Show git commands while executing them
 "
 	parse_args "$@"
 	expand_nameprefix_arg
@@ -455,19 +458,19 @@ h,help!           Show this help
 	# Sanity checks
 	require_clean_working_tree
 	require_branch "$BRANCH"
-	git fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
+	git_do fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 	require_branch_absent "$ORIGIN/$BRANCH"
 
 	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
 
 	# Create remote branch
-	git push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH"
-	git fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
+	git_do push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH"
+	git_do fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 
 	# Configure remote tracking
-	git config "branch.$BRANCH.remote" "$ORIGIN"
-	git config "branch.$BRANCH.merge" "refs/heads/$BRANCH"
-	git checkout "$BRANCH" || die "Could not check out branch '$BRANCH'."
+	git_do config "branch.$BRANCH.remote" "$ORIGIN"
+	git_do config "branch.$BRANCH.merge" "refs/heads/$BRANCH"
+	git_do checkout "$BRANCH" || die "Could not check out branch '$BRANCH'."
 
 	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
 
@@ -486,6 +489,7 @@ git flow feature track [-h] <name>
 Start tracking feature <name> that is shared on $ORIGIN
 --
 h,help!           Show this help
+showcommands!    Show git commands while executing them
 "
 	parse_args "$@"
 	gitflow_require_name_arg
@@ -496,11 +500,11 @@ h,help!           Show this help
 
 	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
 
-	git fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
+	git_do fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 	require_branch "$ORIGIN/$BRANCH"
 
 	# Create tracking branch
-	git checkout -b "$BRANCH" "$ORIGIN/$BRANCH" || die "Could not create '$BRANCH'."
+	git_do checkout -b "$BRANCH" "$ORIGIN/$BRANCH" || die "Could not create '$BRANCH'."
 
 	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
 
@@ -518,20 +522,21 @@ git flow feature diff [-h] [<name|nameprefix>]
 Show all changes in <name> that are not in <develop>
 --
 h,help!           Show this help
+showcommands!    Show git commands while executing them
 "
 	parse_args "$@"
 
 	if [ "$NAME" != "" ]; then
 		expand_nameprefix_arg
 		BASE=$(git merge-base "$DEVELOP_BRANCH" "$BRANCH")
-		git diff "$BASE..$BRANCH"
+		git_do diff "$BASE..$BRANCH"
 	else
 		if ! git_current_branch | grep -q "^$PREFIX"; then
 			die "Not on a feature branch. Name one explicitly."
 		fi
 
 		BASE=$(git merge-base "$DEVELOP_BRANCH" HEAD)
-		git diff "$BASE"
+		git_do diff "$BASE"
 	fi
 }
 
@@ -542,12 +547,13 @@ git flow feature checkout [-h] [<name|nameprefix>]
 Switch to feature branch <name>
 --
 h,help!           Show this help
+showcommands!    Show git commands while executing them
 "
 	parse_args "$@"
 
 	if [ "$NAME" != "" ]; then
 		expand_nameprefix_arg
-		git checkout "$BRANCH"  || die "Could not check out branch '$BRANCH'."
+		git_do checkout "$BRANCH"  || die "Could not check out branch '$BRANCH'."
 	else
 		die "Name a feature branch explicitly."
 	fi
@@ -565,6 +571,7 @@ git flow feature rebase [-h] [-i] [<name|nameprefix>]
 Rebase <name> on <develop>
 --
 h,help!           Show this help
+showcommands!    Show git commands while executing them
 i,interactive     Do an interactive rebase
 "
 	DEFINE_boolean interactive false 'do an interactive rebase' i
@@ -574,12 +581,12 @@ i,interactive     Do an interactive rebase
 	require_clean_working_tree
 	require_branch "$BRANCH"
 
-	git checkout -q "$BRANCH"  || die "Could not check out branch '$BRANCH'."
+	git_do checkout -q "$BRANCH"  || die "Could not check out branch '$BRANCH'."
 	local OPTS=
 	if flag interactive; then
 		OPTS="$OPTS -i"
 	fi
-	git rebase $OPTS "$DEVELOP_BRANCH"
+	git_do rebase $OPTS "$DEVELOP_BRANCH"
 }
 
 avoid_accidental_cross_branch_action() {
@@ -599,6 +606,7 @@ git flow feature pull [-h] <remote> [<name>]
 Pull feature <name> from <remote>
 --
 h,help!           Show this help
+showcommands!    Show git commands while executing them
 "
 	#DEFINE_string prefix false 'alternative remote feature branch name prefix' p
 	DEFINE_boolean rebase false "pull with rebase" r
@@ -630,20 +638,20 @@ h,help!           Show this help
 		# We already have a local branch called like this, so simply pull the
 		# remote changes in
 		if flag rebase; then
-			if ! git pull --rebase -q "$REMOTE" "$BRANCH"; then
+			if ! git_do pull --rebase -q "$REMOTE" "$BRANCH"; then
 				warn "Pull was aborted. There might be conflicts during rebase or '$REMOTE' might be inaccessible."
 				exit 1
 			fi
 		else
-			git pull -q "$REMOTE" "$BRANCH" || die "Failed to pull from remote '$REMOTE'."
+			git_do pull -q "$REMOTE" "$BRANCH" || die "Failed to pull from remote '$REMOTE'."
 		fi
 
 		echo "Pulled $REMOTE's changes into $BRANCH."
 	else
 		# Setup the local branch clone for the first time
-		git fetch -q "$REMOTE" "$BRANCH" ||  die "Could not fetch branch '$BRANCH' from remote '$REMOTE'."     # Stores in FETCH_HEAD
-		git branch --no-track "$BRANCH" FETCH_HEAD || die "Branch failed."
-		git checkout -q "$BRANCH" || die "Could not check out branch '$BRANCH'."
+		git_do fetch -q "$REMOTE" "$BRANCH" ||  die "Could not fetch branch '$BRANCH' from remote '$REMOTE'."     # Stores in FETCH_HEAD
+		git_do branch --no-track "$BRANCH" FETCH_HEAD || die "Branch failed."
+		git_do checkout -q "$BRANCH" || die "Could not check out branch '$BRANCH'."
 		echo "Created local branch $BRANCH based on $REMOTE's $BRANCH."
 	fi
 
@@ -657,6 +665,7 @@ git flow feature delete [-h] [-f] [-r] <name>
 Delete a given feature branch
 --
 h,help!           Show this help
+showcommands!    Show git commands while executing them
 f,force           Force deletion
 r,remote          Delete remote branch
 "
@@ -674,19 +683,19 @@ r,remote          Delete remote branch
 	# We can't delete a branch we are on, switch to the develop branch.
 	if [ "$BRANCH" = "$current_branch" ]; then
 		require_clean_working_tree
-		git checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
+		git_do checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
 	fi
 
 	if git_is_branch_merged_into "$BRANCH" "$DEVELOP_BRANCH"; then
-		git branch -d "$BRANCH" || die "Could not delete the $BRANCH."
+		git_do branch -d "$BRANCH" || die "Could not delete the $BRANCH."
 		if flag remote; then
-			git push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
+			git_do push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
 		fi
 	else
 		if flag force; then
-			git branch -D "$BRANCH" || die "Could not delete the $BRANCH."
+			git_do branch -D "$BRANCH" || die "Could not delete the $BRANCH."
 			if flag remote; then
-				git push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
+				git_do push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
 			fi
 		else
 			die "Feature branch '$BRANCH' has been not been merged yet. Use -f to force the deletion."

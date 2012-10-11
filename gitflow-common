@@ -114,7 +114,7 @@ git_remote_branch_exists() {
 git_remote_branch_delete() {
 	[ -n "$1" ] || die "Missing branch name"
 	if git_remote_branch_exists "$ORIGIN/$1"; then
-		git push "$ORIGIN" :"$1" || die "Could not delete the remote $1 in $ORIGIN."
+		git_do push "$ORIGIN" :"$1" || die "Could not delete the remote $1 in $ORIGIN."
 	else
 		warn "Trying to delete the remote branch $1, but it does not exists in $ORIGIN"
 	fi
@@ -199,7 +199,7 @@ git_fetch_branch() {
 	[ -n "$2" ] || die "Missing branch name"
 	local origin="$1"
 	local branch="$2"
-	git fetch -q "$origin" "$branch":refs/remotes/"$origin"/"$branch" || die "Could not fetch $branch from $origin."
+	git_do fetch -q "$origin" "$branch":refs/remotes/"$origin"/"$branch" || die "Could not fetch $branch from $origin."
 }
 
 #
@@ -392,6 +392,17 @@ require_branches_equal() {
 			die "Branches need merging first."
 		fi
 	fi
+}
+
+#
+# Show commands if flag is set.
+#
+git_do() {
+	if flag showcommands; then
+		echo "git $@" >&2
+	fi
+
+	git "$@"
 }
 
 #

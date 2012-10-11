@@ -153,6 +153,7 @@ git flow support start [-h] [-F] <version> <base>
 Start a new support branch name <version> based on <base>
 --
 h,help!           Show this help
+showcommands!    Show git commands while executing them
 F,fetch           Fetch from origin before performing finish
 "
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
@@ -173,7 +174,7 @@ F,fetch           Fetch from origin before performing finish
 	require_branch_absent "$BRANCH"
 
 	# Create branch
-	git checkout -b "$BRANCH" "$BASE" || die "Could not create support branch '$BRANCH'."
+	git_do checkout -b "$BRANCH" "$BASE" || die "Could not create support branch '$BRANCH'."
 
 	echo
 	echo "Summary of actions:"
