@@ -13,6 +13,9 @@
 
 # Changelog
 
+#### 1.2.1-rc.1
+* Preparation hotfix.
+
 #### 1.2.0
 [Peter van der Does][petervanderdoes]
 * Improve the help output of the commands.
