@@ -13,7 +13,7 @@
 
 # Changelog
 
-#### 1.2.1-rc.1
+#### 1.2.1
 * Bugfix: The --showcommands was on by default. It should be off by default.
 
 #### 1.2.0
