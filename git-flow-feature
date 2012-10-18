@@ -445,15 +445,16 @@ helper_finish_cleanup() {
 
 cmd_publish() {
 	OPTIONS_SPEC="\
-git flow feature publish [-h] <name>
+git flow feature publish [-h] [<name>]
 
-Publish feature branch <name> on $ORIGIN
+Publish feature branch <name> on $ORIGIN.
+When <name> is omitted the current branch is used, but only if it's a feature branch.
 --
 h,help!           Show this help
 showcommands!    Show git commands while executing them
 "
 	parse_args "$@"
-	expand_nameprefix_arg
+	name_or_current
 
 	# Sanity checks
 	require_clean_working_tree
