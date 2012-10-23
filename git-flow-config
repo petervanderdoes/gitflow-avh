@@ -1,0 +1,125 @@
+#
+# git-flow -- A collection of Git extensions to provide high-level
+# repository operations for Vincent Driessen's branching model.
+#
+# A blog post presenting this model is found at:
+#    http://blog.avirtualhome.com/development-workflow-using-git/
+#
+# Feel free to contribute to this project at:
+#    http://github.com/petervanderdoes/gitflow
+#
+# Authors:
+# Copyright 2012 Peter van der Does. All rights reserved.
+#
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+
+initialize() {
+	require_git_repo
+	require_gitflow_initialized
+	gitflow_load_settings
+}
+
+usage() {
+	OPTIONS_SPEC="\
+git flow config [list]
+git flow config set
+
+Manage the git-flow configuration.
+
+For more specific help type the command followed by --help
+--
+"
+flags_help
+}
+
+parse_args() {
+	# Parse options
+	FLAGS "$@" || exit $?
+	eval set -- "${FLAGS_ARGV}"
+}
+
+# Default entry when no SUBACTION is given
+cmd_default() {
+	DEFINE_boolean force false 'force setting of gitflow branches, even if already configured' f
+	DEFINE_boolean defaults false 'use default branch naming conventions' d
+	DEFINE_boolean local false 'use repository config file'
+	DEFINE_boolean global false 'use global config file'
+	DEFINE_boolean system false 'use system config file'
+	DEFINE_string file "" 'use given config file'
+
+	OPTIONS_SPEC="\
+git flow config [list]
+
+Show the git-flow configurations
+--
+h,help!           Show this help
+
+ Use config file location
+local!  use repository config file
+global!  use global config file
+system!  use system config file
+file= use given config file
+"
+	parse_args "$@"
+
+	if [ "$FLAGS_file" != "" ]; then
+		gitflow_config_option="--file '$FLAGS_file''"
+	elif flag local; then
+		gitflow_config_option="--local"
+	elif flag global; then
+		gitflow_config_option="--global"
+	elif flag system; then
+		gitflow_config_option="--system"
+	else
+		gitflow_config_option=""
+	fi
+
+	local output
+
+	output=$(git config $gitflow_config_option --get gitflow.branch.master)
+	echo "Branch name for production releases: $output "
+
+	output=$(git config $gitflow_config_option --get gitflow.branch.develop)
+	echo "Branch name for \"next release\" development: $output "
+
+	output=$(git config $gitflow_config_option --get gitflow.prefix.feature)
+	echo "Feature branch prefix: $output "
+
+	output=$(git config $gitflow_config_option --get gitflow.prefix.release)
+	echo "Release branch prefix: $output "
+
+	output=$(git config $gitflow_config_option --get gitflow.prefix.hotfix)
+	echo "Hotfix branch prefix: $output "
+
+	output=$(git config $gitflow_config_option --get gitflow.prefix.support)
+	echo "Support branch prefix: $output "
+
+	output=$(git config $gitflow_config_option --get gitflow.prefix.versiontag)
+	echo "Version tag prefix: $output "
+}
+
+cmd_help() {
+	usage
+	exit 0
+}
