@@ -19,6 +19,9 @@
   publish, the name should be optional.    
   When a name isn't given, the current branch, if it's a feature branch, 
   will be published.
+* Add option to select configuration file usage    
+  As with the regular git config, git flow init now has the 
+  option --file, --global, --system and --local. --local is default.
 * Add a new command.  
   New command git flow config is added.  
   With this command you can see your current git flow configuration and you 
