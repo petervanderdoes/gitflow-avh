@@ -57,12 +57,25 @@ parse_args() {
 	# Parse options
 	FLAGS "$@" || exit $?
 	eval set -- "${FLAGS_ARGV}"
+
+	OPTION=$(echo $1|tr '[:upper:]' '[:lower:]')
+
+	if [ "$FLAGS_file" != "" ]; then
+		gitflow_config_option="--file '$FLAGS_file'"
+	elif flag local; then
+		gitflow_config_option="--local"
+	elif flag global; then
+		gitflow_config_option="--global"
+	elif flag system; then
+		gitflow_config_option="--system"
+	else
+		gitflow_config_option=""
+	fi
+
 }
 
 # Default entry when no SUBACTION is given
 cmd_default() {
-	DEFINE_boolean force false 'force setting of gitflow branches, even if already configured' f
-	DEFINE_boolean defaults false 'use default branch naming conventions' d
 	DEFINE_boolean local false 'use repository config file'
 	DEFINE_boolean global false 'use global config file'
 	DEFINE_boolean system false 'use system config file'
@@ -83,20 +96,7 @@ file= use given config file
 "
 	parse_args "$@"
 
-	if [ "$FLAGS_file" != "" ]; then
-		gitflow_config_option="--file '$FLAGS_file''"
-	elif flag local; then
-		gitflow_config_option="--local"
-	elif flag global; then
-		gitflow_config_option="--global"
-	elif flag system; then
-		gitflow_config_option="--system"
-	else
-		gitflow_config_option=""
-	fi
-
 	local output
-
 	output=$(git config $gitflow_config_option --get gitflow.branch.master)
 	echo "Branch name for production releases: $output "
 
@@ -117,6 +117,123 @@ file= use given config file
 
 	output=$(git config $gitflow_config_option --get gitflow.prefix.versiontag)
 	echo "Version tag prefix: $output "
+}
+
+cmd_set() {
+	DEFINE_boolean local false 'use repository config file'
+	DEFINE_boolean global false 'use global config file'
+	DEFINE_boolean system false 'use system config file'
+	DEFINE_string file "" 'use given config file'
+
+	OPTIONS_SPEC="\
+git flow config set <option> <value>
+
+ Set the git-flow configuration option to the given value
+--
+h,help!           Show this help
+
+ Use config file location
+local!  use repository config file
+global!  use global config file
+system!  use system config file
+file= use given config file
+"
+	parse_args "$@"
+	eval set -- "${FLAGS_ARGV}"
+	VALUE=$2
+
+	case $OPTION in
+	master)
+		cfg_option="gitflow.branch.master"
+		txt="Branch name for production releases"
+		;;
+	develop)
+		cfg_option="gitflow.branch.develop"
+		txt="Branch name for \"next release\" development"
+		;;
+	feature)
+		cfg_option="gitflow.prefix.feature"
+		txt="Feature branch prefix"
+		;;
+	hotfix)
+		cfg_option="gitflow.prefix.hotfix"
+		txt="Hotfix branch prefix"
+		;;
+	release)
+		cfg_option="gitflow.prefix.release"
+		txt="Release branch prefix"
+		;;
+	support)
+		cfg_option="gitflow.prefix.support"
+		txt="Support branch prefix"
+		;;
+	versiontagprefix)
+		cfg_option="gitflow.prefix.versiontag"
+		txt="Version tag prefix"
+		;;
+	*)
+		die_help "Invalid option given."
+		;;
+	esac
+
+	[ -n "$VALUE" ] || die_help "No value given"
+
+	if [ $OPTION = "master" ]; then
+		develop_branch=$(git config --get gitflow.branch.develop)
+		if [ "$VALUE" = $develop_branch ]; then
+			die "Production and \"next release\" branch should differ."
+		fi
+
+		if ! git_local_branch_exists "$VALUE" && git_remote_branch_exists "origin/$VALUE"; then
+			git_do branch "$VALUE" "origin/$VALUE" >/dev/null 2>&1
+		elif ! git_local_branch_exists "$VALUE"; then
+			die "Local branch '$VALUE' does not exist."
+		fi
+	fi
+
+	if [ $OPTION = "develop" ]; then
+		master_branch=$(git config --get gitflow.branch.master)
+		if [ "$VALUE" = $master_branch ]; then
+			die "Production and \"next release\" branch should differ."
+		fi
+
+		if ! git_local_branch_exists "$VALUE" && git_remote_branch_exists "origin/$VALUE"; then
+			git_do branch "$VALUE" "origin/$VALUE" >/dev/null 2>&1
+		elif ! git_local_branch_exists "$VALUE"; then
+			die "Local branch '$VALUE' does not exist."
+		fi
+	fi
+
+	git_do config $gitflow_config_option $cfg_option "$VALUE"
+
+	case $? in
+	0) ;;
+	3)
+		die "The config file is invalid."
+		;;
+	4)
+		die "Can not write to the config file."
+		;;
+	*)
+		die "Unknown return code [$?]. Please file an issue about this error."
+		;;
+	esac
+
+	echo
+	echo "Summary of actions:"
+	if [ "$FLAGS_file" != "" ]; then
+		echo "- Using configuration file '$FLAGS_file'"
+	elif flag local; then
+		echo "- Using repository specific configuration file."
+	elif flag global; then
+		echo "- Using user-specific configuration file."
+	elif flag system; then
+		echo "- Using system-wide configuration file."
+	else
+		echo "- Using repository specific configuration file."
+	fi
+	echo "- $txt set to $VALUE"
+	echo
 }
 
 cmd_help() {
