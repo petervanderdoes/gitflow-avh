@@ -55,6 +55,13 @@ parse_args() {
 
 # Default entry when no SUBACTION is given
 cmd_default() {
+	DEFINE_boolean force false 'force setting of gitflow branches, even if already configured' f
+	DEFINE_boolean defaults false 'use default branch naming conventions' d
+	DEFINE_boolean local false 'use repository config file'
+	DEFINE_boolean global false 'use global config file'
+	DEFINE_boolean system false 'use system config file'
+	DEFINE_string file "" 'use given config file'
+
 	OPTIONS_SPEC="\
 git flow init [-h] [-d] [-f]
 
@@ -64,10 +71,26 @@ h,help!           Show this help
 showcommands!    Show git commands while executing them
 d,defaults        Use default branch naming conventions
 f,force     Force setting of gitflow branches, even if already configured
+
+ Use config file location
+local!  use repository config file
+global!  use global config file
+system!  use system config file
+file= use given config file
 "
-	DEFINE_boolean force false 'force setting of gitflow branches, even if already configured' f
-	DEFINE_boolean defaults false 'use default branch naming conventions' d
 	parse_args "$@"
+
+	if [ "$FLAGS_file" != "" ]; then
+		gitflow_config_option="--file '$FLAGS_file''"
+	elif flag local; then
+		gitflow_config_option="--local"
+	elif flag global; then
+		gitflow_config_option="--global"
+	elif flag system; then
+		gitflow_config_option="--system"
+	else
+		gitflow_config_option=""
+	fi
 
 	if ! git rev-parse --git-dir >/dev/null 2>&1; then
 		git_do init
@@ -143,7 +166,7 @@ f,force     Force setting of gitflow branches, even if already configured
 		fi
 
 		# Store the name of the master branch
-		git_do config gitflow.branch.master "$master_branch"
+		git_do config $gitflow_config_option gitflow.branch.master "$master_branch"
 	fi
 
 	# Add a develop branch if no such branch exists yet
@@ -198,7 +221,7 @@ f,force     Force setting of gitflow branches, even if already configured
 		fi
 
 		# Store the name of the develop branch
-		git_do config gitflow.branch.develop "$develop_branch"
+		git_do config $gitflow_config_option gitflow.branch.develop "$develop_branch"
 	fi
 
 	# Creation of HEAD
@@ -264,7 +287,7 @@ f,force     Force setting of gitflow branches, even if already configured
 			printf "\n"
 		fi
 		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
-		git_do config gitflow.prefix.feature "$prefix"
+		git_do config $gitflow_config_option gitflow.prefix.feature "$prefix"
 	fi
 
 	# Release branches
@@ -277,7 +300,7 @@ f,force     Force setting of gitflow branches, even if already configured
 			printf "\n"
 		fi
 		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
-		git_do config gitflow.prefix.release "$prefix"
+		git_do config $gitflow_config_option gitflow.prefix.release "$prefix"
 	fi
 
 	# Hotfix branches
@@ -290,7 +313,7 @@ f,force     Force setting of gitflow branches, even if already configured
 			printf "\n"
 		fi
 		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
-		git_do config gitflow.prefix.hotfix "$prefix"
+		git_do config $gitflow_config_option gitflow.prefix.hotfix "$prefix"
 	fi
 
 	# Support branches
@@ -303,7 +326,7 @@ f,force     Force setting of gitflow branches, even if already configured
 			printf "\n"
 		fi
 		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
-		git_do config gitflow.prefix.support "$prefix"
+		git_do config $gitflow_config_option gitflow.prefix.support "$prefix"
 	fi
 
 	# Version tag prefix
@@ -316,7 +339,7 @@ f,force     Force setting of gitflow branches, even if already configured
 			printf "\n"
 		fi
 		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
-		git_do config gitflow.prefix.versiontag "$prefix"
+		git_do config $gitflow_config_option gitflow.prefix.versiontag "$prefix"
 	fi
 
 	# TODO: what to do with origin?
