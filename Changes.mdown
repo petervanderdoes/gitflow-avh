@@ -13,7 +13,7 @@
 
 # Changelog
 
-#### 1.3.0-dev.13
+#### 1.3.0-dev.15
 [Peter van der Does][petervanderdoes]
 * Make name in feature publish optional.    
   Instead of always having to add the branch when doing a git flow feature 
