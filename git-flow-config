@@ -50,7 +50,7 @@ Manage the git-flow configuration.
 For more specific help type the command followed by --help
 --
 "
-flags_help
+	flags_help
 }
 
 parse_args() {
@@ -76,11 +76,6 @@ parse_args() {
 
 # Default entry when no SUBACTION is given
 cmd_default() {
-	DEFINE_boolean local false 'use repository config file'
-	DEFINE_boolean global false 'use global config file'
-	DEFINE_boolean system false 'use system config file'
-	DEFINE_string file "" 'use given config file'
-
 	OPTIONS_SPEC="\
 git flow config [list]
 
@@ -94,9 +89,17 @@ global!  use global config file
 system!  use system config file
 file= use given config file
 "
+	local output
+
+	# Define flags
+	DEFINE_boolean local false 'use repository config file'
+	DEFINE_boolean global false 'use global config file'
+	DEFINE_boolean system false 'use system config file'
+	DEFINE_string file "" 'use given config file'
+
+	# Parse arguments
 	parse_args "$@"
 
-	local output
 	output=$(git config $gitflow_config_option --get gitflow.branch.master)
 	echo "Branch name for production releases: $output "
 
@@ -120,11 +123,6 @@ file= use given config file
 }
 
 cmd_set() {
-	DEFINE_boolean local false 'use repository config file'
-	DEFINE_boolean global false 'use global config file'
-	DEFINE_boolean system false 'use system config file'
-	DEFINE_string file "" 'use given config file'
-
 	OPTIONS_SPEC="\
 git flow config set <option> <value>
 
@@ -138,9 +136,18 @@ global!  use global config file
 system!  use system config file
 file= use given config file
 "
+	local value cfg_option txt
+
+	# Define flags
+	DEFINE_boolean local false 'use repository config file'
+	DEFINE_boolean global false 'use global config file'
+	DEFINE_boolean system false 'use system config file'
+	DEFINE_string file "" 'use given config file'
+
+	# Parse arguments
 	parse_args "$@"
 	eval set -- "${FLAGS_ARGV}"
-	VALUE=$2
+	value=$2
 
 	case $OPTION in
 	master)
@@ -176,38 +183,39 @@ file= use given config file
 		;;
 	esac
 
-	[ -n "$VALUE" ] || die_help "No value given"
+	[ -n "$value" ] || die_help "No value given"
 
 	if [ $OPTION = "master" ]; then
 		develop_branch=$(git config --get gitflow.branch.develop)
-		if [ "$VALUE" = $develop_branch ]; then
+		if [ "$value" = $develop_branch ]; then
 			die "Production and \"next release\" branch should differ."
 		fi
 
-		if ! git_local_branch_exists "$VALUE" && git_remote_branch_exists "origin/$VALUE"; then
-			git_do branch "$VALUE" "origin/$VALUE" >/dev/null 2>&1
-		elif ! git_local_branch_exists "$VALUE"; then
-			die "Local branch '$VALUE' does not exist."
+		if ! git_local_branch_exists "$value" && git_remote_branch_exists "origin/$value"; then
+			git_do branch "$value" "origin/$value" >/dev/null 2>&1
+		elif ! git_local_branch_exists "$value"; then
+			die "Local branch '$value' does not exist."
 		fi
 	fi
 
 	if [ $OPTION = "develop" ]; then
 		master_branch=$(git config --get gitflow.branch.master)
-		if [ "$VALUE" = $master_branch ]; then
+		if [ "$value" = $master_branch ]; then
 			die "Production and \"next release\" branch should differ."
 		fi
 
-		if ! git_local_branch_exists "$VALUE" && git_remote_branch_exists "origin/$VALUE"; then
-			git_do branch "$VALUE" "origin/$VALUE" >/dev/null 2>&1
-		elif ! git_local_branch_exists "$VALUE"; then
-			die "Local branch '$VALUE' does not exist."
+		if ! git_local_branch_exists "$value" && git_remote_branch_exists "origin/$value"; then
+			git_do branch "$value" "origin/$value" >/dev/null 2>&1
+		elif ! git_local_branch_exists "$value"; then
+			die "Local branch '$value' does not exist."
 		fi
 	fi
 
-	git_do config $gitflow_config_option $cfg_option "$VALUE"
+	git_do config $gitflow_config_option $cfg_option "$value"
 
 	case $? in
-	0) ;;
+	0)
+		;;
 	3)
 		die "The config file is invalid."
 		;;
@@ -232,7 +240,7 @@ file= use given config file
 	else
 		echo "- Using repository specific configuration file."
 	fi
-	echo "- $txt set to $VALUE"
+	echo "- $txt set to $value"
 	echo
 }
 
