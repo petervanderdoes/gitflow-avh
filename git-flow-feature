@@ -144,10 +144,13 @@ expand_nameprefix_arg() {
 	expanded_name=$(gitflow_resolve_nameprefix "$NAME" "$PREFIX")
 	exitcode=$?
 	case $exitcode in
-		0) NAME=$expanded_name
+	0)
+		NAME=$expanded_name
 		BRANCH=$PREFIX$NAME
 		;;
-		*) exit 1 ;;
+	*)
+		exit 1
+		;;
 	esac
 }
 

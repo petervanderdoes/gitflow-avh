@@ -330,13 +330,17 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 	# - Can be merged: If there's no common ancestor we can't merge the hotfix
 	git_compare_refs "$BRANCH" "$MASTER_BRANCH"
 	case $? in
-		0) die "You need some commits in the hotfix branch '$BRANCH'"
+	0)
+		die "You need some commits in the hotfix branch '$BRANCH'"
 		;;
-		1) die "The hotfix branch '$BRANCH' is not ahead of branch '$MASTER_BRANCH'"
+	1)
+		die "The hotfix branch '$BRANCH' is not ahead of branch '$MASTER_BRANCH'"
 		;;
-		4) die "The hotfix branch '$BRANCH' has no common ancestor with branch '$MASTER_BRANCH'"
+	4)
+		die "The hotfix branch '$BRANCH' has no common ancestor with branch '$MASTER_BRANCH'"
 		;;
-		*) ;;
+	*)
+		;;
 	esac
 
 	if noflag notag; then
