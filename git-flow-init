@@ -44,24 +44,17 @@ Initialize a new git repo with support for the branching model.
 For more specific help type the command followed by --help
 --
 "
-flags_help
+	flags_help
 }
 
+# Parse arguments and set common variables
 parse_args() {
-	# Parse options
 	FLAGS "$@" || exit $?
 	eval set -- "${FLAGS_ARGV}"
 }
 
 # Default entry when no SUBACTION is given
 cmd_default() {
-	DEFINE_boolean force false 'force setting of gitflow branches, even if already configured' f
-	DEFINE_boolean defaults false 'use default branch naming conventions' d
-	DEFINE_boolean local false 'use repository config file'
-	DEFINE_boolean global false 'use global config file'
-	DEFINE_boolean system false 'use system config file'
-	DEFINE_string file "" 'use given config file'
-
 	OPTIONS_SPEC="\
 git flow init [-h] [-d] [-f]
 
@@ -78,6 +71,18 @@ global!  use global config file
 system!  use system config file
 file= use given config file
 "
+	local gitflow_config_option should_check_existence branchcount guess
+  	local master_branch develop_branch default_suggestion answer prefix
+
+	# Define flags
+	DEFINE_boolean force false 'force setting of gitflow branches, even if already configured' f
+	DEFINE_boolean defaults false 'use default branch naming conventions' d
+	DEFINE_boolean local false 'use repository config file'
+	DEFINE_boolean global false 'use global config file'
+	DEFINE_boolean system false 'use system config file'
+	DEFINE_string file "" 'use given config file'
+
+	# Parse arguments
 	parse_args "$@"
 
 	if [ "$FLAGS_file" != "" ]; then
@@ -106,15 +111,12 @@ file= use given config file
 		exit 0
 	fi
 
-	local branch_count
-	local answer
-
 	if flag defaults; then
 		warn "Using default branch names."
 	fi
 
 	# Add a master branch if no such branch exists yet
-	local master_branch
+
 	if gitflow_has_master_configured && ! flag force; then
 		master_branch=$(git config --get gitflow.branch.master)
 	else
@@ -124,8 +126,6 @@ file= use given config file
 		# 2. Some branches do already exist
 		#    We will disallow creation of new master/develop branches and
 		#    rather allow to use existing branches for git-flow.
-		local default_suggestion
-		local should_check_existence
 		branch_count=$(git_local_branches | wc -l)
 		if [ "$branch_count" -eq 0 ]; then
 			echo "No branches exist yet. Base branches must be created now."
@@ -170,14 +170,11 @@ file= use given config file
 	fi
 
 	# Add a develop branch if no such branch exists yet
-	local develop_branch
 	if gitflow_has_develop_configured && ! flag force; then
 		develop_branch=$(git config --get gitflow.branch.develop)
 	else
 		# Again, the same two cases as with the master selection are
 		# considered (fresh repo or repo that contains branches)
-		local default_suggestion
-		local should_check_existence
 		branch_count=$(git_local_branches | grep -v "^${master_branch}\$" | wc -l)
 		if [ "$branch_count" -eq 0 ]; then
 			should_check_existence=NO
@@ -274,8 +271,6 @@ file= use given config file
 		echo
 		echo "How to name your supporting branch prefixes?"
 	fi
-
-	local prefix
 
 	# Feature branches
 	if ! git config --get gitflow.prefix.feature >/dev/null 2>&1 || flag force; then
