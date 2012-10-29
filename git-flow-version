@@ -43,7 +43,7 @@ initialize() {
 }
 
 usage() {
-		OPTIONS_SPEC="\
+	OPTIONS_SPEC="\
 git flow version
 
 Shows version information.
@@ -51,8 +51,7 @@ Shows version information.
 For more specific help type the command followed by --help
 --
 "
-flags_help
-
+	flags_help
 }
 
 cmd_default() {
