@@ -32,6 +32,8 @@
   GIT_MERGE_AUTOEDIT for example.    
   You can add these exports to the file ~/.gitflow_export if you only want 
   to set the environment variable for git-flow.    
+* Bugfix: Missing command hotfix track.    
+  The command git flow hotfix track is not implemented.
 
 #### 1.2.1
 [Peter van der Does][petervanderdoes]

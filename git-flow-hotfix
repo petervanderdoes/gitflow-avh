@@ -224,7 +224,7 @@ F,fetch           Fetch from origin before performing local operation
 
 cmd_publish() {
 	OPTIONS_SPEC="\
-it flow hotfix publish [-h] <name>
+git flow hotfix publish [-h] <version>
 
 Start sharing hotfix <name> on $ORIGIN
 --
@@ -260,6 +260,36 @@ showcommands!    Show git commands while executing them
 	echo "- A new remote branch '$BRANCH' was created"
 	echo "- The local branch '$BRANCH' was configured to track the remote branch"
 	echo "- You are now on branch '$(git_current_branch)'"
+	echo
+}
+
+cmd_track() {
+	OPTIONS_SPEC="\
+git flow hotfix track [-h] <version>
+
+Create a tracking hotfix branch from $ORIGIN
+--
+h,help!           Show this help
+showcommands!    Show git commands while executing them
+"
+	# Parse arguments
+	parse_args "$@"
+
+	gitflow_require_version_arg
+
+	# Sanity checks
+	require_clean_working_tree
+	require_branch_absent "$BRANCH"
+	git_do fetch -q "$ORIGIN"
+	require_branch "$ORIGIN/$BRANCH"
+
+	# Create tracking branch
+	git_do checkout -b "$BRANCH" "$ORIGIN/$BRANCH"
+
+	echo
+	echo "Summary of actions:"
+	echo "- A new remote tracking branch '$BRANCH' was created"
+	echo "- You are now on branch '$BRANCH'"
 	echo
 }
 
