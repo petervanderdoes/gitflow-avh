@@ -35,7 +35,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-GITFLOW_VERSION=1.2.1
+GITFLOW_VERSION=1.3.0
 
 initialize() {
 	# A function can not be empty. Comments count as empty.
@@ -43,7 +43,7 @@ initialize() {
 }
 
 usage() {
-		OPTIONS_SPEC="\
+	OPTIONS_SPEC="\
 git flow version
 
 Shows version information.
@@ -51,8 +51,7 @@ Shows version information.
 For more specific help type the command followed by --help
 --
 "
-flags_help
-
+	flags_help
 }
 
 cmd_default() {

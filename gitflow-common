@@ -42,6 +42,7 @@
 # Shell output
 warn() { echo "$@" >&2; }
 die() { warn "Fatal: $@"; exit 1; }
+die_help() { warn $@; flags_help; exit 1; }
 
 escape() {
 	echo "$1" | sed 's/\([\.\$\*]\)/\\\1/g'
@@ -49,7 +50,10 @@ escape() {
 
 # Set logic
 has() {
-	local item=$1; shift
+	local item
+
+	item=$1
+	shift
 	echo " $@ " | grep -q " $(escape $item) "
 }
 
@@ -78,8 +82,11 @@ git_local_branches_prefixed() {
 	[ -z $1 ] && die "Prefix parameter missing." # This should never happen.
 	git for-each-ref --format='%(refname:short)' refs/heads/$1 ;
 }
+
 git_current_branch() {
-	local branch_name="$(git symbolic-ref --quiet HEAD)"
+	local branch_name
+
+	branch_name="$(git symbolic-ref --quiet HEAD)"
 	[ -z $branch_name ] && branch_name="(unnamed branch)" || branch_name="$(git for-each-ref --format='%(refname:short)' $branch_name)"
 	echo "$branch_name"
 }
@@ -143,10 +150,12 @@ git_tag_exists() {
 # 4    There is no merge base, i.e. the references have no common ancestors
 #
 git_compare_refs() {
-	local commit1=$(git rev-parse "$1"^{})
-	local commit2=$(git rev-parse "$2"^{})
+	local commit1 commit2 base
+
+	commit1=$(git rev-parse "$1"^{})
+	commit2=$(git rev-parse "$2"^{})
 	if [ "$commit1" != "$commit2" ]; then
-		local base=$(git merge-base "$commit1" "$commit2")
+		base=$(git merge-base "$commit1" "$commit2")
 		if [ $? -ne 0 ]; then
 			return 4
 		elif [ "$commit1" = "$base" ]; then
@@ -167,8 +176,10 @@ git_compare_refs() {
 # Checks whether branch $1 is successfully merged into $2
 #
 git_is_branch_merged_into() {
-	local merge_hash=$(git merge-base "$1"^{} "$2"^{})
-	local base_hash=$(git rev-parse "$1"^{})
+	local merge_hash base_hash
+
+	merge_hash=$(git merge-base "$1"^{} "$2"^{})
+	base_hash=$(git rev-parse "$1"^{})
 
 	# If the hashes are equal, the branches are merged.
 	[ "$merge_hash" = "$base_hash" ]
@@ -195,10 +206,12 @@ git_is_ancestor() {
 # refs/remotes/<origin>/<branch>
 #
 git_fetch_branch() {
+	local origin branch
+
 	[ -n "$1" ] || die "Missing origin"
 	[ -n "$2" ] || die "Missing branch name"
-	local origin="$1"
-	local branch="$2"
+	origin="$1"
+	branch="$2"
 	git_do fetch -q "$origin" "$branch":refs/remotes/"$origin"/"$branch" || die "Could not fetch $branch from $origin."
 }
 
@@ -208,36 +221,34 @@ git_fetch_branch() {
 
 gitflow_require_version_arg() {
 	if [ "$VERSION" = "" ]; then
-		warn "Missing argument <version>"
-		flags_help
-		exit 1
+		die_help "Missing argument <version>"
 	fi
 }
 
 gitflow_require_name_arg() {
 	if [ "$NAME" = "" ]; then
-		warn "Missing argument <name>"
-		flags_help
-		exit 1
+		die_help "Missing argument <name>"
 	fi
 }
 
 gitflow_require_base_arg() {
 	if [ "$BASE" = "" ]; then
-		warn "Missing argument <base>"
-		flags_help
-		exit 1
+		die_help "Missing argument <base>"
 	fi
 }
 
 # Function used to check if the repository is git-flow enabled.
 gitflow_has_master_configured() {
-	local master=$(git config --get gitflow.branch.master)
+	local master
+
+	master=$(git config --get gitflow.branch.master)
 	[ "$master" != "" ] && git_local_branch_exists "$master"
 }
 
 gitflow_has_develop_configured() {
-	local develop=$(git config --get gitflow.branch.develop)
+	local develop
+
+	develop=$(git config --get gitflow.branch.develop)
 	[ "$develop" != "" ] && git_local_branch_exists "$develop"
 }
 
@@ -282,10 +293,11 @@ gitflow_load_settings() {
 # 2: Multiple matches found. These matches are written to stderr
 #
 gitflow_resolve_nameprefix() {
-	local name=$1
-	local prefix=$2
-	local matches
-	local num_matches
+	local name prefix
+	local match matches num_matches
+
+	name=$1
+	prefix=$2
 
 	# first, check if there is a perfect match
 	if git_local_branch_exists "$prefix$name"; then
@@ -318,7 +330,9 @@ gitflow_resolve_nameprefix() {
 # Check if the given branch is a git-flow branch
 #
 gitflow_is_prefixed_branch() {
-	local branch=$1
+	local branch return
+
+	branch=$1
 	case $branch in
 	$(git config --get gitflow.prefix.feature)* | \
 	$(git config --get gitflow.prefix.release)* | \
@@ -346,8 +360,10 @@ require_gitflow_initialized() {
 }
 
 require_clean_working_tree() {
+	local result
+
 	git_is_clean_working_tree
-	local result=$?
+	result=$?
 	if [ $result -eq 1 ]; then
 		die "Working tree contains unstaged changes. Aborting."
 	fi
@@ -377,15 +393,18 @@ require_tag_absent() {
 }
 
 require_branches_equal() {
+	local compare_refs_result
+
 	require_local_branch "$1"
 	require_remote_branch "$2"
 	git_compare_refs "$1" "$2"
-	local status=$?
-	if [ $status -gt 0 ]; then
+	compare_refs_result=$?
+
+	if [ $compare_refs_result -gt 0 ]; then
 		warn "Branches '$1' and '$2' have diverged."
-		if [ $status -eq 1 ]; then
+		if [ $compare_refs_result -eq 1 ]; then
 			die "And branch '$1' may be fast-forwarded."
-		elif [ $status -eq 2 ]; then
+		elif [ $compare_refs_result -eq 2 ]; then
 			# Warn here, since there is no harm in being ahead
 			warn "And local branch '$1' is ahead of '$2'."
 		else
@@ -416,9 +435,11 @@ git_do() {
 # positional arguments.
 #
 run_filter_hook() {
-	local command=$1
+	local command scriptfile
+
+	command=$1
 	shift
-	local scriptfile="${HOOKS_DIR}/filter-flow-${command}"
+	scriptfile="${HOOKS_DIR}/filter-flow-${command}"
 	if [ -x $scriptfile ]; then
 		echo `$scriptfile "$@"`
 	else
@@ -438,9 +459,10 @@ run_filter_hook() {
 # aborted.
 #
 run_pre_hook() {
-	local scriptfile="${HOOKS_DIR}/pre-flow-${SUBCOMMAND}-${SUBACTION}"
-	local exitcode=0
+	local scriptfile exitcode
 
+	scriptfile="${HOOKS_DIR}/pre-flow-${SUBCOMMAND}-${SUBACTION}"
+	exitcode=0
 	if [ -x $scriptfile ]; then
 		$scriptfile "$@"
 		exitcode=$?
@@ -462,7 +484,9 @@ run_pre_hook() {
 # positional arguments.  Its return code is ignored.
 #
 run_post_hook() {
-	local scriptfile="${HOOKS_DIR}/post-flow-${SUBCOMMAND}-${SUBACTION}"
+	local scriptfile
+
+	scriptfile="${HOOKS_DIR}/post-flow-${SUBCOMMAND}-${SUBACTION}"
 	if [ -x $scriptfile ]; then
 		$scriptfile "$@"
 	fi

@@ -44,7 +44,7 @@ initialize() {
 }
 
 usage() {
-OPTIONS_SPEC="\
+	OPTIONS_SPEC="\
 git flow hotfix [list]
 git flow hotfix start
 git flow hotfix finish
@@ -56,7 +56,7 @@ Manage your hotfix branches.
 For more specific help type the command followed by --help
 --
 "
-flags_help
+	flags_help
 }
 
 cmd_default() {
@@ -72,11 +72,15 @@ Lists all local hotfix branches
 h,help!           Show this help
 v,verbose!        Verbose (more) output
 "
+	local hotfix_branches current_branch width branch len
+	local base master_sha branch_sha
+
+	# Define flags
 	DEFINE_boolean verbose false 'verbose (more) output' v
+
+	# Parse arguments
 	parse_args "$@"
 
-	local hotfix_branches
-	local current_branch
 	hotfix_branches=$(git_local_branches_prefixed "$PREFIX")
 	if [ -z "$hotfix_branches" ]; then
 		warn "No hotfix branches exist."
@@ -90,19 +94,17 @@ v,verbose!        Verbose (more) output
 	current_branch=$(git_current_branch)
 
 	# Determine column width first
-	local width=0
-	local branch
+	width=0
 	for branch in $hotfix_branches; do
-		local len=${#branch}
+		len=${#branch}
 		width=$(max $width $len)
 	done
 	width=$(($width+3-${#PREFIX}))
 
-	local branch
 	for branch in $hotfix_branches; do
-		local base=$(git merge-base "$branch" "$MASTER_BRANCH")
-		local master_sha=$(git rev-parse "$MASTER_BRANCH")
-		local branch_sha=$(git rev-parse "$branch")
+		base=$(git merge-base "$branch" "$MASTER_BRANCH")
+		master_sha=$(git rev-parse "$MASTER_BRANCH")
+		branch_sha=$(git rev-parse "$branch")
 		if [ "$branch" = "$current_branch" ]; then
 			printf "* "
 		else
@@ -134,8 +136,8 @@ cmd_help() {
 	exit 0
 }
 
+# Parse arguments and set common variables
 parse_args() {
-	# Parse options
 	FLAGS "$@" || exit $?
 	eval set -- "${FLAGS_ARGV}"
 
@@ -145,8 +147,11 @@ parse_args() {
 }
 
 require_no_existing_hotfix_branches() {
-	local hotfix_branches=$(git_local_branches_prefixed "$PREFIX")
-	local first_branch=$(echo ${hotfix_branches} | head -n1)
+	local hotfix_branches first_branch
+
+	hotfix_branches=$(git_local_branches_prefixed "$PREFIX")
+	first_branch=$(echo ${hotfix_branches} | head -n1)
+
 	first_branch=${first_branch#$PREFIX}
 	[ -z "$hotfix_branches" ] || die "There is an existing hotfix branch '$first_branch'. Finish that one first."
 }
@@ -161,10 +166,15 @@ h,help!           Show this help
 showcommands!    Show git commands while executing them
 F,fetch           Fetch from origin before performing local operation
 "
+	local base
+
+	# Define flags
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
+
+	# Parse arguments
 	parse_args "$@"
 	eval set -- "${FLAGS_ARGV}"
-	BASE=${2:-$MASTER_BRANCH}
+	base=${2:-$MASTER_BRANCH}
 
 	# No need to continue if not clean
 	require_clean_working_tree
@@ -181,7 +191,7 @@ F,fetch           Fetch from origin before performing local operation
 	BRANCH=$PREFIX$VERSION
 
 	gitflow_require_version_arg
-	git_is_ancestor "$BASE" "$MASTER_BRANCH" || die "Given base '$BASE' is not a valid commit on '$MASTER_BRANCH'."
+	git_is_ancestor "$base" "$MASTER_BRANCH" || die "Given base '$base' is not a valid commit on '$MASTER_BRANCH'."
 	require_no_existing_hotfix_branches
 
 	# Sanity checks
@@ -191,16 +201,16 @@ F,fetch           Fetch from origin before performing local operation
 		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
 	fi
 
-	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$BASE"
+	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$base"
 
 	# Create branch
-	git_do checkout -b "$BRANCH" "$BASE"  || die "Could not create hotfix branch '$BRANCH'."
+	git_do checkout -b "$BRANCH" "$base"  || die "Could not create hotfix branch '$BRANCH'."
 
-	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$BASE"
+	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$base"
 
 	echo
 	echo "Summary of actions:"
-	echo "- A new branch '$BRANCH' was created, based on '$BASE'"
+	echo "- A new branch '$BRANCH' was created, based on '$base'"
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo
 	echo "Follow-up actions:"
@@ -214,14 +224,16 @@ F,fetch           Fetch from origin before performing local operation
 
 cmd_publish() {
 	OPTIONS_SPEC="\
-it flow hotfix publish [-h] <name>
+git flow hotfix publish [-h] <version>
 
 Start sharing hotfix <name> on $ORIGIN
 --
 h,help!           Show this help
 showcommands!    Show git commands while executing them
 "
+	# Parse arguments
 	parse_args "$@"
+
 	gitflow_require_version_arg
 
 	# Sanity checks
@@ -251,6 +263,36 @@ showcommands!    Show git commands while executing them
 	echo
 }
 
+cmd_track() {
+	OPTIONS_SPEC="\
+git flow hotfix track [-h] <version>
+
+Create a tracking hotfix branch from $ORIGIN
+--
+h,help!           Show this help
+showcommands!    Show git commands while executing them
+"
+	# Parse arguments
+	parse_args "$@"
+
+	gitflow_require_version_arg
+
+	# Sanity checks
+	require_clean_working_tree
+	require_branch_absent "$BRANCH"
+	git_do fetch -q "$ORIGIN"
+	require_branch "$ORIGIN/$BRANCH"
+
+	# Create tracking branch
+	git_do checkout -b "$BRANCH" "$ORIGIN/$BRANCH"
+
+	echo
+	echo "Summary of actions:"
+	echo "- A new remote tracking branch '$BRANCH' was created"
+	echo "- You are now on branch '$BRANCH'"
+	echo
+}
+
 cmd_finish() {
 	OPTIONS_SPEC="\
 git flow hotfix finish [-h] [-F] [-s] [-u] [-m | -f ] [-p] [-k] [-n] [-b] <version>
@@ -271,6 +313,9 @@ keeplocal         Keep the local branch
 n,notag           Don't tag this release
 b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 "
+	local opts commit remotebranch
+
+	# Define flags
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	DEFINE_boolean sign false "sign the release tag cryptographically" s
 	DEFINE_string signingkey "" "use the given GPG-key for the digital signature (implies -s)" u
@@ -283,7 +328,9 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 	DEFINE_boolean notag false "don't tag this release" n
 	DEFINE_boolean nobackmerge false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
 
+	# Parse arguments
 	parse_args "$@"
+
 	gitflow_require_version_arg
 
 	# Handle flags that imply other flags
@@ -330,13 +377,17 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 	# - Can be merged: If there's no common ancestor we can't merge the hotfix
 	git_compare_refs "$BRANCH" "$MASTER_BRANCH"
 	case $? in
-		0) die "You need some commits in the hotfix branch '$BRANCH'"
+	0)
+		die "You need some commits in the hotfix branch '$BRANCH'"
 		;;
-		1) die "The hotfix branch '$BRANCH' is not ahead of branch '$MASTER_BRANCH'"
+	1)
+		die "The hotfix branch '$BRANCH' is not ahead of branch '$MASTER_BRANCH'"
 		;;
-		4) die "The hotfix branch '$BRANCH' has no common ancestor with branch '$MASTER_BRANCH'"
+	4)
+		die "The hotfix branch '$BRANCH' has no common ancestor with branch '$MASTER_BRANCH'"
 		;;
-		*) ;;
+	*)
+		;;
 	esac
 
 	if noflag notag; then
@@ -367,7 +418,7 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
 			fi
-			local opts="-a"
+			opts="-a"
 			flag sign && opts="$opts -s"
 			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
 			[ "$FLAGS_message" != "" ] && opts="$opts -m '$FLAGS_message'"
@@ -414,7 +465,7 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 			git_do branch -d "$BRANCH"
 		fi
 		if noflag keepremote;then
-			local remotebranch=0
+			remotebranch=0
 			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 				remotebranch=1
 				git_remote_branch_delete "$BRANCH"
@@ -476,11 +527,16 @@ h,help!           Show this help
 showcommands!    Show git commands while executing them
 f,force           Force deletion
 r,remote          Delete remote branch
-
 "
+	local current_branch
+
+	# Define flags
 	DEFINE_boolean force false "force deletion" f
 	DEFINE_boolean remote false "delete remote branch" r
+
+	# Parse arguments
 	parse_args "$@"
+
 	gitflow_require_version_arg
 
 	# Sanity checks
@@ -488,7 +544,7 @@ r,remote          Delete remote branch
 
 	run_pre_hook "$VERSION" "$ORIGIN" "$BRANCH"
 
-	local current_branch=$(git_current_branch)
+	current_branch=$(git_current_branch)
 	# We can't delete a branch we are on, switch to the master branch.
 	if [ "$BRANCH" = "$current_branch" ]; then
 		require_clean_working_tree

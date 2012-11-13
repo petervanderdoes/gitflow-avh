@@ -1,0 +1,250 @@
+#
+# git-flow -- A collection of Git extensions to provide high-level
+# repository operations for Vincent Driessen's branching model.
+#
+# A blog post presenting this model is found at:
+#    http://blog.avirtualhome.com/development-workflow-using-git/
+#
+# Feel free to contribute to this project at:
+#    http://github.com/petervanderdoes/gitflow
+#
+# Authors:
+# Copyright 2012 Peter van der Does. All rights reserved.
+#
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+
+initialize() {
+	require_git_repo
+	require_gitflow_initialized
+	gitflow_load_settings
+}
+
+usage() {
+	OPTIONS_SPEC="\
+git flow config [list]
+git flow config set
+
+Manage the git-flow configuration.
+
+For more specific help type the command followed by --help
+--
+"
+	flags_help
+}
+
+parse_args() {
+	# Parse options
+	FLAGS "$@" || exit $?
+	eval set -- "${FLAGS_ARGV}"
+
+	OPTION=$(echo $1|tr '[:upper:]' '[:lower:]')
+
+	if [ "$FLAGS_file" != "" ]; then
+		gitflow_config_option="--file '$FLAGS_file'"
+	elif flag local; then
+		gitflow_config_option="--local"
+	elif flag global; then
+		gitflow_config_option="--global"
+	elif flag system; then
+		gitflow_config_option="--system"
+	else
+		gitflow_config_option=""
+	fi
+
+}
+
+# Default entry when no SUBACTION is given
+cmd_default() {
+	OPTIONS_SPEC="\
+git flow config [list]
+
+Show the git-flow configurations
+--
+h,help!           Show this help
+
+ Use config file location
+local!  use repository config file
+global!  use global config file
+system!  use system config file
+file= use given config file
+"
+	local output
+
+	# Define flags
+	DEFINE_boolean local false 'use repository config file'
+	DEFINE_boolean global false 'use global config file'
+	DEFINE_boolean system false 'use system config file'
+	DEFINE_string file "" 'use given config file'
+
+	# Parse arguments
+	parse_args "$@"
+
+	output=$(git config $gitflow_config_option --get gitflow.branch.master)
+	echo "Branch name for production releases: $output "
+
+	output=$(git config $gitflow_config_option --get gitflow.branch.develop)
+	echo "Branch name for \"next release\" development: $output "
+
+	output=$(git config $gitflow_config_option --get gitflow.prefix.feature)
+	echo "Feature branch prefix: $output "
+
+	output=$(git config $gitflow_config_option --get gitflow.prefix.release)
+	echo "Release branch prefix: $output "
+
+	output=$(git config $gitflow_config_option --get gitflow.prefix.hotfix)
+	echo "Hotfix branch prefix: $output "
+
+	output=$(git config $gitflow_config_option --get gitflow.prefix.support)
+	echo "Support branch prefix: $output "
+
+	output=$(git config $gitflow_config_option --get gitflow.prefix.versiontag)
+	echo "Version tag prefix: $output "
+}
+
+cmd_set() {
+	OPTIONS_SPEC="\
+git flow config set <option> <value>
+
+ Set the git-flow configuration option to the given value
+--
+h,help!           Show this help
+
+ Use config file location
+local!  use repository config file
+global!  use global config file
+system!  use system config file
+file= use given config file
+"
+	local value cfg_option txt
+
+	# Define flags
+	DEFINE_boolean local false 'use repository config file'
+	DEFINE_boolean global false 'use global config file'
+	DEFINE_boolean system false 'use system config file'
+	DEFINE_string file "" 'use given config file'
+
+	# Parse arguments
+	parse_args "$@"
+	eval set -- "${FLAGS_ARGV}"
+	value=$2
+
+	case $OPTION in
+	master)
+		cfg_option="gitflow.branch.master"
+		txt="Branch name for production releases"
+		;;
+	develop)
+		cfg_option="gitflow.branch.develop"
+		txt="Branch name for \"next release\" development"
+		;;
+	feature)
+		cfg_option="gitflow.prefix.feature"
+		txt="Feature branch prefix"
+		;;
+	hotfix)
+		cfg_option="gitflow.prefix.hotfix"
+		txt="Hotfix branch prefix"
+		;;
+	release)
+		cfg_option="gitflow.prefix.release"
+		txt="Release branch prefix"
+		;;
+	support)
+		cfg_option="gitflow.prefix.support"
+		txt="Support branch prefix"
+		;;
+	versiontagprefix)
+		cfg_option="gitflow.prefix.versiontag"
+		txt="Version tag prefix"
+		;;
+	*)
+		die_help "Invalid option given."
+		;;
+	esac
+
+	[ -n "$value" ] || die_help "No value given"
+
+	if [ $OPTION = "master" ]; then
+		develop_branch=$(git config --get gitflow.branch.develop)
+		if [ "$value" = $develop_branch ]; then
+			die "Production and \"next release\" branch should differ."
+		fi
+
+		if ! git_local_branch_exists "$value" && git_remote_branch_exists "origin/$value"; then
+			git_do branch "$value" "origin/$value" >/dev/null 2>&1
+		elif ! git_local_branch_exists "$value"; then
+			die "Local branch '$value' does not exist."
+		fi
+	fi
+
+	if [ $OPTION = "develop" ]; then
+		master_branch=$(git config --get gitflow.branch.master)
+		if [ "$value" = $master_branch ]; then
+			die "Production and \"next release\" branch should differ."
+		fi
+
+		if ! git_local_branch_exists "$value" && git_remote_branch_exists "origin/$value"; then
+			git_do branch "$value" "origin/$value" >/dev/null 2>&1
+		elif ! git_local_branch_exists "$value"; then
+			die "Local branch '$value' does not exist."
+		fi
+	fi
+
+	git_do config $gitflow_config_option $cfg_option "$value"
+
+	case $? in
+	0)
+		;;
+	3)
+		die "The config file is invalid."
+		;;
+	4)
+		die "Can not write to the config file."
+		;;
+	*)
+		die "Unknown return code [$?]. Please file an issue about this error."
+		;;
+	esac
+
+	echo
+	echo "Summary of actions:"
+	if [ "$FLAGS_file" != "" ]; then
+		echo "- Using configuration file '$FLAGS_file'"
+	elif flag local; then
+		echo "- Using repository specific configuration file."
+	elif flag global; then
+		echo "- Using user-specific configuration file."
+	elif flag system; then
+		echo "- Using system-wide configuration file."
+	else
+		echo "- Using repository specific configuration file."
+	fi
+	echo "- $txt set to $value"
+	echo
+}
+
+cmd_help() {
+	usage
+	exit 0
+}

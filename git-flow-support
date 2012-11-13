@@ -56,8 +56,7 @@ Manage your hotfix branches.
 For more specific help type the command followed by --help
 --
 "
-flags_help
-
+	flags_help
 }
 
 cmd_default() {
@@ -73,11 +72,16 @@ List all local support branches
 h,help!           Show this help
 v,verbose         Verbose (more) output
 "
+	local support_branches current_branch width branch len
+	local base master_sha branch_sha
+	local tagname nicename
+
+	# Define flags
 	DEFINE_boolean verbose false 'verbose (more) output' v
+
+	# Parse arguments
 	parse_args "$@"
 
-	local support_branches
-	local current_branch
 	support_branches=$(git_local_branches_prefixed "$PREFIX")
 	if [ -z "$support_branches" ]; then
 		warn "No support branches exist."
@@ -91,19 +95,17 @@ v,verbose         Verbose (more) output
 	current_branch=$(git_current_branch)
 
 	# Determine column width first
-	local width=0
-	local branch
+	width=0
 	for branch in $support_branches; do
-		local len=${#branch}
+		len=${#branch}
 		width=$(max $width $len)
 	done
 	width=$(($width+3-${#PREFIX}))
 
-	local branch
 	for branch in $support_branches; do
-		local base=$(git merge-base "$branch" "$MASTER_BRANCH")
-		local master_sha=$(git rev-parse "$MASTER_BRANCH")
-		local branch_sha=$(git rev-parse "$branch")
+		base=$(git merge-base "$branch" "$MASTER_BRANCH")
+		master_sha=$(git rev-parse "$MASTER_BRANCH")
+		branch_sha=$(git rev-parse "$branch")
 		if [ "$branch" = "$current_branch" ]; then
 			printf "* "
 		else
@@ -114,8 +116,7 @@ v,verbose         Verbose (more) output
 			if [ "$branch_sha" = "$master_sha" ]; then
 				printf "(no commits yet)"
 			else
-				local tagname=$(git name-rev --tags --no-undefined --name-only "$base")
-				local nicename
+				tagname=$(git name-rev --tags --no-undefined --name-only "$base")
 				if [ "$tagname" != "" ]; then
 					nicename=$tagname
 				else
@@ -135,8 +136,8 @@ cmd_help() {
 	exit 0
 }
 
+# Parse arguments and set common variables
 parse_args() {
-	# Parse options
 	FLAGS "$@" || exit $?
 	eval set -- "${FLAGS_ARGV}"
 
@@ -156,8 +157,12 @@ h,help!           Show this help
 showcommands!    Show git commands while executing them
 F,fetch           Fetch from origin before performing finish
 "
+	# Define flags
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
+
+	# Parse arguments
 	parse_args "$@"
+
 	gitflow_require_version_arg
 	gitflow_require_base_arg
 

@@ -60,7 +60,7 @@ Manage your feature branches.
 For more specific help type the command followed by --help
 --
 "
-flags_help
+	flags_help
 }
 
 cmd_default() {
@@ -75,13 +75,16 @@ Lists all the existing feature branches in the local repository.
 --
 h,help!     Show this help
 v,verbose   Verbose (more) output
-
 "
+	local feature_branches current_branch width branch len
+	local base develop_sha branch_sha
+
+	# Define flags
 	DEFINE_boolean verbose false 'verbose (more) output' v
+
+	# Parse argun=ments
 	parse_args "$@"
 
-	local feature_branches
-	local current_branch
 	feature_branches=$(git_local_branches_prefixed "$PREFIX")
 	if [ -z "$feature_branches" ]; then
 		warn "No feature branches exist."
@@ -95,19 +98,17 @@ v,verbose   Verbose (more) output
 	current_branch=$(git_current_branch)
 
 	# Determine column width first
-	local width=0
-	local branch
+	width=0
 	for branch in $feature_branches; do
-		local len=${#branch}
+		len=${#branch}
 		width=$(max $width $len)
 	done
 	width=$(($width+3-${#PREFIX}))
 
-	local branch
 	for branch in $feature_branches; do
-		local base=$(git merge-base "$branch" "$DEVELOP_BRANCH")
-		local develop_sha=$(git rev-parse "$DEVELOP_BRANCH")
-		local branch_sha=$(git rev-parse "$branch")
+		base=$(git merge-base "$branch" "$DEVELOP_BRANCH")
+		develop_sha=$(git rev-parse "$DEVELOP_BRANCH")
+		branch_sha=$(git rev-parse "$branch")
 		if [ "$branch" = "$current_branch" ]; then
 			printf "* "
 		else
@@ -137,22 +138,28 @@ cmd_help() {
 }
 
 expand_nameprefix_arg() {
+	local expanded_name exitcode
+
 	gitflow_require_name_arg
 
-	local expanded_name
-	local exitcode
 	expanded_name=$(gitflow_resolve_nameprefix "$NAME" "$PREFIX")
 	exitcode=$?
 	case $exitcode in
-		0) NAME=$expanded_name
+	0)
+		NAME=$expanded_name
 		BRANCH=$PREFIX$NAME
 		;;
-		*) exit 1 ;;
+	*)
+		exit 1
+		;;
 	esac
 }
 
 use_current_feature_branch_name() {
-	local current_branch=$(git_current_branch)
+	local current_branch
+
+	current_branch=$(git_current_branch)
+
 	if startswith "$current_branch" "$PREFIX"; then
 		BRANCH=$current_branch
 		NAME=${BRANCH#$PREFIX}
@@ -178,8 +185,8 @@ name_or_current() {
 	fi
 }
 
+# Parse arguments and set common variables
 parse_args() {
-	# parse options
 	FLAGS "$@" || exit $?
 	eval set -- "${FLAGS_ARGV}"
 
@@ -189,7 +196,7 @@ parse_args() {
 }
 
 parse_remote_name() {
-	# parse options
+	# Parse arguments
 	FLAGS "$@" || exit $?
 	eval set -- "${FLAGS_ARGV}"
 
@@ -209,10 +216,16 @@ h,help! Show this help
 showcommands!    Show git commands while executing them
 F,fetch Fetch from origin before performing local operation
 "
+	local base
+
+	# Define flags
 	DEFINE_boolean fetch false 'fetch from origin before performing local operation' F
+
+	# Parse arguments
 	parse_args "$@"
 	eval set -- "${FLAGS_ARGV}"
-	BASE=${2:-$DEVELOP_BRANCH}
+	base=${2:-$DEVELOP_BRANCH}
+
 	gitflow_require_name_arg
 
 	# Update the local repo with remote changes, if asked
@@ -229,16 +242,16 @@ F,fetch Fetch from origin before performing local operation
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
 	fi
 
-	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH" "$BASE"
+	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH" "$base"
 
 	# create branch
-	git_do checkout -b "$BRANCH" "$BASE" || die "Could not create feature branch '$BRANCH'."
+	git_do checkout -b "$BRANCH" "$base" || die "Could not create feature branch '$BRANCH'."
 
-	run_post_hook "$NAME" "$ORIGIN" "$BRANCH" "$BASE"
+	run_post_hook "$NAME" "$ORIGIN" "$BRANCH" "$base"
 
 	echo
 	echo "Summary of actions:"
-	echo "- A new branch '$BRANCH' was created, based on '$BASE'"
+	echo "- A new branch '$BRANCH' was created, based on '$base'"
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo ""
 	echo "Now, start committing on your feature. When done, use:"
@@ -263,6 +276,9 @@ keeplocal!     Keep the local branch
 D,force_delete Force delete feature branch after finish
 S,squash       Squash feature during merge
 "
+	local finish_base
+
+	# Define flags
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	DEFINE_boolean rebase false "rebase instead of merge" r
 	DEFINE_boolean keep false "keep branch after performing finish" k
@@ -271,7 +287,9 @@ S,squash       Squash feature during merge
 	DEFINE_boolean force_delete false "force delete feature branch after finish" D
 	DEFINE_boolean squash false "squash feature during merge" S
 
+	# Parse arguments
 	parse_args "$@"
+
 	expand_nameprefix_arg_or_current
 
 	# Keeping both branches implies the --keep flag to be true.
@@ -294,12 +312,12 @@ S,squash       Squash feature during merge
 		# exit code for "unmerged changes in working tree", which we should
 		# actually be testing for here
 		if git_is_clean_working_tree; then
-			FINISH_BASE=$(cat "$DOT_GIT_DIR/.gitflow/MERGE_BASE")
+			finish_base=$(cat "$DOT_GIT_DIR/.gitflow/MERGE_BASE")
 
 			# Since the working tree is now clean, either the user did a
 			# succesfull merge manually, or the merge was cancelled.
 			# We detect this using git_is_branch_merged_into()
-			if git_is_branch_merged_into "$BRANCH" "$FINISH_BASE"; then
+			if git_is_branch_merged_into "$BRANCH" "$finish_base"; then
 				rm -f "$DOT_GIT_DIR/.gitflow/MERGE_BASE"
 				helper_finish_cleanup
 				exit 0
@@ -396,6 +414,8 @@ S,squash       Squash feature during merge
 }
 
 helper_finish_cleanup() {
+	local keepmsg
+
 	# Sanity checks
 	require_branch "$BRANCH"
 	require_clean_working_tree
@@ -423,7 +443,7 @@ helper_finish_cleanup() {
 	echo "- The feature branch '$BRANCH' was merged into '$DEVELOP_BRANCH'"
 	#echo "- Merge conflicts were resolved"		# TODO: Add this line when it's supported
 	if noflag keep; then
-		local keepmsg="'has been deleted"
+		keepmsg="'has been deleted"
 		if flag keeplocal; then
 			keepmsg="is locally still available."
 			if [ $remotebranch -eq 1 ]; then
@@ -445,15 +465,18 @@ helper_finish_cleanup() {
 
 cmd_publish() {
 	OPTIONS_SPEC="\
-git flow feature publish [-h] <name>
+git flow feature publish [-h] [<name>]
 
-Publish feature branch <name> on $ORIGIN
+Publish feature branch <name> on $ORIGIN.
+When <name> is omitted the current branch is used, but only if it's a feature branch.
 --
 h,help!           Show this help
 showcommands!    Show git commands while executing them
 "
+	# Parse arguments
 	parse_args "$@"
-	expand_nameprefix_arg
+
+	name_or_current
 
 	# Sanity checks
 	require_clean_working_tree
@@ -491,7 +514,9 @@ Start tracking feature <name> that is shared on $ORIGIN
 h,help!           Show this help
 showcommands!    Show git commands while executing them
 "
+	# Parse arguments
 	parse_args "$@"
+
 	gitflow_require_name_arg
 
 	# Sanity checks
@@ -524,19 +549,22 @@ Show all changes in <name> that are not in <develop>
 h,help!           Show this help
 showcommands!    Show git commands while executing them
 "
+	local base
+
+	# Parse arguments
 	parse_args "$@"
 
 	if [ "$NAME" != "" ]; then
 		expand_nameprefix_arg
-		BASE=$(git merge-base "$DEVELOP_BRANCH" "$BRANCH")
-		git_do diff "$BASE..$BRANCH"
+		base=$(git merge-base "$DEVELOP_BRANCH" "$BRANCH")
+		git_do diff "$base..$BRANCH"
 	else
 		if ! git_current_branch | grep -q "^$PREFIX"; then
 			die "Not on a feature branch. Name one explicitly."
 		fi
 
-		BASE=$(git merge-base "$DEVELOP_BRANCH" HEAD)
-		git_do diff "$BASE"
+		base=$(git merge-base "$DEVELOP_BRANCH" HEAD)
+		git_do diff "$base"
 	fi
 }
 
@@ -549,6 +577,7 @@ Switch to feature branch <name>
 h,help!           Show this help
 showcommands!    Show git commands while executing them
 "
+	# Parse arguments
 	parse_args "$@"
 
 	if [ "$NAME" != "" ]; then
@@ -574,23 +603,30 @@ h,help!           Show this help
 showcommands!    Show git commands while executing them
 i,interactive     Do an interactive rebase
 "
+	local opts
+
+	# Define flags
 	DEFINE_boolean interactive false 'do an interactive rebase' i
+
+	# Parse arguments
 	parse_args "$@"
+
 	expand_nameprefix_arg_or_current
 	warn "Will try to rebase '$NAME'..."
 	require_clean_working_tree
 	require_branch "$BRANCH"
 
 	git_do checkout -q "$BRANCH"  || die "Could not check out branch '$BRANCH'."
-	local OPTS=
 	if flag interactive; then
-		OPTS="$OPTS -i"
+		opts="$opts -i"
 	fi
-	git_do rebase $OPTS "$DEVELOP_BRANCH"
+	git_do rebase $opts "$DEVELOP_BRANCH"
 }
 
 avoid_accidental_cross_branch_action() {
-	local current_branch=$(git_current_branch)
+	local current_branch
+
+	current_branch=$(git_current_branch)
 	if [ "$BRANCH" != "$current_branch" ]; then
 		warn "Trying to pull from '$BRANCH' while currently on branch '$current_branch'."
 		warn "To avoid unintended merges, git-flow aborted."
@@ -608,8 +644,12 @@ Pull feature <name> from <remote>
 h,help!           Show this help
 showcommands!    Show git commands while executing them
 "
-	#DEFINE_string prefix false 'alternative remote feature branch name prefix' p
+	local current_branch
+
+	# Define flags
 	DEFINE_boolean rebase false "pull with rebase" r
+
+	# Parse arguments
 	parse_remote_name "$@"
 
 	if [ -z "$REMOTE" ]; then
@@ -620,7 +660,7 @@ showcommands!    Show git commands while executing them
 	# To avoid accidentally merging different feature branches into each other,
 	# die if the current feature branch differs from the requested $NAME
 	# argument.
-	local current_branch=$(git_current_branch)
+	current_branch=$(git_current_branch)
 	if startswith "$current_branch" "$PREFIX"; then
 		# We are on a local feature branch already, so $BRANCH must be equal to
 		# the current branch
@@ -669,9 +709,15 @@ showcommands!    Show git commands while executing them
 f,force           Force deletion
 r,remote          Delete remote branch
 "
+	local current_branch
+
+	# Define flags
 	DEFINE_boolean force false "force deletion" f
 	DEFINE_boolean remote false "delete remote branch" r
+
+	# Parse arguments
 	parse_args "$@"
+
 	expand_nameprefix_arg
 
 	# Sanity checks
@@ -679,7 +725,7 @@ r,remote          Delete remote branch
 
 	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
 
-	local current_branch=$(git_current_branch)
+	current_branch=$(git_current_branch)
 	# We can't delete a branch we are on, switch to the develop branch.
 	if [ "$BRANCH" = "$current_branch" ]; then
 		require_clean_working_tree

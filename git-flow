@@ -49,6 +49,11 @@ fi
 # This helps our Windows users, while not bothering our Unix users.
 export GITFLOW_DIR=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
 
+# Extra environment settings
+if [ -f ~/.gitflow_export ]; then
+        . ~/.gitflow_export
+fi
+
 usage() {
 	echo "usage: git flow <subcommand>"
 	echo
@@ -59,6 +64,7 @@ usage() {
 	echo "   hotfix    Manage your hotfix branches."
 	echo "   support   Manage your support branches."
 	echo "   version   Shows version information."
+	echo "   config    Manage your git-flow configuration."
 	echo
 	echo "Try 'git flow <subcommand> help' for details."
 }
