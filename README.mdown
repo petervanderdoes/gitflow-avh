@@ -44,13 +44,13 @@ Starting with version 1.0, the project uses the following scheme:
 
 ## Please help out
 
-This project is still under development. Feedback and suggestions are very
+This project is under constant development. Feedback and suggestions are very
 welcome and I encourage you to use the [Issues
 list](http://github.com/petervanderdoes/gitflow/issues) on Github to provide that
 feedback.
 
-Feel free to fork this repo and to commit your additions. For a list of all
-contributors, please see the [AUTHORS](AUTHORS) file.
+Feel free to fork this repository and to commit your additions. For a list of 
+all contributors, please see the [AUTHORS](AUTHORS) file.
 
 Any questions, tips, or general discussion can be posted to our Google group:
 [http://groups.google.com/group/gitflow-users](http://groups.google.com/group/gitflow-users)
