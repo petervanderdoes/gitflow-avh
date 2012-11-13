@@ -26,11 +26,12 @@ See the Wiki for up-to-date [Installation Instructions](https://github.com/peter
 
 ## Integration with your shell
 
-For those who use the [Bash](http://www.gnu.org/software/bash/) or
-[ZSH](http://www.zsh.org) shell, please check out the excellent work on the
-[git-flow-completion](http://github.com/bobthecow/git-flow-completion) project
-by [bobthecow](http://github.com/bobthecow). It offers tab-completion for all
-git-flow subcommands and branch names.
+For those who use the [Bash](http://www.gnu.org/software/bash/) or [ZSH](http://www.zsh.org) 
+shell, you can use my [fork of git-flow-completion](https://github.com/petervanderdoes/git-flow-completion) 
+of the excellent work on the[git-flow-completion](http://github.com/bobthecow/git-flow-completion) 
+project by [bobthecow](http://github.com/bobthecow). It offers tab-completion 
+for all git-flow subcommands and branch names. My fork includes tab-completion 
+for the commands not found in the original git-flow.
 
 
 ## FAQ
