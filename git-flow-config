@@ -76,6 +76,10 @@ parse_args() {
 
 # Default entry when no SUBACTION is given
 cmd_default() {
+	cmd_list "$@"
+}
+
+cmd_list() {
 	OPTIONS_SPEC="\
 git flow config [list]
 
