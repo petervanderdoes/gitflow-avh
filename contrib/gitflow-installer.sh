@@ -28,53 +28,92 @@ DATAROOTDIR="$PREFIX/share"
 DOCDIR="$DATAROOTDIR/doc/gitflow"
 
 EXEC_FILES="git-flow"
-SCRIPT_FILES="git-flow-init git-flow-feature git-flow-hotfix git-flow-release git-flow-support git-flow-version gitflow-common gitflow-shFlags"
+SCRIPT_FILES="git-flow-init git-flow-feature git-flow-hotfix git-flow-release git-flow-support git-flow-version gitflow-common gitflow-shFlags git-flow-config"
 HOOK_FILES="$REPO_NAME/hooks/*"
 
 
 echo "### git-flow no-make installer ###"
 
 case "$1" in
-	uninstall)
-		echo "Uninstalling git-flow from $PREFIX"
-		if [ -d "$BINDIR" ] ; then
-			for script_file in $SCRIPT_FILES $EXEC_FILES ; do
-				echo "rm -vf $BINDIR/$script_file"
-				rm -vf "$BINDIR/$script_file"
-			done
-			rm -rf "$DOCDIR"
-		else
-			echo "The '$BINDIR' directory was not found."
-		fi
+uninstall)
+	echo "Uninstalling git-flow from $PREFIX"
+	if [ -d "$BINDIR" ] ; then
+		for script_file in $SCRIPT_FILES $EXEC_FILES ; do
+			echo "rm -vf $BINDIR/$script_file"
+			rm -vf "$BINDIR/$script_file"
+		done
+		rm -rf "$DOCDIR"
+	else
+		echo "The '$BINDIR' directory was not found."
+	fi
+	exit
+	;;
+help)
+	echo "Usage: [environment] gitflow-installer.sh [install|uninstall] [master|develop]"
+	echo "Environment:"
+	echo "   PREFIX=$PREFIX"
+	echo "   REPO_HOME=$REPO_HOME"
+	echo "   REPO_NAME=$REPO_NAME"
+	exit
+	;;
+install)
+	if [ -z $2 ]; then
+		echo "Usage: [environment] gitflow-installer.sh [install|uninstall] [master|develop]"
+		echo "Environment:"
+		echo "   PREFIX=$PREFIX"
+		echo "   REPO_HOME=$REPO_HOME"
+		echo "   REPO_NAME=$REPO_NAME"
 		exit
+	fi
+	echo "Installing git-flow to $BINDIR"
+	if [ -d "$REPO_NAME" -a -d "$REPO_NAME/.git" ] ; then
+		echo "Using existing repo: $REPO_NAME"
+	else
+		echo "Cloning repo from GitHub to $REPO_NAME"
+		git clone "$REPO_HOME" "$REPO_NAME"
+	fi
+	cd "$REPO_NAME"
+	git pull
+	cd "$OLDPWD"
+	case "$2" in
+	stable)
+		cd "$REPO_NAME"
+		git checkout master
+		cd "$OLDPWD"
 		;;
-	help)
-		echo "Usage: [environment] gitflow-installer.sh [install|uninstall]"
+	develop)
+		cd "$REPO_NAME"
+		git checkout develop
+		cd "$OLDPWD"
+		;;
+	*)
+		echo "Usage: [environment] gitflow-installer.sh [install|uninstall] [master|develop]"
 		echo "Environment:"
 		echo "   PREFIX=$PREFIX"
 		echo "   REPO_HOME=$REPO_HOME"
 		echo "   REPO_NAME=$REPO_NAME"
 		exit
 		;;
-	*)
-		echo "Installing git-flow to $BINDIR"
-		if [ -d "$REPO_NAME" -a -d "$REPO_NAME/.git" ] ; then
-			echo "Using existing repo: $REPO_NAME"
-		else
-			echo "Cloning repo from GitHub to $REPO_NAME"
-			git clone "$REPO_HOME" "$REPO_NAME"
-		fi
-		install -v -d -m 0755 "$PREFIX/bin"
-		install -v -d -m 0755 "$DOCDIR/hooks"
-		for exec_file in $EXEC_FILES ; do
-			install -v -m 0755 "$REPO_NAME/$exec_file" "$BINDIR"
-		done
-		for script_file in $SCRIPT_FILES ; do
-			install -v -m 0644 "$REPO_NAME/$script_file" "$BINDIR"
-		done
-		for hook_file in $HOOK_FILES ; do
-			install -v -m 0644 "$hook_file"  "$DOCDIR/hooks"
-		done
-		exit
-		;;
+	esac
+	install -v -d -m 0755 "$PREFIX/bin"
+	install -v -d -m 0755 "$DOCDIR/hooks"
+	for exec_file in $EXEC_FILES ; do
+		install -v -m 0755 "$REPO_NAME/$exec_file" "$BINDIR"
+	done
+	for script_file in $SCRIPT_FILES ; do
+		install -v -m 0644 "$REPO_NAME/$script_file" "$BINDIR"
+	done
+	for hook_file in $HOOK_FILES ; do
+		install -v -m 0644 "$hook_file"  "$DOCDIR/hooks"
+	done
+	exit
+	;;
+*)
+	echo "Usage: [environment] gitflow-installer.sh [install|uninstall] [master|develop]"
+	echo "Environment:"
+	echo "   PREFIX=$PREFIX"
+	echo "   REPO_HOME=$REPO_HOME"
+	echo "   REPO_NAME=$REPO_NAME"
+	exit
+	;;
 esac
