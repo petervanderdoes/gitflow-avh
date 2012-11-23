@@ -13,7 +13,7 @@
 
 # Changelog
 
-#### 1.4.0-dev.1
+#### 1.4.0-dev.7
 [Daniel Dehennin][baby-gnu]
 * Permit to use a single symlink as installation method
 
