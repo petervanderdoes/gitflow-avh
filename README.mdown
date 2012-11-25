@@ -28,9 +28,10 @@ See the Wiki for up-to-date [Installation Instructions](https://github.com/peter
 
 For those who use the [Bash](http://www.gnu.org/software/bash/) or [ZSH](http://www.zsh.org) 
 shell, you can use my [fork of git-flow-completion](https://github.com/petervanderdoes/git-flow-completion) 
-of the excellent work on the[git-flow-completion](http://github.com/bobthecow/git-flow-completion) 
-project by [bobthecow](http://github.com/bobthecow). It offers tab-completion 
-for all git-flow subcommands and branch names. My fork includes tab-completion 
+which includes several additions for git-flow (AVH Edition), or you can use the 
+original [git-flow-completion](http://github.com/bobthecow/git-flow-completion) 
+project by [bobthecow](http://github.com/bobthecow). Both offer tab-completion 
+for git-flow subcommands and branch names with my fork including tab-completion 
 for the commands not found in the original git-flow.
 
 
@@ -40,7 +41,7 @@ for the commands not found in the original git-flow.
 of the project Wiki.
 * Version Numbering Scheme.  
 Starting with version 1.0, the project uses the following scheme:
-\<MAJOR\>.\<MINOR\>.\<REVISION\>-avh
+\<MAJOR\>.\<MINOR\>.\<REVISION\>\
 
 ## Please help out
 
@@ -52,7 +53,7 @@ feedback.
 Feel free to fork this repository and to commit your additions. For a list of 
 all contributors, please see the [AUTHORS](AUTHORS) file.
 
-Any questions, tips, or general discussion can be posted to our Google group:
+Any questions, tips, or general discussion can be posted to the Google group:
 [http://groups.google.com/group/gitflow-users](http://groups.google.com/group/gitflow-users)
 This is the original group set up to support the nvie branch, but I am monitoring
 the list as well for any questions related to my version.
