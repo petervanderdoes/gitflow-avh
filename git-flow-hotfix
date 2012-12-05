@@ -87,7 +87,7 @@ v,verbose!        Verbose (more) output
 		warn ""
 		warn "You can start a new hotfix branch:"
 		warn ""
-		warn "    git flow hotfix start <version> [<base>]"
+		warn "    git flow hotfix start <name> [<base>]"
 		warn ""
 		exit 0
 	fi
@@ -142,8 +142,8 @@ parse_args() {
 	eval set -- "${FLAGS_ARGV}"
 
 	# Read arguments into global variables
-	VERSION=$1
-	BRANCH=$PREFIX$VERSION
+	NAME=$1
+	BRANCH=$PREFIX$NAME
 }
 
 require_no_existing_hotfix_branches() {
@@ -158,9 +158,9 @@ require_no_existing_hotfix_branches() {
 
 cmd_start() {
 	OPTIONS_SPEC="\
-git flow hotfix start [-h] [-F] <version> [<base>]
+git flow hotfix start [-h] [-F] <name> [<base>]
 
-Start new hotfix branch named <version>, optionally base it on <base> instead of the <master> branch
+Start new hotfix branch named <name>, optionally base it on <base> instead of the <master> branch
 --
 h,help!           Show this help
 showcommands!    Show git commands while executing them
@@ -184,29 +184,23 @@ F,fetch           Fetch from origin before performing local operation
 		git_fetch_branch "$ORIGIN" "$MASTER_BRANCH"
 	fi
 
-	# Run filter on the version
-	VERSION=$(run_filter_hook hotfix-start-version $VERSION)
+	gitflow_require_name_arg
 
-	# As VERSION might have changed reset BRANCH with new VERSION
-	BRANCH=$PREFIX$VERSION
-
-	gitflow_require_version_arg
 	git_is_ancestor "$base" "$MASTER_BRANCH" || die "Given base '$base' is not a valid commit on '$MASTER_BRANCH'."
 	require_no_existing_hotfix_branches
 
 	# Sanity checks
 	require_branch_absent "$BRANCH"
-	require_tag_absent "$VERSION_PREFIX$VERSION"
 	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
 		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
 	fi
 
-	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$base"
+	run_pre_hook "$ORIGIN" "$BRANCH" "$base"
 
 	# Create branch
 	git_do checkout -b "$BRANCH" "$base"  || die "Could not create hotfix branch '$BRANCH'."
 
-	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$base"
+	run_post_hook "$ORIGIN" "$BRANCH" "$base"
 
 	echo
 	echo "Summary of actions:"
@@ -218,13 +212,13 @@ F,fetch           Fetch from origin before performing local operation
 	echo "- Start committing your hot fixes"
 	echo "- When done, run:"
 	echo
-	echo "     git flow hotfix finish '$VERSION'"
+	echo "     git flow hotfix finish '<version>'"
 	echo
 }
 
 cmd_publish() {
 	OPTIONS_SPEC="\
-git flow hotfix publish [-h] <version>
+git flow hotfix publish [-h] <name>
 
 Start sharing hotfix <name> on $ORIGIN
 --
@@ -233,8 +227,7 @@ showcommands!    Show git commands while executing them
 "
 	# Parse arguments
 	parse_args "$@"
-
-	gitflow_require_version_arg
+	gitflow_require_name_arg
 
 	# Sanity checks
 	require_clean_working_tree
@@ -242,7 +235,7 @@ showcommands!    Show git commands while executing them
 	git_do fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 	require_branch_absent "$ORIGIN/$BRANCH"
 
-	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+	run_pre_hook "$ORIGIN" "$BRANCH"
 
 	# Create remote branch
 	git_do push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH"
@@ -253,7 +246,7 @@ showcommands!    Show git commands while executing them
 	git_do config "branch.$BRANCH.merge" "refs/heads/$BRANCH"
 	git_do checkout "$BRANCH" || die "Could not check out branch '$BRANCH'."
 
-	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+	run_post_hook "$ORIGIN" "$BRANCH"
 
 	echo
 	echo "Summary of actions:"
@@ -265,7 +258,7 @@ showcommands!    Show git commands while executing them
 
 cmd_track() {
 	OPTIONS_SPEC="\
-git flow hotfix track [-h] <version>
+git flow hotfix track [-h] <name>
 
 Create a tracking hotfix branch from $ORIGIN
 --
@@ -275,7 +268,7 @@ showcommands!    Show git commands while executing them
 	# Parse arguments
 	parse_args "$@"
 
-	gitflow_require_version_arg
+	gitflow_require_name_arg
 
 	# Sanity checks
 	require_clean_working_tree
@@ -295,9 +288,9 @@ showcommands!    Show git commands while executing them
 
 cmd_finish() {
 	OPTIONS_SPEC="\
-git flow hotfix finish [-h] [-F] [-s] [-u] [-m | -f ] [-p] [-k] [-n] [-b] <version>
+git flow hotfix finish [-h] [-F] [-s] [-u] [-m | -f ] [-p] [-k] [-n] [-b] <version> [<name>]
 
-Finish hotfix branch <version>
+Finish hotfix branch <version>, use branch named <name> if specified
 --
 h,help!           Show this help
 showcommands!    Show git commands while executing them
@@ -330,8 +323,26 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 
 	# Parse arguments
 	parse_args "$@"
+	eval set -- "${FLAGS_ARGV}"
+
+	# The first argument is version, not name
+	VERSION="$1"
+
+	# Run filter on the version
+	VERSION=$(run_filter_hook hotfix-finish-version $VERSION)
+
+	# As VERSION might have changed reset BRANCH with new VERSION
+	BRANCH=$PREFIX$VERSION
 
 	gitflow_require_version_arg
+
+	# User set a specific branch name
+	if [ -n "$2" ]; then
+		BRANCH="$PREFIX$2"
+	elif ! git_local_branch_exists "$BRANCH"; then
+		require_current_hotfix_branch
+		BRANCH=$(git_current_branch)
+	fi
 
 	# Handle flags that imply other flags
 	if [ "$FLAGS_signingkey" != "" ]; then
@@ -536,13 +547,12 @@ r,remote          Delete remote branch
 
 	# Parse arguments
 	parse_args "$@"
-
-	gitflow_require_version_arg
+	gitflow_require_name_arg
 
 	# Sanity checks
 	require_branch "$BRANCH"
 
-	run_pre_hook "$VERSION" "$ORIGIN" "$BRANCH"
+	run_pre_hook "$ORIGIN" "$BRANCH"
 
 	current_branch=$(git_current_branch)
 	# We can't delete a branch we are on, switch to the master branch.
@@ -567,7 +577,7 @@ r,remote          Delete remote branch
 		fi
 	fi
 
-	run_post_hook "$VERSION" "$ORIGIN" "$BRANCH"
+	run_post_hook "$ORIGIN" "$BRANCH"
 
 	echo
 	echo "Summary of actions:"
