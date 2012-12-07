@@ -226,6 +226,7 @@ F,fetch Fetch from origin before performing local operation
 	eval set -- "${FLAGS_ARGV}"
 	base=${2:-$DEVELOP_BRANCH}
 
+	require_base_is_local_branch "$base"
 	gitflow_require_name_arg
 	gitflow_config_set_base_branch $base $BRANCH
 

@@ -482,6 +482,7 @@ v,verbose! verbose (more) output
 	# As VERSION might have changed reset BRANCH with new VERSION
 	BRANCH=$PREFIX$VERSION
 
+	require_base_is_local_branch "$base"
 	gitflow_require_version_arg
 	gitflow_config_set_base_branch $base $BRANCH
 

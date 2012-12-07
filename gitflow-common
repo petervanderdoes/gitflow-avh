@@ -412,6 +412,10 @@ require_clean_working_tree() {
 	fi
 }
 
+require_base_is_local_branch() {
+	git_local_branch_exists "$1" || die "Base '$1' needs to be a branch. It does not exist and is required."
+}
+
 require_local_branch() {
 	git_local_branch_exists "$1" || die "Local branch '$1' does not exist and is required."
 }
