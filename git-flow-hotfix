@@ -314,7 +314,7 @@ keeplocal         Keep the local branch
 n,notag           Don't tag this release
 b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 "
-	local opts commit remotebranch
+	local opts commit remotebranch removebase
 
 	# Define flags
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
@@ -469,15 +469,28 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 
 	# Delete branch
 	if noflag keep; then
+		removebase=$FLAGS_FALSE
+
 		if noflag keeplocal; then
+			removebase=$FLAGS_TRUE
 			git_do branch -d "$BRANCH"
 		fi
+
+		if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			removebase=$FLAGS_FALSE
+		fi
+
 		if noflag keepremote;then
+			removebase=$FLAGS_TRUE
 			remotebranch=0
 			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 				remotebranch=1
 				git_remote_branch_delete "$BRANCH"
 			fi
+		fi
+
+		if [ $removebase -eq $FLAGS_TRUE ]; then
+			gitflow_config_remove_base_section "$BRANCH"
 		fi
 	fi
 

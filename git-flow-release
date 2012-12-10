@@ -40,7 +40,7 @@
 # Called when the base of the release is the $DEVELOP_BRANCH
 #
 _finish_from_develop() {
-	local opts merge_branch commit remotebranch keepmsg
+	local opts merge_branch commit remotebranch keepmsg removebase
 
 		# Update local branches with remote branches
 	if flag fetch; then
@@ -138,18 +138,31 @@ _finish_from_develop() {
 
 	# Delete branch
 	if noflag keep; then
+		removebase=$FLAGS_FALSE
+
 		if [ "$BRANCH" = "$(git_current_branch)" ]; then
 			git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
 		fi
 		if noflag keeplocal; then
+			removebase=$FLAGS_TRUE
 			git_do branch -d "$BRANCH"
 		fi
+
+		if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			removebase=$FLAGS_FALSE
+		fi
+
 		if noflag keepremote; then
 			remotebranch=0
 			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+				removebase=$FLAGS_TRUE
 				remotebranch=1
 				git_remote_branch_delete "$BRANCH"
 			fi
+		fi
+
+		if [ $removebase -eq $FLAGS_TRUE ]; then
+			gitflow_config_remove_base_section "$BRANCH"
 		fi
 	fi
 
@@ -205,7 +218,7 @@ _finish_from_develop() {
 #
 
 _finish_base() {
-	local opts merge_branch commit remotebranch keepmsg
+	local opts merge_branch commit remotebranch keepmsg remove base
 
 	# Update local branches with remote branches
 	if flag fetch; then
@@ -278,18 +291,31 @@ _finish_base() {
 
 	# Delete branch
 	if noflag keep; then
+		removebase=$FLAGS_FALSE
+
 		if [ "$BRANCH" = "$(git_current_branch)" ]; then
 			git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
 		fi
 		if noflag keeplocal; then
+			removebase=$FLAGS_TRUE
 			git_do branch -d "$BRANCH"
 		fi
+
+		if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			removebase=$FLAGS_FALSE
+		fi
+
 		if noflag keepremote; then
+			removebase=$FLAGS_TRUE
 			remotebranch=0
 			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 				remotebranch=1
 				git_remote_branch_delete "$BRANCH"
 			fi
+		fi
+
+		if [ $removebase -eq $FLAGS_TRUE ]; then
+			gitflow_config_remove_base_section "$BRANCH"
 		fi
 	fi
 
@@ -542,7 +568,6 @@ n,tag 			Don't tag this release
 b,nobackmerge 	Don't back-merge master, or tag if applicable, in develop
 S,squash 		Squash release during merge
 "
-
 	# Define flags
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	DEFINE_boolean sign false "sign the release tag cryptographically" s

@@ -421,28 +421,40 @@ S,squash       Squash feature during merge
 }
 
 helper_finish_cleanup() {
-	local keepmsg
+	local keepmsg remotebranch removebase
 
 	# Sanity checks
 	require_branch "$BRANCH"
 	require_clean_working_tree
 
 	if noflag keep; then
+		removebase=$FLAGS_FALSE
+
 		if noflag keeplocal; then
+			removebase=$FLAGS_TRUE
 			if flag force_delete; then
 				git_do branch -D "$BRANCH"
 			else
 				git_do branch -d "$BRANCH"
 			fi
 		fi
+
+		if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			removebase=$FLAGS_FALSE
+		fi
+
 		if noflag keepremote;then
-			local remotebranch=0
+			remotebranch=0
 			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+				removebase=$FLAGS_TRUE
 				remotebranch=1
 				git_remote_branch_delete "$BRANCH"
 			fi
 		fi
 
+		if [ $removebase -eq $FLAGS_TRUE ]; then
+			gitflow_config_remove_base_section "$BRANCH"
+		fi
 	fi
 
 	echo
