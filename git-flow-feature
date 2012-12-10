@@ -226,11 +226,13 @@ F,fetch Fetch from origin before performing local operation
 	eval set -- "${FLAGS_ARGV}"
 	base=${2:-$DEVELOP_BRANCH}
 
+	require_base_is_local_branch "$base"
 	gitflow_require_name_arg
+	gitflow_config_set_base_branch $base $BRANCH
 
 	# Update the local repo with remote changes, if asked
 	if flag fetch; then
-		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
+		git_fetch_branch "$ORIGIN" "$base"
 	fi
 
 	# Sanity checks
@@ -238,11 +240,12 @@ F,fetch Fetch from origin before performing local operation
 
 	# If the origin branch counterpart exists, assert that the local branch
 	# isn't behind it (to avoid unnecessary rebasing)
-	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
-		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
+	if git_remote_branch_exists "$ORIGIN/$base"; then
+		require_branches_equal "$base" "$ORIGIN/$base"
 	fi
 
 	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH" "$base"
+
 
 	# create branch
 	git_do checkout -b "$BRANCH" "$base" || die "Could not create feature branch '$BRANCH'."
@@ -300,6 +303,9 @@ S,squash       Squash feature during merge
 	# Sanity checks
 	require_branch "$BRANCH"
 
+	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
+	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
+
 	# Detect if we're restoring from a merge conflict
 	if [ -f "$DOT_GIT_DIR/.gitflow/MERGE_BASE" ]; then
 		#
@@ -315,7 +321,7 @@ S,squash       Squash feature during merge
 			finish_base=$(cat "$DOT_GIT_DIR/.gitflow/MERGE_BASE")
 
 			# Since the working tree is now clean, either the user did a
-			# succesfull merge manually, or the merge was cancelled.
+			# successful merge manually, or the merge was cancelled.
 			# We detect this using git_is_branch_merged_into()
 			if git_is_branch_merged_into "$BRANCH" "$finish_base"; then
 				rm -f "$DOT_GIT_DIR/.gitflow/MERGE_BASE"
@@ -353,33 +359,33 @@ S,squash       Squash feature during merge
 
 	# Update local branches with remote branches
 	if flag fetch; then
-		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
+		git_fetch_branch "$ORIGIN" "$BASE_BRANCH"
 	fi
 
 	# Check if the local branches have all the commits from the remote branches
 	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 			require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
 	fi
-	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
-		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
+	if git_remote_branch_exists "$ORIGIN/$BASE_BRANCH"; then
+		require_branches_equal "$BASE_BRANCH" "$ORIGIN/$BASE_BRANCH"
 	fi
 
 	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
 
 	# If the user wants to rebase, do that first
 	if flag rebase; then
-		if ! git flow feature rebase "$NAME" "$DEVELOP_BRANCH"; then
+		if ! git flow feature rebase "$NAME" "$BASE_BRANCH"; then
 			warn "Finish was aborted due to conflicts during rebase."
 			warn "Please finish the rebase manually now."
 			warn "When finished, re-run:"
-			warn "    git flow feature finish '$NAME' '$DEVELOP_BRANCH'"
+			warn "    git flow feature finish '$NAME' '$BASE_BRANCH'"
 			exit 1
 		fi
 	fi
 
 	# Merge into BASE
-	git_do checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
-	if [ "$(git rev-list -n2 "$DEVELOP_BRANCH..$BRANCH" | wc -l)" -eq 1 ]; then
+	git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
+	if [ "$(git rev-list -n2 "$BASE_BRANCH..$BRANCH" | wc -l)" -eq 1 ]; then
 		git_do merge --ff "$BRANCH"
 	else
 		if noflag squash; then
@@ -392,10 +398,10 @@ S,squash       Squash feature during merge
 
 	if [ $? -ne 0 ]; then
 		# Oops.. we have a merge conflict!
-		# Write the given $DEVELOP_BRANCH to a temporary file as we will
+		# Write the given $BASE_BRANCH to a temporary file as we will
 		# be needing it later.
 		mkdir -p "$DOT_GIT_DIR/.gitflow"
-		echo "$DEVELOP_BRANCH" > "$DOT_GIT_DIR/.gitflow/MERGE_BASE"
+		echo "$BASE_BRANCH" > "$DOT_GIT_DIR/.gitflow/MERGE_BASE"
 		echo
 		echo "There were merge conflicts. To resolve the merge conflict manually, use:"
 		echo "    git mergetool"
@@ -410,37 +416,50 @@ S,squash       Squash feature during merge
 	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
 
 	# When no merge conflict is detected, just clean up the feature branch
+	gitflow_config_remove_base_branch "$BRANCH"
 	helper_finish_cleanup
 }
 
 helper_finish_cleanup() {
-	local keepmsg
+	local keepmsg remotebranch removebase
 
 	# Sanity checks
 	require_branch "$BRANCH"
 	require_clean_working_tree
 
 	if noflag keep; then
+		removebase=$FLAGS_FALSE
+
 		if noflag keeplocal; then
+			removebase=$FLAGS_TRUE
 			if flag force_delete; then
 				git_do branch -D "$BRANCH"
 			else
 				git_do branch -d "$BRANCH"
 			fi
 		fi
+
+		if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			removebase=$FLAGS_FALSE
+		fi
+
 		if noflag keepremote;then
-			local remotebranch=0
+			remotebranch=0
 			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+				removebase=$FLAGS_TRUE
 				remotebranch=1
 				git_remote_branch_delete "$BRANCH"
 			fi
 		fi
 
+		if [ $removebase -eq $FLAGS_TRUE ]; then
+			gitflow_config_remove_base_section "$BRANCH"
+		fi
 	fi
 
 	echo
 	echo "Summary of actions:"
-	echo "- The feature branch '$BRANCH' was merged into '$DEVELOP_BRANCH'"
+	echo "- The feature branch '$BRANCH' was merged into '$BASE_BRANCH'"
 	#echo "- Merge conflicts were resolved"		# TODO: Add this line when it's supported
 	if noflag keep; then
 		keepmsg="'has been deleted"

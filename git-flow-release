@@ -35,6 +35,331 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+#
+# Function used by finish command to actually finish the release branch
+# Called when the base of the release is the $DEVELOP_BRANCH
+#
+_finish_from_develop() {
+	local opts merge_branch commit remotebranch keepmsg removebase
+
+		# Update local branches with remote branches
+	if flag fetch; then
+		git_fetch_branch "$ORIGIN" "$MASTER_BRANCH"
+		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
+	fi
+
+	# Check if the local branches have all the commits from the remote branches
+	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
+	fi
+	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
+		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
+	fi
+	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
+		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
+	fi
+
+	if noflag notag; then
+		# We ask for a tag, be sure it does not exists or
+		# points to the latest hotfix commit
+		if git_tag_exists "$VERSION_PREFIX$VERSION"; then
+			git_compare_refs  "$BRANCH" "$VERSION_PREFIX$VERSION"^2 2>/dev/null
+			[ $? -eq 0 ] || die "Tag already exists and does not point to release branch '$BRANCH'"
+		fi
+	fi
+
+	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+
+	# Try to merge into master.
+	# In case a previous attempt to finish this release branch has failed,
+	# but the merge into master was successful, we skip it now
+	if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
+			git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
+			if noflag squash; then
+				git_do merge --no-ff "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+			else
+				git_do merge --squash "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+				git_do commit
+			fi
+	fi
+
+	if noflag notag; then
+		# Try to tag the release.
+		# In case a previous attempt to finish this release branch has failed,
+		# but the tag was set successful, we skip it now
+		if ! git_tag_exists "$VERSION_PREFIX$VERSION"; then
+			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
+				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
+			fi
+			opts="-a"
+			flag sign && opts="$opts -s"
+			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
+			[ "$FLAGS_message" != "" ] && opts="$opts -m '$FLAGS_message'"
+			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
+			eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
+		fi
+	fi
+
+	# By default we backmerge the $MASTER_BRANCH unless the user explicitly
+	# stated not to do a back merge, in that case we use the $BRANCH.
+	if noflag nobackmerge; then
+		merge_branch="$MASTER_BRANCH"
+	else
+		merge_branch="$BRANCH"
+	fi
+
+	# Try to merge into develop.
+	# In case a previous attempt to finish this release branch has failed,
+	# but the merge into develop was successful, we skip it now
+	if ! git_is_branch_merged_into "$merge_branch" "$DEVELOP_BRANCH"; then
+		git_do checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
+
+		if noflag nobackmerge; then
+			# Accounting for 'git describe', if a release is tagged
+			# we use the tag commit instead of the branch.
+			if noflag notag; then
+				commit="$VERSION_PREFIX$VERSION"
+			else
+				commit="$MASTER_BRANCH"
+			fi
+		else
+			commit="$BRANCH"
+		fi
+
+		if noflag squash; then
+			git_do merge --no-ff "$commit" || die "There were merge conflicts." # TODO: What do we do now?
+		else
+			git_do merge --squash "$commit" || die "There were merge conflicts." # TODO: What do we do now?
+			git_do commit
+		fi
+	fi
+
+	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+
+	# Delete branch
+	if noflag keep; then
+		removebase=$FLAGS_FALSE
+
+		if [ "$BRANCH" = "$(git_current_branch)" ]; then
+			git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
+		fi
+		if noflag keeplocal; then
+			removebase=$FLAGS_TRUE
+			git_do branch -d "$BRANCH"
+		fi
+
+		if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			removebase=$FLAGS_FALSE
+		fi
+
+		if noflag keepremote; then
+			remotebranch=0
+			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+				removebase=$FLAGS_TRUE
+				remotebranch=1
+				git_remote_branch_delete "$BRANCH"
+			fi
+		fi
+
+		if [ $removebase -eq $FLAGS_TRUE ]; then
+			gitflow_config_remove_base_section "$BRANCH"
+		fi
+	fi
+
+	if flag push; then
+		git_do push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
+		git_do push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push branch '$MASTER_BRANCH' to remote '$ORIGIN'."
+		if noflag notag; then
+			git_do push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
+		fi
+	fi
+
+	echo
+	echo "Summary of actions:"
+	if flag fetch; then
+		echo "- Latest objects have been fetched from '$ORIGIN'"
+	fi
+	echo "- Release branch '$BRANCH' has been merged into '$MASTER_BRANCH'"
+	if noflag notag; then
+		echo "- The release was tagged '$VERSION_PREFIX$VERSION'"
+	fi
+	[ "$commit" = "$MASTER_BRANCH" ] && echo "- Master branch '$MASTER_BRANCH' has been back-merged into '$DEVELOP_BRANCH'"
+	[ "$commit" = "$VERSION_PREFIX$VERSION" ] && echo "- Release tag '$VERSION_PREFIX$VERSION' has been back-merged into '$DEVELOP_BRANCH'"
+	[ "$commit" = "$BRANCH" ] && echo "- Release branch '$BRANCH' has been merged into '$DEVELOP_BRANCH'"
+
+	if noflag keep; then
+		keepmsg="'has been deleted"
+		if flag keeplocal; then
+			local keepmsg="is locally still available."
+			if [ $remotebranch -eq 1 ]; then
+				keepmsg=$keepmsg" It is deleted from '$ORIGIN'."
+			fi
+		fi
+		if flag keepremote; then
+			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+				keepmsg="is remotely still available. It is deleted locally."
+			fi
+		fi
+	else
+		keepmsg="is still available"
+	fi
+	echo "- Release branch '$BRANCH' "$keepmsg
+
+	if flag push; then
+		echo "- '$DEVELOP_BRANCH', '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
+	fi
+	echo "- You are now on branch '$(git_current_branch)'"
+	echo
+}
+
+#
+# Function used by finish command to actually finish the release branch
+# Called when the base of the release is NOT the $DEVELOP_BRANCH
+#
+
+_finish_base() {
+	local opts merge_branch commit remotebranch keepmsg remove base
+
+	# Update local branches with remote branches
+	if flag fetch; then
+		git_fetch_branch "$ORIGIN" "$BASE_BRANCH"
+	fi
+
+	# Check if the local branches have all the commits from the remote branches
+	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
+	fi
+	if git_remote_branch_exists "$ORIGIN/$BASE_BRANCH"; then
+		require_branches_equal "$BASE_BRANCH" "$ORIGIN/$BASE_BRANCH"
+	fi
+
+	if noflag notag; then
+		# We ask for a tag, be sure it does not exists or
+		# points to the latest hotfix commit
+		if git_tag_exists "$VERSION_PREFIX$VERSION"; then
+			git_compare_refs  "$BRANCH" "$VERSION_PREFIX$VERSION"^2 2>/dev/null
+			[ $? -eq 0 ] || die "Tag already exists and does not point to release branch '$BRANCH'"
+		fi
+	fi
+
+	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+
+	git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
+
+	if noflag notag; then
+		# Try to tag the release.
+		# In case a previous attempt to finish this release branch has failed,
+		# but the tag was set successful, we skip it now
+		if ! git_tag_exists "$VERSION_PREFIX$VERSION"; then
+			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
+				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
+			fi
+			opts="-a"
+			flag sign && opts="$opts -s"
+			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
+			[ "$FLAGS_message" != "" ] && opts="$opts -m '$FLAGS_message'"
+			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
+			eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
+		fi
+	fi
+
+	merge_branch="$BRANCH"
+
+	# Try to merge into develop.
+	# In case a previous attempt to finish this release branch has failed,
+	# but the merge into develop was successful, we skip it now
+	if ! git_is_branch_merged_into "$merge_branch" "$BASE_BRANCH"; then
+		git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
+
+		# Accounting for 'git describe', if a release is tagged
+		# we use the tag commit instead of the branch.
+		if noflag notag; then
+			commit="$VERSION_PREFIX$VERSION"
+		else
+			commit="$BRANCH"
+		fi
+
+		if noflag squash; then
+			git_do merge --no-ff "$commit" || die "There were merge conflicts." # TODO: What do we do now?
+		else
+			git_do merge --squash "$commit" || die "There were merge conflicts." # TODO: What do we do now?
+			git_do commit
+		fi
+	fi
+
+	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+
+	# Delete branch
+	if noflag keep; then
+		removebase=$FLAGS_FALSE
+
+		if [ "$BRANCH" = "$(git_current_branch)" ]; then
+			git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
+		fi
+		if noflag keeplocal; then
+			removebase=$FLAGS_TRUE
+			git_do branch -d "$BRANCH"
+		fi
+
+		if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			removebase=$FLAGS_FALSE
+		fi
+
+		if noflag keepremote; then
+			removebase=$FLAGS_TRUE
+			remotebranch=0
+			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+				remotebranch=1
+				git_remote_branch_delete "$BRANCH"
+			fi
+		fi
+
+		if [ $removebase -eq $FLAGS_TRUE ]; then
+			gitflow_config_remove_base_section "$BRANCH"
+		fi
+	fi
+
+	if flag push; then
+		git_do push "$ORIGIN" "$BASE_BRANCH" || die "Could not push branch '$BASE_BRANCH' to remote '$ORIGIN'."
+		if noflag notag; then
+			git_do push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
+		fi
+	fi
+
+	echo
+	echo "Summary of actions:"
+	if flag fetch; then
+		echo "- Latest objects have been fetched from '$ORIGIN'"
+	fi
+	if noflag notag; then
+		echo "- The release was tagged '$VERSION_PREFIX$VERSION'"
+	fi
+	[ "$commit" = "$VERSION_PREFIX$VERSION" ] && echo "- Release tag '$VERSION_PREFIX$VERSION' has been merged into '$BASE_BRANCH'"
+	[ "$commit" = "$BRANCH" ] && echo "- Release branch '$BRANCH' has been merged into '$BASE_BRANCH'"
+	if noflag keep; then
+		keepmsg="'has been deleted"
+		if flag keeplocal; then
+			local keepmsg="is locally still available."
+			if [ $remotebranch -eq 1 ]; then
+				keepmsg=$keepmsg" It is deleted from '$ORIGIN'."
+			fi
+		fi
+		if flag keepremote; then
+			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+				keepmsg="is remotely still available. It is deleted locally."
+			fi
+		fi
+	else
+		keepmsg="is still available"
+	fi
+	echo "- Release branch '$BRANCH' "$keepmsg
+
+	if flag push; then
+		echo "- '$BASE_BRANCH' and tags have been pushed to '$ORIGIN'"
+	fi
+	echo "- You are now on branch '$(git_current_branch)'"
+	echo
+}
 initialize() {
 	require_git_repo
 	require_gitflow_initialized
@@ -158,7 +483,7 @@ require_no_existing_release_branches() {
 
 cmd_start() {
 	OPTIONS_SPEC="\
-git flow release start [options] <version>
+git flow release start [options] <version> [<base>]
 
 Start a new release branch
 --
@@ -175,7 +500,7 @@ v,verbose! verbose (more) output
 	# Parse arguments
 	parse_args "$@"
 	eval set -- "${FLAGS_ARGV}"
-	base=${2:-$DEVELOP_BRANCH}
+	base=${2:-DEVELOP_BRANCH}
 
 	# Run filter on the version
 	VERSION=$(run_filter_hook release-start-version $VERSION)
@@ -183,8 +508,10 @@ v,verbose! verbose (more) output
 	# As VERSION might have changed reset BRANCH with new VERSION
 	BRANCH=$PREFIX$VERSION
 
+	require_base_is_local_branch "$base"
 	gitflow_require_version_arg
-	git_is_ancestor "$base" "$DEVELOP_BRANCH"  || die "Given base '$base' is not a valid commit on '$DEVELOP_BRANCH'."
+	gitflow_config_set_base_branch $base $BRANCH
+
 	require_no_existing_release_branches
 
 	# Sanity checks
@@ -192,10 +519,10 @@ v,verbose! verbose (more) output
 	require_branch_absent "$BRANCH"
 	require_tag_absent "$VERSION_PREFIX$VERSION"
 	if flag fetch; then
-		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
+		git_fetch_branch "$ORIGIN" "$base"
 	fi
-	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
-		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
+	if git_remote_branch_exists "$ORIGIN/$base"; then
+		require_branches_equal "$base" "$ORIGIN/$base"
 	fi
 
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$base"
@@ -241,8 +568,6 @@ n,tag 			Don't tag this release
 b,nobackmerge 	Don't back-merge master, or tag if applicable, in develop
 S,squash 		Squash release during merge
 "
-	local opts merge_branch commit remotebranch keepmsg
-
 	# Define flags
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	DEFINE_boolean sign false "sign the release tag cryptographically" s
@@ -267,6 +592,8 @@ S,squash 		Squash release during merge
 	BRANCH=$PREFIX$VERSION
 
 	gitflow_require_version_arg
+	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
+	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
 
 	# Handle flags that imply other flags
 	if [ "$FLAGS_signingkey" != "" ]; then
@@ -289,161 +616,11 @@ S,squash 		Squash release during merge
 			git_fetch_branch "$ORIGIN" "$BRANCH"
 	fi
 
-	# Update local branches with remote branches
-	if flag fetch; then
-		git_fetch_branch "$ORIGIN" "$MASTER_BRANCH"
-		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
-	fi
-
-	# Check if the local branches have all the commits from the remote branches
-	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
-	fi
-	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
-		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
-	fi
-	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
-		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
-	fi
-
-	if noflag notag; then
-		# We ask for a tag, be sure it does not exists or
-		# points to the latest hotfix commit
-		if git_tag_exists "$VERSION_PREFIX$VERSION"; then
-			git_compare_refs  "$BRANCH" "$VERSION_PREFIX$VERSION"^2 2>/dev/null
-			[ $? -eq 0 ] || die "Tag already exists and does not point to release branch '$BRANCH'"
-		fi
-	fi
-
-	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
-
-	# Try to merge into master.
-	# In case a previous attempt to finish this release branch has failed,
-	# but the merge into master was successful, we skip it now
-	if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
-			git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
-			if noflag squash; then
-				git_do merge --no-ff "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
-			else
-				git_do merge --squash "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
-				git_do commit
-			fi
-	fi
-
-	if noflag notag; then
-		# Try to tag the release.
-		# In case a previous attempt to finish this release branch has failed,
-		# but the tag was set successful, we skip it now
-		if ! git_tag_exists "$VERSION_PREFIX$VERSION"; then
-			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
-				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
-			fi
-			opts="-a"
-			flag sign && opts="$opts -s"
-			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
-			[ "$FLAGS_message" != "" ] && opts="$opts -m '$FLAGS_message'"
-			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
-			eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
-		fi
-	fi
-
-	# By default we backmerge the $MASTER_BRANCH unless the user explicitly
-	# stated not to do a back merge, in that case we use the $BRANCH.
-	if noflag nobackmerge; then
-		merge_branch="$MASTER_BRANCH"
+	if [ "$BASE_BRANCH" = "$DEVELOP_BRANCH" ]; then
+		_finish_from_develop
 	else
-		merge_branch="$BRANCH"
+		_finish_base
 	fi
-
-	# Try to merge into develop.
-	# In case a previous attempt to finish this release branch has failed,
-	# but the merge into develop was successful, we skip it now
-	if ! git_is_branch_merged_into "$merge_branch" "$DEVELOP_BRANCH"; then
-		git_do checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
-
-		if noflag nobackmerge; then
-			# Accounting for 'git describe', if a release is tagged
-			# we use the tag commit instead of the branch.
-			if noflag notag; then
-				commit="$VERSION_PREFIX$VERSION"
-			else
-				commit="$MASTER_BRANCH"
-			fi
-		else
-			commit="$BRANCH"
-		fi
-
-		if noflag squash; then
-			git_do merge --no-ff "$commit" || die "There were merge conflicts." # TODO: What do we do now?
-		else
-			git_do merge --squash "$commit" || die "There were merge conflicts." # TODO: What do we do now?
-			git_do commit
-		fi
-	fi
-
-	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
-
-	# Delete branch
-	if noflag keep; then
-		if [ "$BRANCH" = "$(git_current_branch)" ]; then
-			git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
-		fi
-		if noflag keeplocal; then
-			git_do branch -d "$BRANCH"
-		fi
-		if noflag keepremote; then
-			remotebranch=0
-			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-				remotebranch=1
-				git_remote_branch_delete "$BRANCH"
-			fi
-		fi
-	fi
-
-	if flag push; then
-		git_do push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
-		git_do push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push branch '$MASTER_BRANCH' to remote '$ORIGIN'."
-		if noflag notag; then
-			git_do push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
-		fi
-	fi
-
-	echo
-	echo "Summary of actions:"
-	if flag fetch; then
-		echo "- Latest objects have been fetched from '$ORIGIN'"
-	fi
-	echo "- Release branch '$BRANCH' has been merged into '$MASTER_BRANCH'"
-	if noflag notag; then
-		echo "- The release was tagged '$VERSION_PREFIX$VERSION'"
-	fi
-	[ "$commit" = "$MASTER_BRANCH" ] && echo "- Master branch '$MASTER_BRANCH' has been back-merged into '$DEVELOP_BRANCH'"
-	[ "$commit" = "$VERSION_PREFIX$VERSION" ] && echo "- Release tag '$VERSION_PREFIX$VERSION' has been back-merged into '$DEVELOP_BRANCH'"
-	[ "$commit" = "$BRANCH" ] && echo "- Release branch '$BRANCH' has been merged into '$DEVELOP_BRANCH'"
-
-	if noflag keep; then
-		keepmsg="'has been deleted"
-		if flag keeplocal; then
-			local keepmsg="is locally still available."
-			if [ $remotebranch -eq 1 ]; then
-				keepmsg=$keepmsg" It is deleted from '$ORIGIN'."
-			fi
-		fi
-		if flag keepremote; then
-			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-				keepmsg="is remotely still available. It is deleted locally."
-			fi
-		fi
-	else
-		keepmsg="is still available"
-	fi
-	echo "- Release branch '$BRANCH' "$keepmsg
-
-	if flag push; then
-		echo "- '$DEVELOP_BRANCH', '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
-	fi
-	echo "- You are now on branch '$(git_current_branch)'"
-	echo
 }
 
 cmd_branch() {

@@ -13,7 +13,16 @@
 
 # Changelog
 
-#### 1.4.0-dev.7
+#### 1.4.0-dev.16
+[Peter van der Does][petervanderdoes]
+* Remember the base.    
+  With the commands feature/hotfix/release start you can give a base from which 
+  the new branch will be created. Upon finishing this branch it will 
+  automatically merge the branch back into the base as given during the start.     
+  If no base is given the normal functionality will be followed.     
+  With the hotfix and release, if a base is given and it's not the 
+  DEVELOP_BRANCH, the branch will *NOT* be merged back into the $DEVELOP_BRANCH 
+  upon finishing this branch. 
 [Daniel Dehennin][baby-gnu]
 * Permit to use a single symlink as installation method
 
