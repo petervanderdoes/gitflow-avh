@@ -384,7 +384,7 @@ gitflow_config_remove_base_section() {
 	local branch
 
 	branch=$1
-	$(git config --file=$GITFLOW_CONFIG --remove-section "branch.$branch")
+	$(git config --file=$GITFLOW_CONFIG --remove-section "branch.$branch" 2>/dev/null)
 }
 
 #
@@ -395,7 +395,7 @@ gitflow_config_remove_base_branch() {
 	local base
 
 	base=$1
-	$(git config --file=$GITFLOW_CONFIG --unset "branch.$branch.base")
+	$(git config --file=$GITFLOW_CONFIG --unset "branch.$branch.base" 2>/dev/null)
 }
 
 #
