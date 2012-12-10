@@ -13,7 +13,7 @@
 
 # Changelog
 
-#### 1.4.0-dev.7
+#### 1.4.0-dev.16
 [Peter van der Does][petervanderdoes]
 * Remember the base.    
   With the commands feature/hotfix/release start you can give a base from which 
