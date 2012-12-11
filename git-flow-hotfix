@@ -513,7 +513,7 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 	if noflag notag; then
 		echo "- The hotfix was tagged '$VERSION_PREFIX$VERSION'"
 	fi
-	if [ "$BASE_BRANCH" = "$MASTER_BRANCH" ];
+	if [ "$BASE_BRANCH" = "$MASTER_BRANCH" ]; then
 		[ "$commit" = "$BASE_BRANCH" ] && echo "- Master branch '$BASE_BRANCH' has been back-merged into '$DEVELOP_BRANCH'"
 		[ "$commit" = "$VERSION_PREFIX$VERSION" ] && echo "- Hotfix tag '$VERSION_PREFIX$VERSION' has been back-merged into '$DEVELOP_BRANCH'"
 		[ "$commit" = "$BRANCH" ] && echo "- Hotfix branch '$BRANCH' has been merged into '$DEVELOP_BRANCH'"
@@ -536,7 +536,7 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 	fi
 	echo "- Hotfix branch '$BRANCH' "$keepmsg
 	if flag push; then
-		if [ "$BASE_BRANCH" = "$MASTER_BRANCH" ];
+		if [ "$BASE_BRANCH" = "$MASTER_BRANCH" ]; then
 			echo "- '$DEVELOP_BRANCH', '$BASE_BRANCH' and tags have been pushed to '$ORIGIN'"
 		else
 			echo "- '$BASE_BRANCH' and tags have been pushed to '$ORIGIN'"
