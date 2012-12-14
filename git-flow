@@ -54,7 +54,7 @@ FreeBSD|OpenBSD|NetBSD)
 	export GITFLOW_DIR=$(dirname "$(realpath "$0")")
 	;;
 Darwin)
-	$PRG="$0"
+	PRG="$0"
 	while [ -h "$PRG" ]; do
 		link=$(readlink "$0")
 		if expr "$link" : '/.*' > /dev/null; then
