@@ -36,18 +36,41 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 #
-
-# Set this to workaround expr problems in shFlags on FreeBSD
-if uname -s | egrep -iq 'bsd'; then export EXPR_COMPAT=1; fi
-
 # enable debug mode
 if [ "$DEBUG" = "yes" ]; then
 	set -x
 fi
 
-# The sed expression here replaces all backslashes by forward slashes.
-# This helps our Windows users, while not bothering our Unix users.
-export GITFLOW_DIR=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+# Setup the GITFLOW_DIR for different operating systems.
+# This is mostly to make sure that we get the correct directory when the
+# git-flow file is a symbolic link
+case $(uname -s) in
+Linux)
+	export GITFLOW_DIR=$(dirname "$(readlink -e "$0")")
+	;;
+FreeBSD|OpenBSD|NetBSD)
+	# Set this to workaround expr problems in shFlags on FreeBSD
+	export EXPR_COMPAT=1
+	export GITFLOW_DIR=$(dirname "$(realpath "$0")")
+	;;
+Darwin)
+	$PRG="$0"
+	while [ -h "$PRG" ]; do
+		link=$(readlink "$0")
+		if expr "$link" : '/.*' > /dev/null; then
+			PRG="$link"
+		else
+			PRG="$(dirname "$PRG")/$link"
+		fi
+	done
+	export GITFLOW_DIR=$(dirname "$PRG")
+	;;
+*)
+	# The sed expression here replaces all backslashes by forward slashes.
+	# This helps our Windows users, while not bothering our Unix users.)
+	export GITFLOW_DIR=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+	;;
+esac
 
 # Extra environment settings
 if [ -f ~/.gitflow_export ]; then

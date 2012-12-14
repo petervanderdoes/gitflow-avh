@@ -13,7 +13,7 @@
 
 # Changelog
 
-#### 1.4.0-dev.20
+#### 1.4.0-dev.22
 [Peter van der Does][petervanderdoes]
 * Remember the base.    
   With the commands feature/hotfix/release start you can give a base from which 
@@ -23,8 +23,7 @@
   With the hotfix and release, if a base is given and it's not the 
   DEVELOP_BRANCH, the branch will *NOT* be merged back into the $DEVELOP_BRANCH 
   upon finishing this branch. 
-[Daniel Dehennin][baby-gnu]
-* Permit to use a single symlink as installation method
+* Get the correct working directory when the git-flow file is a symbolic link.
 
 #### 1.3.1
 * Bugix: git flow config list results in error.
