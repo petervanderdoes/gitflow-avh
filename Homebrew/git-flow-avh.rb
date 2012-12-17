@@ -2,8 +2,8 @@ require 'formula'
 
 class GitFlowCompletionAvh < Formula
   homepage 'https://github.com/petervanderdoes/git-flow-completion'
-  url 'https://github.com/petervanderdoes/git-flow-completion.git', :tag => '0.4.2'
-  version '0.4.2'
+  url 'https://github.com/petervanderdoes/git-flow-completion.git', :tag => '1.3.1'
+  version '1.3.1'
 
   head 'https://github.com/petervanderdoes/git-flow-completion.git', :branch => 'develop'
 end
