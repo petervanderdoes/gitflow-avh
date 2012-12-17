@@ -500,7 +500,7 @@ v,verbose! verbose (more) output
 	# Parse arguments
 	parse_args "$@"
 	eval set -- "${FLAGS_ARGV}"
-	base=${2:-DEVELOP_BRANCH}
+	base=${2:-$DEVELOP_BRANCH}
 
 	# Run filter on the version
 	VERSION=$(run_filter_hook release-start-version $VERSION)
