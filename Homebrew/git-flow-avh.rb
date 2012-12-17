@@ -11,7 +11,6 @@ end
 class GitFlowAvh < Formula
   homepage 'https://github.com/petervanderdoes/gitflow'
 
-  # Use the tag instead of the tarball to get submodules
   url 'https://github.com/petervanderdoes/gitflow.git', :tag => '1.3.1'
   version '1.3.1'
 
