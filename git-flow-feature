@@ -421,38 +421,32 @@ S,squash       Squash feature during merge
 }
 
 helper_finish_cleanup() {
-	local keepmsg remotebranch removebase
+	local keepmsg remotebranchdeleted localbranchdeleted
 
 	# Sanity checks
 	require_branch "$BRANCH"
 	require_clean_working_tree
 
 	if noflag keep; then
-		removebase=$FLAGS_FALSE
-
-		if noflag keeplocal; then
-			removebase=$FLAGS_TRUE
-			if flag force_delete; then
-				git_do branch -D "$BRANCH"
-			else
-				git_do branch -d "$BRANCH"
-			fi
-		fi
-
-		if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-			removebase=$FLAGS_FALSE
-		fi
-
+	
+		# Always delete remote first
 		if noflag keepremote;then
-			remotebranch=0
 			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-				removebase=$FLAGS_TRUE
-				remotebranch=1
-				git_remote_branch_delete "$BRANCH"
+				git_remote_branch_delete "$BRANCH" && remotebranchdeleted=1
 			fi
 		fi
 
-		if [ $removebase -eq $FLAGS_TRUE ]; then
+		# Delete local after remote to avoid warnings
+		if noflag keeplocal; then
+			if flag force_delete; then
+				git_do branch -D "$BRANCH" && localbranchdeleted=1
+			else
+				git_do branch -d "$BRANCH" && localbranchdeleted=1
+			fi
+		fi
+		
+		# no more branches: we can safely remove config section
+		if ! git_remote_branch_exists "$ORIGIN/$BRANCH" -a ! git_local_branch_exists "$BRANCH"; then
 			gitflow_config_remove_base_section "$BRANCH"
 		fi
 	fi
@@ -462,20 +456,21 @@ helper_finish_cleanup() {
 	echo "- The feature branch '$BRANCH' was merged into '$BASE_BRANCH'"
 	#echo "- Merge conflicts were resolved"		# TODO: Add this line when it's supported
 	if noflag keep; then
-		keepmsg="'has been deleted"
-		if flag keeplocal; then
-			keepmsg="is locally still available."
-			if [ $remotebranch -eq 1 ]; then
-				keepmsg=$keepmsg" It is deleted from '$ORIGIN'."
-			fi
+		if [ $localbranchdeleted -eq 1 ]; then
+			keepmsg="has been locally deleted"
+		else
+			keepmsg="is still locally available"
 		fi
-		if flag keepremote ; then
-			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-				keepmsg="is remotely still available. It is deleted locally."
-			fi
+		if [ $remotebranchdeleted -eq 1 ]; then
+			keepmsg=$keepmsg"; it has been remotely deleted from '$ORIGIN'"
+		elif git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			keepmsg=$keepmsg"; it is still remotely available on '$ORIGIN'"
 		fi
 	else
-		keepmsg="is still available"
+		keepmsg="is still locally available"
+		if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			keepmsg=$keepmsg"; it is still remotely available on '$ORIGIN'"
+		fi
 	fi
 	echo "- Feature branch '$BRANCH' "$keepmsg
 	echo "- You are now on branch '$(git_current_branch)'"

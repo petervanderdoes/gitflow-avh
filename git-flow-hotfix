@@ -301,7 +301,7 @@ git flow hotfix finish [-h] [-F] [-s] [-u] [-m | -f ] [-p] [-k] [-n] [-b] <versi
 Finish hotfix branch <version>
 --
 h,help!           Show this help
-showcommands!    Show git commands while executing them
+showcommands!     Show git commands while executing them
 F,fetch           Fetch from origin before performing finish
 s,sign            Sign the release tag cryptographically
 u,signingkey      Use the given GPG-key for the digital signature (implies -s)
@@ -311,10 +311,11 @@ p,push            Push to origin after performing finish
 k,keep            Keep branch after performing finish
 keepremote        Keep the remote branch
 keeplocal         Keep the local branch
+D,force_delete    Force delete hotfix branch after finish
 n,notag           Don't tag this release
 b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 "
-	local opts commit remotebranch removebase
+	local opts commit keepmsg remotebranchdeleted localbranchdeleted
 
 	# Define flags
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
@@ -326,6 +327,7 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 	DEFINE_boolean keep false "keep branch after performing finish" k
 	DEFINE_boolean keepremote false "keep the remote branch"
 	DEFINE_boolean keeplocal false "keep the local branch"
+	DEFINE_boolean force_delete false "force delete hotfix branch after finish" D
 	DEFINE_boolean notag false "don't tag this release" n
 	DEFINE_boolean nobackmerge false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
 
@@ -473,29 +475,28 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 
 	# Delete branch
 	if noflag keep; then
-		removebase=$FLAGS_FALSE
 
-		if noflag keeplocal; then
-			removebase=$FLAGS_TRUE
-			git_do branch -d "$BRANCH"
-		fi
-
-		if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-			removebase=$FLAGS_FALSE
-		fi
-
+		# Always delete remote first
 		if noflag keepremote;then
-			removebase=$FLAGS_TRUE
-			remotebranch=0
 			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-				remotebranch=1
-				git_remote_branch_delete "$BRANCH"
+				git_remote_branch_delete "$BRANCH" && remotebranchdeleted=1
 			fi
 		fi
 
-		if [ $removebase -eq $FLAGS_TRUE ]; then
+		# Delete local after remote to avoid warnings
+		if noflag keeplocal; then
+			if flag force_delete; then
+				git_do branch -D "$BRANCH" && localbranchdeleted=1
+			else
+				git_do branch -d "$BRANCH" && localbranchdeleted=1
+			fi
+		fi
+		
+		# no more branches: we can safely remove config section
+		if ! git_remote_branch_exists "$ORIGIN/$BRANCH" -a ! git_local_branch_exists "$BRANCH"; then
 			gitflow_config_remove_base_section "$BRANCH"
 		fi
+		
 	fi
 
 	if flag push; then
@@ -513,7 +514,7 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 	if flag fetch; then
 		echo "- Latest objects have been fetched from '$ORIGIN'"
 	fi
-	echo "- Hotfix branch '$BRANCH'has been merged into '$BASE_BRANCH'"
+	echo "- Hotfix branch '$BRANCH' has been merged into '$BASE_BRANCH'"
 	if noflag notag; then
 		echo "- The hotfix was tagged '$VERSION_PREFIX$VERSION'"
 	fi
@@ -523,20 +524,21 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 		[ "$commit" = "$BRANCH" ] && echo "- Hotfix branch '$BRANCH' has been merged into '$DEVELOP_BRANCH'"
 	fi
 	if noflag keep; then
-		local keepmsg="'has been deleted"
-		if flag keeplocal; then
-			keepmsg="is locally still available."
-			if [ $remotebranch -eq 1 ]; then
-				keepmsg=$keepmsg" It is deleted from '$ORIGIN'."
-			fi
+		if [ $localbranchdeleted -eq 1 ]; then
+			keepmsg="has been locally deleted"
+		else
+			keepmsg="is still locally available"
 		fi
-		if flag keepremote ; then
-			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-				keepmsg="is remotely still available. It is deleted locally."
-			fi
+		if [ $remotebranchdeleted -eq 1 ]; then
+			keepmsg=$keepmsg"; it has been remotely deleted from '$ORIGIN'"
+		elif git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			keepmsg=$keepmsg"; it is still remotely available on '$ORIGIN'"
 		fi
 	else
-		keepmsg="is still available"
+		keepmsg="is still locally available"
+		if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			keepmsg=$keepmsg"; it is still remotely available on '$ORIGIN'"
+		fi
 	fi
 	echo "- Hotfix branch '$BRANCH' "$keepmsg
 	if flag push; then
