@@ -377,24 +377,28 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 		fi
 	fi
 
-	# Check if the hotfix branch:
-	# - has commits: No reason to finish a hotfix without commits
-	# - Is ahead of the BASE: If it's not a good idea to merge
-	# - Can be merged: If there's no common ancestor we can't merge the hotfix
-	git_compare_refs "$BRANCH" "$BASE_BRANCH"
-	case $? in
-	0)
-		die "You need some commits in the hotfix branch '$BRANCH'"
-		;;
-	1)
-		die "The hotfix branch '$BRANCH' is not ahead of branch '$BASE_BRANCH'"
-		;;
-	4)
-		die "The hotfix branch '$BRANCH' has no common ancestor with branch '$BASE_BRANCH'"
+	# If the branch is already merged there is no need to check the hotfix branch
+	# This can happen when the merge in develop fails and we rerun the finish.
+	if ! git_is_branch_merged_into "$BRANCH" "$BASE_BRANCH"; then
+		# Check if the hotfix branch:
+		# - has commits: No reason to finish a hotfix without commits
+		# - Is ahead of the BASE: If it's not a good idea to merge
+		# - Can be merged: If there's no common ancestor we can't merge the hotfix
+		git_compare_refs "$BRANCH" "$BASE_BRANCH"
+		case $? in
+		0)
+			die "You need some commits in the hotfix branch '$BRANCH'"
+			;;
+		1)
+			die "The hotfix branch '$BRANCH' is not ahead of branch '$BASE_BRANCH'"
+			;;
+		4)
+			die "The hotfix branch '$BRANCH' has no common ancestor with branch '$BASE_BRANCH'"
 			;;
 		*)
 			;;
-	esac
+		esac
+	fi
 
 	if noflag notag; then
 		# We ask for a tag, be sure it does not exists or
