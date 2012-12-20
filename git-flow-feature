@@ -438,6 +438,9 @@ helper_finish_cleanup() {
 
 		# Delete local after remote to avoid warnings
 		if noflag keeplocal; then
+			if [ "$BRANCH" = "$(git_current_branch)" ]; then
+				git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
+			fi
 			if flag force_delete; then
 				git_do branch -D "$BRANCH" && localbranchdeleted=1
 			else
