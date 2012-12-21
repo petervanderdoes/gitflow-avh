@@ -14,7 +14,7 @@
 
 # Changelog
 
-#### 1.4.0-dev.27
+#### 1.4.0-dev.28
 [Peter van der Does][petervanderdoes]
 * Remember the base.    
   With the commands feature/hotfix/release start you can give a base from which 
@@ -26,6 +26,11 @@
   upon finishing this branch. 
 * Get the correct working directory when the git-flow file is a symbolic link.
 * Don't check/compare hotfix and base branch when branch is merged already.
+* Upstream update of shFlags.    
+  The upstream fixes a problem with BSD systems. It does rely on the command
+  `gexpr` instead of `expr`. A workaround has been implemented in git-flow, but
+  it is better to install `gexpr`. For more information about installing 
+  git-flow on BSD systems see our [wiki page](https://github.com/petervanderdoes/gitflow/wiki/Installing-on-BSD-systems)
 
 [Alexandre Dutra][adutra]
 * Git refuses to delete local branch with "-d" if it is tracking a remote one.
