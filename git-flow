@@ -101,11 +101,6 @@ main() {
 		exit 1
 	fi
 
-	# This environmental variable fixes non-POSIX getopt style argument
-	# parsing, effectively breaking git-flow subcommand parsing on several
-	# Linux platforms.
-	export POSIXLY_CORRECT=1
-
 	# Use the shFlags project to parse the command line arguments
 	. "$GITFLOW_DIR/gitflow-shFlags"
 	FLAGS_PARENT="git flow"
@@ -115,10 +110,6 @@ main() {
 
 	# allow user to request git action logging
 	DEFINE_boolean showcommands false 'Show actions taken (git commands)'
-
-	# do actual parsing
-	FLAGS "$@" || exit $?
-	eval set -- "${FLAGS_ARGV}"
 
 	# Sanity checks
 	SUBCOMMAND="$1"; shift

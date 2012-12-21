@@ -14,7 +14,7 @@
 
 # Changelog
 
-#### 1.4.0-dev.28
+#### 1.4.0-dev.29
 [Peter van der Does][petervanderdoes]
 * Remember the base.    
   With the commands feature/hotfix/release start you can give a base from which 
@@ -31,6 +31,9 @@
   `gexpr` instead of `expr`. A workaround has been implemented in git-flow, but
   it is better to install `gexpr`. For more information about installing 
   git-flow on BSD systems see our [wiki page](https://github.com/petervanderdoes/gitflow/wiki/Installing-on-BSD-systems)
+* Remove export POSIXLY_CORRECT.    
+  Setting this environment variable can mess things up when git-flow is used in 
+  combination with other shell scripts.
 
 [Alexandre Dutra][adutra]
 * Git refuses to delete local branch with "-d" if it is tracking a remote one.
