@@ -427,12 +427,15 @@ helper_finish_cleanup() {
 	require_branch "$BRANCH"
 	require_clean_working_tree
 
+	remotebranchdeleted=$FLAGS_FALSE
+	localbranchdeleted=$FLAGS_FALSE
+
 	if noflag keep; then
-	
+
 		# Always delete remote first
 		if noflag keepremote;then
 			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-				git_remote_branch_delete "$BRANCH" && remotebranchdeleted=1
+				git_remote_branch_delete "$BRANCH" && remotebranchdeleted=$FLAGS_TRUE
 			fi
 		fi
 
@@ -442,12 +445,12 @@ helper_finish_cleanup() {
 				git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
 			fi
 			if flag force_delete; then
-				git_do branch -D "$BRANCH" && localbranchdeleted=1
+				git_do branch -D "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
 			else
-				git_do branch -d "$BRANCH" && localbranchdeleted=1
+				git_do branch -d "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
 			fi
 		fi
-		
+
 		# no more branches: we can safely remove config section
 		if ! git_remote_branch_exists "$ORIGIN/$BRANCH" -a ! git_local_branch_exists "$BRANCH"; then
 			gitflow_config_remove_base_section "$BRANCH"
@@ -459,12 +462,12 @@ helper_finish_cleanup() {
 	echo "- The feature branch '$BRANCH' was merged into '$BASE_BRANCH'"
 	#echo "- Merge conflicts were resolved"		# TODO: Add this line when it's supported
 	if noflag keep; then
-		if [ $localbranchdeleted -eq 1 ]; then
+		if [ $localbranchdeleted ]; then
 			keepmsg="has been locally deleted"
 		else
 			keepmsg="is still locally available"
 		fi
-		if [ $remotebranchdeleted -eq 1 ]; then
+		if [ $remotebranchdeleted ]; then
 			keepmsg=$keepmsg"; it has been remotely deleted from '$ORIGIN'"
 		elif git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 			keepmsg=$keepmsg"; it is still remotely available on '$ORIGIN'"

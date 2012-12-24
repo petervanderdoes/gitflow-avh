@@ -42,7 +42,10 @@
 _finish_from_develop() {
 	local opts merge_branch commit keepmsg remotebranchdeleted localbranchdeleted
 
-		# Update local branches with remote branches
+	remotebranchdeleted=$FLAGS_FALSE
+	localbranchdeleted=$FLAGS_FALSE
+
+	# Update local branches with remote branches
 	if flag fetch; then
 		git_fetch_branch "$ORIGIN" "$MASTER_BRANCH"
 		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
@@ -146,19 +149,19 @@ _finish_from_develop() {
 		# Always delete remote first
 		if noflag keepremote;then
 			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-				git_remote_branch_delete "$BRANCH" && remotebranchdeleted=1
+				git_remote_branch_delete "$BRANCH" && remotebranchdeleted=$FLAGS_TRUE
 			fi
 		fi
 
 		# Delete local after remote to avoid warnings
 		if noflag keeplocal; then
 			if flag force_delete; then
-				git_do branch -D "$BRANCH" && localbranchdeleted=1
+				git_do branch -D "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
 			else
-				git_do branch -d "$BRANCH" && localbranchdeleted=1
+				git_do branch -d "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
 			fi
 		fi
-		
+
 		# no more branches: we can safely remove config section
 		if ! git_remote_branch_exists "$ORIGIN/$BRANCH" -a ! git_local_branch_exists "$BRANCH"; then
 			gitflow_config_remove_base_section "$BRANCH"
@@ -187,12 +190,12 @@ _finish_from_develop() {
 	[ "$commit" = "$BRANCH" ] && echo "- Release branch '$BRANCH' has been merged into '$DEVELOP_BRANCH'"
 
 	if noflag keep; then
-		if [ $localbranchdeleted -eq 1 ]; then
+		if [ $localbranchdeleted ]; then
 			keepmsg="has been locally deleted"
 		else
 			keepmsg="is still locally available"
 		fi
-		if [ $remotebranchdeleted -eq 1 ]; then
+		if [ $remotebranchdeleted ]; then
 			keepmsg=$keepmsg"; it has been remotely deleted from '$ORIGIN'"
 		elif git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 			keepmsg=$keepmsg"; it is still remotely available on '$ORIGIN'"
@@ -219,6 +222,9 @@ _finish_from_develop() {
 
 _finish_base() {
 	local opts merge_branch commit keepmsg localbranchdeleted remotebranchdeleted
+
+	remotebranchdeleted=$FLAGS_FALSE
+	localbranchdeleted=$FLAGS_FALSE
 
 	# Update local branches with remote branches
 	if flag fetch; then
@@ -295,7 +301,7 @@ _finish_base() {
 		# Always delete remote first
 		if noflag keepremote;then
 			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-				git_remote_branch_delete "$BRANCH" && remotebranchdeleted=1
+				git_remote_branch_delete "$BRANCH" && remotebranchdeleted=$FLAGS_TRUE
 			fi
 		fi
 
@@ -305,12 +311,12 @@ _finish_base() {
 				git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
 			fi
 			if flag force_delete; then
-				git_do branch -D "$BRANCH" && localbranchdeleted=1
+				git_do branch -D "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
 			else
-				git_do branch -d "$BRANCH" && localbranchdeleted=1
+				git_do branch -d "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
 			fi
 		fi
-		
+
 		# no more branches: we can safely remove config section
 		if ! git_remote_branch_exists "$ORIGIN/$BRANCH" -a ! git_local_branch_exists "$BRANCH"; then
 			gitflow_config_remove_base_section "$BRANCH"
@@ -335,12 +341,12 @@ _finish_base() {
 	[ "$commit" = "$VERSION_PREFIX$VERSION" ] && echo "- Release tag '$VERSION_PREFIX$VERSION' has been merged into '$BASE_BRANCH'"
 	[ "$commit" = "$BRANCH" ] && echo "- Release branch '$BRANCH' has been merged into '$BASE_BRANCH'"
 	if noflag keep; then
-		if [ $localbranchdeleted -eq 1 ]; then
+		if [ $localbranchdeleted ]; then
 			keepmsg="has been locally deleted"
 		else
 			keepmsg="is still locally available"
 		fi
-		if [ $remotebranchdeleted -eq 1 ]; then
+		if [ $remotebranchdeleted ]; then
 			keepmsg=$keepmsg"; it has been remotely deleted from '$ORIGIN'"
 		elif git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 			keepmsg=$keepmsg"; it is still remotely available on '$ORIGIN'"

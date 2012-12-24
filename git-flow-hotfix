@@ -334,6 +334,8 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 	# Parse arguments
 	parse_args "$@"
 
+	remotebranchdeleted=$FLAGS_FALSE
+	localbranchdeleted=$FLAGS_FALSE
 	gitflow_require_version_arg
 
 	# Handle flags that imply other flags
@@ -475,11 +477,11 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 
 	# Delete branch
 	if noflag keep; then
-	
+
 		# Always delete remote first
 		if noflag keepremote;then
 			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-				git_remote_branch_delete "$BRANCH" && remotebranchdeleted=1
+				git_remote_branch_delete "$BRANCH" && remotebranchdeleted=$FLAGSS_TRUE
 			fi
 		fi
 
@@ -489,17 +491,17 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 				git_do checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
 			fi
 			if flag force_delete; then
-				git_do branch -D "$BRANCH" && localbranchdeleted=1
+				git_do branch -D "$BRANCH" && localbranchdeleted=$FLAGSS_TRUE
 			else
-				git_do branch -d "$BRANCH" && localbranchdeleted=1
+				git_do branch -d "$BRANCH" && localbranchdeleted=$FLAGSS_TRUE
 			fi
 		fi
-		
+
 		# no more branches: we can safely remove config section
 		if ! git_remote_branch_exists "$ORIGIN/$BRANCH" -a ! git_local_branch_exists "$BRANCH"; then
 			gitflow_config_remove_base_section "$BRANCH"
 		fi
-		
+
 	fi
 
 	if flag push; then
@@ -527,12 +529,12 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 		[ "$commit" = "$BRANCH" ] && echo "- Hotfix branch '$BRANCH' has been merged into '$DEVELOP_BRANCH'"
 	fi
 	if noflag keep; then
-		if [ $localbranchdeleted -eq 1 ]; then
+		if [ $localbranchdeleted ]; then
 			keepmsg="has been locally deleted"
 		else
 			keepmsg="is still locally available"
 		fi
-		if [ $remotebranchdeleted -eq 1 ]; then
+		if [ $remotebranchdeleted ]; then
 			keepmsg=$keepmsg"; it has been remotely deleted from '$ORIGIN'"
 		elif git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 			keepmsg=$keepmsg"; it is still remotely available on '$ORIGIN'"
