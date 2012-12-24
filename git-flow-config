@@ -248,6 +248,45 @@ file= use given config file
 	echo
 }
 
+cmd_set_base () {
+	OPTIONS_SPEC="\
+git flow config set-base <branch> <base>
+
+Set the given <base> for the given <branch>
+--
+h,help!           Show this help
+"
+	FLAGS "$@" || exit $?
+	eval set -- "${FLAGS_ARGV}"
+
+	require_branch "$1"
+	git_branch_exists "$2" || die_help "Given base doesn't exists or is not a branch."
+
+	gitflow_config_set_base_branch "$2" "$1"
+}
+
+cmd_get_base () {
+	OPTIONS_SPEC="\
+git flow config get-base <branch>
+
+Display the <base> for the given <branch>
+--
+h,help!           Show this help
+"
+	local base
+
+	FLAGS "$@" || exit $?
+	eval set -- "${FLAGS_ARGV}"
+
+	base=$(gitflow_config_get_base_branch "$1")
+	echo
+	if [ -z "$base" ]; then
+		echo "Base branch not set for branch "$1""
+	else
+		echo "Base branch for branch "$1" set to "$base""
+	fi
+}
+
 cmd_help() {
 	usage
 	exit 0

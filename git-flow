@@ -123,13 +123,24 @@ main() {
 	. "$GITFLOW_DIR/git-flow-$SUBCOMMAND"
 	FLAGS_PARENT="git flow $SUBCOMMAND"
 
-	# Test if the first argument is a flag (i.e. starts with '-')
-	# in that case, we interpret this arg as a flag for the default
-	# command
-	SUBACTION="default"
-	if [ "$1" != "" ] && { ! echo "$1" | grep -q "^-"; } then
-		SUBACTION="$1"; shift
+	# If the first argument is a flag, it starts with '-', we interpret this
+	# argument as a flag for the default command.
+	if startswith "$1" "-"; then
+		SUBACTION="default"
+	else
+		SUBACTION="$1"
+		shift
+		# Do not allow direct calls to subactions with an underscore.
+		if $(contains "$SUBACTION" "_"); then
+			warn "Unknown subcommand: '$SUBACTION'"
+			usage
+			exit 1
+		fi
+		# Replace the dash with an underscore as bash doesn't allow a dash
+		# in the function name.
+		SUBACTION=$(echo "$SUBACTION" |tr '-' '_')
 	fi
+
 	if ! type "cmd_$SUBACTION" >/dev/null 2>&1; then
 		warn "Unknown subcommand: '$SUBACTION'"
 		usage
