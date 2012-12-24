@@ -48,13 +48,23 @@ escape() {
 	echo "$1" | sed 's/\([\.\$\*]\)/\\\1/g'
 }
 
-# Set logic
-has() {
-	local item
+#
+# String contains function
+# $1 haystack
+# $2 Needle
+#
+contains() {
+	local return
 
-	item=$1
-	shift
-	echo " $@ " | grep -q " $(escape $item) "
+	case $1 in
+		*$2*)
+			return=$FLAGS_TRUE
+			;;
+		*)
+			return=$FLAGS_FALSE
+			;;
+	esac
+	return $return
 }
 
 # Basic math
