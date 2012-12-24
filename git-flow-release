@@ -601,6 +601,7 @@ S,squash        Squash release during merge
 	gitflow_require_version_arg
 	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
 	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
+	git_local_branch_exists "BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't finish the release branch '$BRANCH'."
 
 	# Handle flags that imply other flags
 	if [ "$FLAGS_signingkey" != "" ]; then

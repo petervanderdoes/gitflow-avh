@@ -354,6 +354,7 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 
 	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
 	BASE_BRANCH=${BASE_BRANCH:-$MASTER_BRANCH}
+	git_local_branch_exists "BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't finish the hotfix branch '$BRANCH'."
 
 	# We always fetch the Branch from Origin
 	# This is done to avoid possible commits on the remote that are not
