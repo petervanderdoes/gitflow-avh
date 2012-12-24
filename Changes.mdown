@@ -23,7 +23,11 @@
   If no base is given the normal functionality will be followed.     
   With the hotfix and release, if a base is given and it's not the 
   DEVELOP_BRANCH, the branch will *NOT* be merged back into the $DEVELOP_BRANCH 
-  upon finishing this branch. 
+  upon finishing this branch.
+* Two new config commands.  
+  git flow config set-base and get-base. These can be used to set and get the 
+  base for feature/hotfix/release branches so it can be used when finishing 
+  these branches.
 * Get the correct working directory when the git-flow file is a symbolic link.
 * Don't check/compare hotfix and base branch when branch is merged already.
 * Upstream update of shFlags.    
