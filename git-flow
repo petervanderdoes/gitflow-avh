@@ -127,6 +127,8 @@ main() {
 	# argument as a flag for the default command.
 	if startswith "$1" "-"; then
 		SUBACTION="default"
+	elif [ -z "$1" ]; then
+		SUBACTION="default"
 	else
 		SUBACTION="$1"
 		shift
