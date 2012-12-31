@@ -87,16 +87,8 @@
 [ -n "${FLAGS_VERSION:-}" ] && return 0
 FLAGS_VERSION='1.0.4pre'
 
-# Set some reasonable defaults.
-__FLAGS_UNAME_S=`uname -s`
-case "${__FLAGS_UNAME_S}" in
-  BSD) __FLAGS_EXPR_CMD='gexpr' ;;
-  *) __FLAGS_EXPR_CMD='expr' ;;
-esac
-
 # A user can set the path to different commands by overriding these variables in
 # their script.
-FLAGS_EXPR_CMD=${FLAGS_EXPR_CMD:-${__FLAGS_EXPR_CMD}}
 FLAGS_GETOPT_CMD=${FLAGS_GETOPT_CMD:-getopt}
 
 # return values that scripts can use
@@ -108,7 +100,7 @@ FLAGS_ERROR=2
 _flags_debug() { echo "flags:DEBUG $@" >&2; }
 _flags_warn() { echo "flags:WARN $@" >&2; }
 _flags_error() { echo "flags:ERROR $@" >&2; }
-_flags_fatal() { echo "flags:FATAL $@" >&2; exit ${FLAGS_ERROR}; }
+_flags_fatal() { echo "flags:FATAL $@" >&2; }
 
 # specific shell checks
 if [ -n "${ZSH_VERSION:-}" ]; then
@@ -119,6 +111,7 @@ if [ -n "${ZSH_VERSION:-}" ]; then
   if [ -z "${FLAGS_PARENT:-}" ]; then
     _flags_fatal "zsh does not pass \$0 through properly. please declare' \
 \"FLAGS_PARENT=\$0\" before calling shFlags"
+  exit ${FLAGS_ERROR};
   fi
 fi
 
@@ -146,7 +139,9 @@ case $? in
       __FLAGS_GETOPT_VERS=${__FLAGS_GETOPT_VERS_ENH}
     fi
     ;;
-  *) _flags_fatal 'unable to determine getopt version' ;;
+  *) _flags_fatal 'unable to determine getopt version'
+    exit ${FLAGS_ERROR}
+    ;;
 esac
 
 # getopt optstring lengths
@@ -384,7 +379,7 @@ _flags_genOptStr()
   for _flags_name_ in ${__flags_longNames}; do
     _flags_usName_=`_flags_underscoreName ${_flags_name_}`
     _flags_type_=`_flags_getFlagInfo ${_flags_usName_} ${__FLAGS_INFO_TYPE}`
-    [ $? -eq ${FLAGS_TRUE} ] || _flags_fatal 'call to _flags_type_ failed'
+    [ $? -eq ${FLAGS_TRUE} ] || ( _flags_fatal 'call to _flags_type_ failed'; return ${FLAGS_ERROR} )
     case ${_flags_optStrType_} in
       ${__FLAGS_OPTSTR_SHORT})
         _flags_shortName_=`_flags_getFlagInfo \
@@ -677,13 +672,6 @@ _flags_parseGetopt()
     # note the quotes around the `$@' -- they are essential!
     eval set -- "$@"
   fi
-
-  # provide user with number of arguments to shift by later
-  # NOTE: the FLAGS_ARGC variable is obsolete as of 1.0.3 because it does not
-  # properly give user access to non-flag arguments mixed in between flag
-  # arguments. Its usage was replaced by FLAGS_ARGV, and it is being kept only
-  # for backwards compatibility reasons.
-  FLAGS_ARGC=`${FLAGS_EXPR_CMD} $# - 1 - ${_flags_argc_}`
 
   # handle options. note options with values must do an additional shift
   while true; do

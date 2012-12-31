@@ -49,11 +49,6 @@ Linux)
 	export GITFLOW_DIR=$(dirname "$(readlink -e "$0")")
 	;;
 FreeBSD|OpenBSD|NetBSD)
-	if [ ! -f "/bin/gexpr" ]; then
-		# Set this to workaround expr problems in shFlags on FreeBSD
-		FLAGS_EXPR_CMD='expr'
-		export EXPR_COMPAT=1
-	fi
 	export GITFLOW_DIR=$(dirname "$(realpath "$0")")
 	;;
 Darwin)
