@@ -541,21 +541,20 @@ _flags_validateFloat()
   if _flags_validateInteger ${_flags_float_}; then
     flags_return=${FLAGS_TRUE}
   else
-    flags_return=${FLAGS_TRUE}
-    case ${_flags_float_} in
-      -*)  # negative floats
-        _flags_test_=`${FLAGS_EXPR_CMD} -- "${_flags_float_}" :\
-            '\(-[0-9][0-9]*\.[0-9][0-9]*\)'`
-        ;;
-      *)  # positive floats
-        _flags_test_=`${FLAGS_EXPR_CMD} -- "${_flags_float_}" :\
-            '\([0-9][0-9]*\.[0-9][0-9]*\)'`
-        ;;
-    esac
-    [ "${_flags_test_}" != "${_flags_float_}" ] && flags_return=${FLAGS_FALSE}
+    _flags_float_whole_=${_flags_float_%.*}
+    _flags_float_fraction_=${_flags_float_#*.}
+    if _flags_validateInteger ${_flags_float_whole_}; then
+      flags_return=${FLAGS_TRUE}
+      case ${_flags_float_fraction_} in
+      *[!0-9]*|"")
+        flags_return=${FLAGS_FALSE};;
+      esac
+    else
+      flags_return=${FLAGS_FALSE}
+    fi
+    unset _flags_float_whole_ _flags_float_fraction_
   fi
-
-  unset _flags_float_ _flags_test_
+  unset _flags_float_
   return ${flags_return}
 }
 
@@ -570,17 +569,16 @@ _flags_validateInteger()
   _flags_int_=$1
 
   flags_return=${FLAGS_TRUE}
-  case ${_flags_int_} in
-    -*)  # negative ints
-      _flags_test_=`${FLAGS_EXPR_CMD} -- "${_flags_int_}" : '\(-[0-9][0-9]*\)'`
-      ;;
-    *)  # positive ints
-      _flags_test_=`${FLAGS_EXPR_CMD} -- "${_flags_int_}" : '\([0-9][0-9]*\)'`
-      ;;
-  esac
-  [ "${_flags_test_}" != "${_flags_int_}" ] && flags_return=${FLAGS_FALSE}
 
-  unset _flags_int_ _flags_test_
+  case ${_flags_int_} in
+  -*)
+      _flags_int_=${_flags_int_#*-};;
+  esac
+  case ${_flags_int_} in
+    *[!0-9]* | "")
+      flags_return=${FLAGS_FALSE};;
+  esac
+  unset _flags_int_
   return ${flags_return}
 }
 
@@ -699,14 +697,14 @@ _flags_parseGetopt()
       --) shift; break ;;  # discontinue option parsing
 
       --*)  # long option
-        _flags_opt_=`${FLAGS_EXPR_CMD} -- "${_flags_opt_}" : '--\(.*\)'`
+        _flags_opt_=${_flags_opt_#*--}
         _flags_len_=${__FLAGS_LEN_LONG}
         if _flags_itemInList "${_flags_opt_}" ${__flags_longNames}; then
           _flags_name_=${_flags_opt_}
         else
           # check for negated long boolean version
           if _flags_itemInList "${_flags_opt_}" ${__flags_boolNames}; then
-            _flags_name_=`${FLAGS_EXPR_CMD} -- "${_flags_opt_}" : 'no\(.*\)'`
+            _flags_name_=${_flags_opt_#*no}
             _flags_type_=${__FLAGS_TYPE_BOOLEAN}
             _flags_arg_=${__FLAGS_NULL}
           fi
@@ -714,7 +712,7 @@ _flags_parseGetopt()
         ;;
 
       -*)  # short option
-        _flags_opt_=`${FLAGS_EXPR_CMD} -- "${_flags_opt_}" : '-\(.*\)'`
+        _flags_opt_=${_flags_opt_#*-}
         _flags_len_=${__FLAGS_LEN_SHORT}
         if _flags_itemInList "${_flags_opt_}" ${__flags_shortNames}; then
           # yes. match short name to long name. note purposeful off-by-one
@@ -989,7 +987,7 @@ flags_help()
       flags_defaultStr_="(default: ${flags_defaultStr_})"
 
       flags_helpStr_="  ${flags_flagStr_}  ${flags_help_} ${flags_defaultStr_}"
-      flags_helpStrLen_=`${FLAGS_EXPR_CMD} -- "${flags_helpStr_}" : '.*'`
+      flags_helpStrLen_=${#flags_helpStr_}
       flags_columns_=`_flags_columns`
       if [ ${flags_helpStrLen_} -lt ${flags_columns_} ]; then
         echo "${flags_helpStr_}" >&2
@@ -1000,7 +998,7 @@ flags_help()
         flags_emptyStr_="`echo \"x${flags_flagStr_}x\" \
             |awk '{printf "%"length($0)-2"s", ""}'`"
         flags_helpStr_="  ${flags_emptyStr_}  ${flags_defaultStr_}"
-        flags_helpStrLen_=`${FLAGS_EXPR_CMD} -- "${flags_helpStr_}" : '.*'`
+        flags_helpStrLen_=${#flags_helpStr_}
         if [ ${__FLAGS_GETOPT_VERS} -eq ${__FLAGS_GETOPT_VERS_STD} \
             -o ${flags_helpStrLen_} -lt ${flags_columns_} ]; then
           # indented to match help string
