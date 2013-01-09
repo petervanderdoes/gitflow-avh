@@ -44,6 +44,7 @@ usage() {
 	OPTIONS_SPEC="\
 git flow config [list]
 git flow config set
+git flow config base
 
 Manage the git-flow configuration.
 
