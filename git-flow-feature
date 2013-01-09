@@ -80,7 +80,7 @@ v,verbose   Verbose (more) output
 	local base develop_sha branch_sha
 
 	# Define flags
-	DEFINE_boolean verbose false 'verbose (more) output' v
+	DEFINE_boolean 'verbose' false 'verbose (more) output' v
 
 	# Parse argun=ments
 	parse_args "$@"
@@ -219,7 +219,7 @@ F,fetch Fetch from origin before performing local operation
 	local base
 
 	# Define flags
-	DEFINE_boolean fetch false 'fetch from origin before performing local operation' F
+	DEFINE_boolean 'fetch' false 'fetch from origin before performing local operation' F
 
 	# Parse arguments
 	parse_args "$@"
@@ -282,13 +282,13 @@ S,squash       Squash feature during merge
 	local finish_base
 
 	# Define flags
-	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
-	DEFINE_boolean rebase false "rebase instead of merge" r
-	DEFINE_boolean keep false "keep branch after performing finish" k
-	DEFINE_boolean keepremote false "keep the remote branch"
-	DEFINE_boolean keeplocal false "keep the local branch"
-	DEFINE_boolean force_delete false "force delete feature branch after finish" D
-	DEFINE_boolean squash false "squash feature during merge" S
+	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
+	DEFINE_boolean 'rebase' false "rebase instead of merge" r
+	DEFINE_boolean 'keep' false "keep branch after performing finish" k
+	DEFINE_boolean 'keepremote' false "keep the remote branch"
+	DEFINE_boolean 'keeplocal' false "keep the local branch"
+	DEFINE_boolean 'force_delete' false "force delete feature branch after finish" D
+	DEFINE_boolean 'squash' false "squash feature during merge" S
 
 	# Parse arguments
 	parse_args "$@"
@@ -627,7 +627,7 @@ i,interactive     Do an interactive rebase
 	local opts
 
 	# Define flags
-	DEFINE_boolean interactive false 'do an interactive rebase' i
+	DEFINE_boolean 'interactive' false 'do an interactive rebase' i
 
 	# Parse arguments
 	parse_args "$@"
@@ -668,7 +668,7 @@ showcommands!    Show git commands while executing them
 	local current_branch
 
 	# Define flags
-	DEFINE_boolean rebase false "pull with rebase" r
+	DEFINE_boolean 'rebase' false "pull with rebase" r
 
 	# Parse arguments
 	parse_remote_name "$@"
@@ -733,8 +733,8 @@ r,remote          Delete remote branch
 	local current_branch
 
 	# Define flags
-	DEFINE_boolean force false "force deletion" f
-	DEFINE_boolean remote false "delete remote branch" r
+	DEFINE_boolean 'force' false "force deletion" f
+	DEFINE_boolean 'remote' false "delete remote branch" r
 
 	# Parse arguments
 	parse_args "$@"

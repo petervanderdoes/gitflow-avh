@@ -75,12 +75,12 @@ file= use given config file
   	local master_branch develop_branch default_suggestion answer prefix
 
 	# Define flags
-	DEFINE_boolean force false 'force setting of gitflow branches, even if already configured' f
-	DEFINE_boolean defaults false 'use default branch naming conventions' d
-	DEFINE_boolean local false 'use repository config file'
-	DEFINE_boolean global false 'use global config file'
-	DEFINE_boolean system false 'use system config file'
-	DEFINE_string file "" 'use given config file'
+	DEFINE_boolean 'force' false 'force setting of gitflow branches, even if already configured' f
+	DEFINE_boolean 'defaults' false 'use default branch naming conventions' d
+	DEFINE_boolean 'local' false 'use repository config file'
+	DEFINE_boolean 'global' false 'use global config file'
+	DEFINE_boolean 'system' false 'use system config file'
+	DEFINE_string 'file' "" 'use given config file'
 
 	# Parse arguments
 	parse_args "$@"

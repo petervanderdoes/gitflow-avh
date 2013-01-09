@@ -96,10 +96,10 @@ file= use given config file
 	local output
 
 	# Define flags
-	DEFINE_boolean local false 'use repository config file'
-	DEFINE_boolean global false 'use global config file'
-	DEFINE_boolean system false 'use system config file'
-	DEFINE_string file "" 'use given config file'
+	DEFINE_boolean 'local' false 'use repository config file'
+	DEFINE_boolean 'global' false 'use global config file'
+	DEFINE_boolean 'system' false 'use system config file'
+	DEFINE_string 'file' "" 'use given config file'
 
 	# Parse arguments
 	parse_args "$@"
@@ -143,10 +143,10 @@ file= use given config file
 	local value cfg_option txt
 
 	# Define flags
-	DEFINE_boolean local false 'use repository config file'
-	DEFINE_boolean global false 'use global config file'
-	DEFINE_boolean system false 'use system config file'
-	DEFINE_string file "" 'use given config file'
+	DEFINE_boolean 'local' false 'use repository config file'
+	DEFINE_boolean 'global' false 'use global config file'
+	DEFINE_boolean 'system' false 'use system config file'
+	DEFINE_string 'file' "" 'use given config file'
 
 	# Parse arguments
 	parse_args "$@"
@@ -259,8 +259,8 @@ get               Get the base for the given branch (default behavior).
 set               Set the given base for the given branch.
 "
 
-	DEFINE_boolean 'get' true "Get the base for the given branch (default behavior)."
-	DEFINE_boolean 'set' false "Set the given base for the given branch."
+	DEFINE_boolean 'get' true 'Get the base for the given branch (default behavior).'
+	DEFINE_boolean 'set' false 'Set the given base for the given branch.'
 
 	FLAGS "$@" || exit $?
 	eval set -- "${FLAGS_ARGV}"

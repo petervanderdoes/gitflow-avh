@@ -108,7 +108,7 @@ main() {
 	. "$GITFLOW_DIR/gitflow-common"
 
 	# allow user to request git action logging
-	DEFINE_boolean showcommands false 'Show actions taken (git commands)'
+	DEFINE_boolean 'showcommands' false 'Show actions taken (git commands)'
 
 	# Sanity checks
 	SUBCOMMAND="$1"; shift

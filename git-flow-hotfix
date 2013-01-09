@@ -76,7 +76,7 @@ v,verbose!        Verbose (more) output
 	local base master_sha branch_sha
 
 	# Define flags
-	DEFINE_boolean verbose false 'verbose (more) output' v
+	DEFINE_boolean 'verbose' false 'verbose (more) output' v
 
 	# Parse arguments
 	parse_args "$@"
@@ -169,7 +169,7 @@ F,fetch           Fetch from origin before performing local operation
 	local base
 
 	# Define flags
-	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
+	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
 
 	# Parse arguments
 	parse_args "$@"
@@ -318,18 +318,18 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 	local opts commit keepmsg remotebranchdeleted localbranchdeleted
 
 	# Define flags
-	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
-	DEFINE_boolean sign false "sign the release tag cryptographically" s
-	DEFINE_string signingkey "" "use the given GPG-key for the digital signature (implies -s)" u
-	DEFINE_string message "" "use the given tag message" m
-	DEFINE_string messagefile "" "use the contents of the given file as tag message" f
-	DEFINE_boolean push false "push to $ORIGIN after performing finish" p
-	DEFINE_boolean keep false "keep branch after performing finish" k
-	DEFINE_boolean keepremote false "keep the remote branch"
-	DEFINE_boolean keeplocal false "keep the local branch"
-	DEFINE_boolean force_delete false "force delete hotfix branch after finish" D
-	DEFINE_boolean notag false "don't tag this release" n
-	DEFINE_boolean nobackmerge false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
+	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
+	DEFINE_boolean 'sign' false "sign the release tag cryptographically" s
+	DEFINE_string 'signingkey' "" "use the given GPG-key for the digital signature (implies -s)" u
+	DEFINE_string 'message' "" "use the given tag message" m
+	DEFINE_string 'messagefile' "" "use the contents of the given file as tag message" f
+	DEFINE_boolean 'push' false "push to $ORIGIN after performing finish" p
+	DEFINE_boolean 'keep' false "keep branch after performing finish" k
+	DEFINE_boolean 'keepremote' false "keep the remote branch"
+	DEFINE_boolean 'keeplocal' false "keep the local branch"
+	DEFINE_boolean 'force_delete' false "force delete hotfix branch after finish" D
+	DEFINE_boolean 'notag' false "don't tag this release" n
+	DEFINE_boolean 'nobackmerge' false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
 
 	# Parse arguments
 	parse_args "$@"
@@ -573,8 +573,8 @@ r,remote          Delete remote branch
 	local current_branch
 
 	# Define flags
-	DEFINE_boolean force false "force deletion" f
-	DEFINE_boolean remote false "delete remote branch" r
+	DEFINE_boolean 'force' false "force deletion" f
+	DEFINE_boolean 'remote' false "delete remote branch" r
 
 	# Parse arguments
 	parse_args "$@"
