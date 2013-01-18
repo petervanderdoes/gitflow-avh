@@ -30,7 +30,6 @@
   branches.
 * Get the correct working directory when the git-flow file is a symbolic link.
 * Don't check/compare hotfix and base branch when branch is merged already.
-* Upstream update of shFlags.  
 * Remove export POSIXLY_CORRECT.  
   Setting this environment variable can mess things up when git-flow is used in 
   combination with other shell scripts.
