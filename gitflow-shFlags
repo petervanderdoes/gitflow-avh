@@ -1,4 +1,4 @@
-# $Id: shflags 150 2012-12-17 23:34:29Z kate.ward@forestent.com $
+# $Id$
 # vim:et:ft=sh:sts=2:sw=2
 #
 # Copyright 2008 Kate Ward. All Rights Reserved.
@@ -18,12 +18,10 @@
 #
 # DEFINE_string: takes any input, and intreprets it as a string.
 #
-# DEFINE_boolean: typically does not take any argument: say --myflag to set
-#   FLAGS_myflag to true, or --nomyflag to set FLAGS_myflag to false.
-#   Alternately, you can say
-#     --myflag=true  or --myflag=t or --myflag=0  or
-#     --myflag=false or --myflag=f or --myflag=1
-#   Passing an option has the same affect as passing the option once.
+# DEFINE_boolean: does not take any arguments. Say --myflag to set
+#   FLAGS_myflag to true, or --nomyflag to set FLAGS_myflag to false. For short
+#   flags, passing the flag on the command-line negates the default value, i.e.
+#   if the default is true, passing the flag sets the value to false.
 #
 # DEFINE_float: takes an input and intreprets it as a floating point number. As
 #   shell does not support floats per-se, the input is merely validated as
@@ -64,7 +62,8 @@
 # shFlags
 #
 # Shared attributes:
-#   flags_error: last error message
+#   flags_error:  last error message
+#   flags_output: last function output (rarely valid)
 #   flags_return: last return value
 #
 #   __flags_longNames: list of long names for all flags
@@ -87,20 +86,21 @@
 [ -n "${FLAGS_VERSION:-}" ] && return 0
 FLAGS_VERSION='1.0.4pre'
 
-# A user can set the path to different commands by overriding these variables in
-# their script.
-FLAGS_GETOPT_CMD=${FLAGS_GETOPT_CMD:-getopt}
-
 # return values that scripts can use
 FLAGS_TRUE=0
 FLAGS_FALSE=1
 FLAGS_ERROR=2
 
-# logging functions
-_flags_debug() { echo "flags:DEBUG $@" >&2; }
-_flags_warn() { echo "flags:WARN $@" >&2; }
-_flags_error() { echo "flags:ERROR $@" >&2; }
-_flags_fatal() { echo "flags:FATAL $@" >&2; }
+# determine some reasonable command defaults
+__FLAGS_UNAME_S=`uname -s`
+case "${__FLAGS_UNAME_S}" in
+  BSD) __FLAGS_EXPR_CMD='gexpr' ;;
+  *) __FLAGS_EXPR_CMD='expr' ;;
+esac
+
+# commands a user can override if needed
+FLAGS_EXPR_CMD=${FLAGS_EXPR_CMD:-${__FLAGS_EXPR_CMD}}
+FLAGS_GETOPT_CMD=${FLAGS_GETOPT_CMD:-getopt}
 
 # specific shell checks
 if [ -n "${ZSH_VERSION:-}" ]; then
@@ -111,8 +111,15 @@ if [ -n "${ZSH_VERSION:-}" ]; then
   if [ -z "${FLAGS_PARENT:-}" ]; then
     _flags_fatal "zsh does not pass \$0 through properly. please declare' \
 \"FLAGS_PARENT=\$0\" before calling shFlags"
-  exit ${FLAGS_ERROR};
   fi
+fi
+
+# can we use built-ins?
+( echo "${FLAGS_TRUE#0}"; ) >/dev/null 2>&1
+if [ $? -eq ${FLAGS_TRUE} ]; then
+  __FLAGS_USE_BUILTIN=${FLAGS_TRUE}
+else
+  __FLAGS_USE_BUILTIN=${FLAGS_FALSE}
 fi
 
 #
@@ -139,9 +146,7 @@ case $? in
       __FLAGS_GETOPT_VERS=${__FLAGS_GETOPT_VERS_ENH}
     fi
     ;;
-  *) _flags_fatal 'unable to determine getopt version'
-    exit ${FLAGS_ERROR}
-    ;;
+  *) _flags_fatal 'unable to determine getopt version' ;;
 esac
 
 # getopt optstring lengths
@@ -196,6 +201,7 @@ __flags_boolNames=' '  # boolean flag names
 __flags_longNames=' '  # long flag names
 __flags_shortNames=' '  # short flag names
 __flags_definedNames=' ' # defined flag names (used for validation)
+__flags_nonegateNames=' '
 
 __flags_columns=''  # screen width in columns
 __flags_opts=''  # temporary storage for parsed getopt flags
@@ -203,6 +209,12 @@ __flags_opts=''  # temporary storage for parsed getopt flags
 #------------------------------------------------------------------------------
 # private functions
 #
+
+# logging functions
+_flags_debug() { echo "flags:DEBUG $@" >&2; }
+_flags_warn() { echo "flags:WARN $@" >&2; }
+_flags_error() { echo "flags:ERROR $@" >&2; }
+_flags_fatal() { echo "flags:FATAL $@" >&2; exit ${FLAGS_ERROR}; }
 
 # Define a flag.
 #
@@ -238,7 +250,8 @@ _flags_define()
   _flags_short_=${5:-${__FLAGS_NULL}}
 
   _flags_return_=${FLAGS_TRUE}
-  _flags_usName_=`_flags_underscoreName ${_flags_name_}`
+  _flags_usName_=`_flags_removeExclamationName ${_flags_name_}`
+  _flags_usName_=`_flags_underscoreName ${_flags_usName_}`
 
   # check whether the flag name is reserved
   _flags_itemInList ${_flags_usName_} "${__FLAGS_RESERVED_LIST}"
@@ -282,11 +295,13 @@ _flags_define()
   if [ ${_flags_return_} -eq ${FLAGS_TRUE} ]; then
     case ${_flags_type_} in
       ${__FLAGS_TYPE_BOOLEAN})
-        if _flags_validateBoolean "${_flags_default_}"; then
+        if _flags_validBool "${_flags_default_}"; then
           case ${_flags_default_} in
             true|t|0) _flags_default_=${FLAGS_TRUE} ;;
             false|f|1) _flags_default_=${FLAGS_FALSE} ;;
           esac
+          _flags_isNegate ${_flags_name_}
+          _flags_isNegate_=$?
         else
           flags_error="invalid default flag value '${_flags_default_}'"
           _flags_return_=${FLAGS_ERROR}
@@ -294,7 +309,7 @@ _flags_define()
         ;;
 
       ${__FLAGS_TYPE_FLOAT})
-        if _flags_validateFloat "${_flags_default_}"; then
+        if _flags_validFloat "${_flags_default_}"; then
           :
         else
           flags_error="invalid default flag value '${_flags_default_}'"
@@ -303,7 +318,7 @@ _flags_define()
         ;;
 
       ${__FLAGS_TYPE_INTEGER})
-        if _flags_validateInteger "${_flags_default_}"; then
+        if _flags_validInt "${_flags_default_}"; then
           :
         else
           flags_error="invalid default flag value '${_flags_default_}'"
@@ -331,14 +346,28 @@ _flags_define()
 
     # append flag names to name lists
     __flags_shortNames="${__flags_shortNames}${_flags_short_} "
-    __flags_longNames="${__flags_longNames}${_flags_name_} "
-    [ ${_flags_type_} -eq ${__FLAGS_TYPE_BOOLEAN} ] && \
+    __flags_longNames="${__flags_longNames}`_flags_removeExclamationName ${_flags_name_}` "
+    if [ ${_flags_type_} -eq ${__FLAGS_TYPE_BOOLEAN} \
+      -a  ${_flags_isNegate_} -eq ${FLAGS_TRUE} ]; then
         __flags_boolNames="${__flags_boolNames}no${_flags_name_} "
+    fi
 
     # append flag names to defined names for later validation checks
     __flags_definedNames="${__flags_definedNames}${_flags_usName_} "
-    [ ${_flags_type_} -eq ${__FLAGS_TYPE_BOOLEAN} ] && \
+    if [ ${_flags_type_} -eq ${__FLAGS_TYPE_BOOLEAN} ]; then
+      if [ ${_flags_isNegate_} -eq ${FLAGS_TRUE} ]; then
         __flags_definedNames="${__flags_definedNames}no${_flags_usName_} "
+      fi
+    fi
+
+    # append flag names to nonegateNames names for later validation checks
+    __flags_definedNames="${__flags_definedNames}${_flags_usName_} "
+    if [ ${_flags_type_} -eq ${__FLAGS_TYPE_BOOLEAN} ]; then
+      if [ ${_flags_isNegate_} -eq ${FLAGS_FALSE} ]; then
+        __flags_nonegateNames="${__flags_nonegateNames}`_flags_removeExclamationName ${_flags_name_}` "
+      fi
+    fi
+
   fi
 
   flags_return=${_flags_return_}
@@ -359,6 +388,33 @@ _flags_underscoreName()
   echo $1 |tr '-' '_'
 }
 
+# Strip potential exclamation mark
+#
+# Args:
+#   unnamed: string: log flag name
+# Output:
+#   string: exclamation stripped from name
+_flags_removeExclamationName()
+{
+  echo $1 |sed 's/!$//'
+}
+
+# Check if a flag ends in an exclamation mark,
+#  if it does, there will not be a negate option
+# Args:
+#   unnamed: string: flag name
+# return:
+#   boolean
+_flags_isNegate()
+{
+  case $1 in
+    *!) flags_return=${FLAGS_FALSE} ;;
+    *) flags_return=${FLAGS_TRUE} ;;
+  esac
+  return ${flags_return}
+}
+
+
 # Return valid getopt options using currently defined list of long options.
 #
 # This function builds a proper getopt option string for short (and long)
@@ -377,9 +433,10 @@ _flags_genOptStr()
   _flags_opts_=''
 
   for _flags_name_ in ${__flags_longNames}; do
-    _flags_usName_=`_flags_underscoreName ${_flags_name_}`
+    _flags_usName_=`_flags_removeExclamationName ${_flags_name_}`
+    _flags_usName_=`_flags_underscoreName ${_flags_usName_}`
     _flags_type_=`_flags_getFlagInfo ${_flags_usName_} ${__FLAGS_INFO_TYPE}`
-    [ $? -eq ${FLAGS_TRUE} ] || ( _flags_fatal 'call to _flags_type_ failed'; return ${FLAGS_ERROR} )
+    [ $? -eq ${FLAGS_TRUE} ] || _flags_fatal 'call to _flags_type_ failed'
     case ${_flags_optStrType_} in
       ${__FLAGS_OPTSTR_SHORT})
         _flags_shortName_=`_flags_getFlagInfo \
@@ -393,7 +450,7 @@ _flags_genOptStr()
         ;;
 
       ${__FLAGS_OPTSTR_LONG})
-        _flags_opts_="${_flags_opts_:+${_flags_opts_},}${_flags_name_}"
+        _flags_opts_="${_flags_opts_:+${_flags_opts_},}`_flags_removeExclamationName ${_flags_name_}`"
         # getopt needs a trailing ':' to indicate a required argument
         [ ${_flags_type_} -ne ${__FLAGS_TYPE_BOOLEAN} ] && \
             _flags_opts_="${_flags_opts_}:"
@@ -508,7 +565,7 @@ _flags_columns()
 #   _flags__bool: boolean: value to validate
 # Returns:
 #   bool: true if the value is a valid boolean
-_flags_validateBoolean()
+_flags_validBool()
 {
   _flags_bool_=$1
 
@@ -526,53 +583,73 @@ _flags_validateBoolean()
 # Validate a float.
 #
 # Args:
-#   _flags__float: float: value to validate
+#   _flags_float_: float: value to validate
 # Returns:
-#   bool: true if the value is a valid float
-_flags_validateFloat()
+#   bool: true if the value is a valid integer
+_flags_validFloat()
 {
+  flags_return=${FLAGS_FALSE}
+  [ -n "$1" ] || return ${flags_return}
   _flags_float_=$1
 
-  if _flags_validateInteger ${_flags_float_}; then
+  if _flags_validInt ${_flags_float_}; then
     flags_return=${FLAGS_TRUE}
-  else
+  elif _flags_useBuiltin; then
     _flags_float_whole_=${_flags_float_%.*}
     _flags_float_fraction_=${_flags_float_#*.}
-    if _flags_validateInteger ${_flags_float_whole_}; then
+    if _flags_validInt ${_flags_float_whole_:-0} -a \
+      _flags_validInt ${_flags_float_fraction_}; then
       flags_return=${FLAGS_TRUE}
-      case ${_flags_float_fraction_} in
-      *[!0-9]*|"")
-        flags_return=${FLAGS_FALSE};;
-      esac
-    else
-      flags_return=${FLAGS_FALSE}
     fi
     unset _flags_float_whole_ _flags_float_fraction_
+  else
+    flags_return=${FLAGS_TRUE}
+    case ${_flags_float_} in
+      -*)  # negative floats
+        _flags_test_=`${FLAGS_EXPR_CMD} -- "${_flags_float_}" :\
+            '\(-[0-9]*\.[0-9]*\)'`
+        ;;
+      *)  # positive floats
+        _flags_test_=`${FLAGS_EXPR_CMD} -- "${_flags_float_}" :\
+            '\([0-9]*\.[0-9]*\)'`
+        ;;
+    esac
+    [ "${_flags_test_}" != "${_flags_float_}" ] && flags_return=${FLAGS_FALSE}
+    unset _flags_test_
   fi
-  unset _flags_float_
+
+  unset _flags_float_ _flags_float_whole_ _flags_float_fraction_
   return ${flags_return}
 }
 
 # Validate an integer.
 #
 # Args:
-#   _flags__integer: interger: value to validate
+#   _flags_int_: integer: value to validate
 # Returns:
 #   bool: true if the value is a valid integer
-_flags_validateInteger()
+_flags_validInt()
 {
+  flags_return=${FLAGS_FALSE}
+  [ -n "$1" ] || return ${flags_return}
   _flags_int_=$1
 
-  flags_return=${FLAGS_TRUE}
+  case ${_flags_int_} in
+    -*.*) ;;  # ignore negative floats (we'll invalidate them later)
+    -*)  # strip possible leading negative sign
+      if _flags_useBuiltin; then
+        _flags_int_=${_flags_int_#-}
+      else
+        _flags_int_=`${FLAGS_EXPR_CMD} -- "${_flags_int_}" : '-\([0-9][0-9]*\)'`
+      fi
+      ;;
+  esac
 
   case ${_flags_int_} in
-  -*)
-      _flags_int_=${_flags_int_#*-};;
+    *[!0-9]*) flags_return=${FLAGS_FALSE} ;;
+    *) flags_return=${FLAGS_TRUE} ;;
   esac
-  case ${_flags_int_} in
-    *[!0-9]* | "")
-      flags_return=${FLAGS_FALSE};;
-  esac
+
   unset _flags_int_
   return ${flags_return}
 }
@@ -673,6 +750,13 @@ _flags_parseGetopt()
     eval set -- "$@"
   fi
 
+  # Provide user with the number of arguments to shift by later.
+  # NOTE: the FLAGS_ARGC variable is obsolete as of 1.0.3 because it does not
+  # properly give user access to non-flag arguments mixed in between flag
+  # arguments. Its usage was replaced by FLAGS_ARGV, and it is being kept only
+  # for backwards compatibility reasons.
+  FLAGS_ARGC=`_flags_math "$# - 1 - ${_flags_argc_}"`
+
   # handle options. note options with values must do an additional shift
   while true; do
     _flags_opt_=$1
@@ -685,14 +769,22 @@ _flags_parseGetopt()
       --) shift; break ;;  # discontinue option parsing
 
       --*)  # long option
-        _flags_opt_=${_flags_opt_#*--}
+        if _flags_useBuiltin; then
+          _flags_opt_=${_flags_opt_#*--}
+        else
+          _flags_opt_=`${FLAGS_EXPR_CMD} -- "${_flags_opt_}" : '--\(.*\)'`
+        fi
         _flags_len_=${__FLAGS_LEN_LONG}
         if _flags_itemInList "${_flags_opt_}" ${__flags_longNames}; then
           _flags_name_=${_flags_opt_}
         else
           # check for negated long boolean version
           if _flags_itemInList "${_flags_opt_}" ${__flags_boolNames}; then
-            _flags_name_=${_flags_opt_#*no}
+            if _flags_useBuiltin; then
+              _flags_name_=${_flags_opt_#*no}
+            else
+              _flags_name_=`${FLAGS_EXPR_CMD} -- "${_flags_opt_}" : 'no\(.*\)'`
+            fi
             _flags_type_=${__FLAGS_TYPE_BOOLEAN}
             _flags_arg_=${__FLAGS_NULL}
           fi
@@ -700,7 +792,11 @@ _flags_parseGetopt()
         ;;
 
       -*)  # short option
-        _flags_opt_=${_flags_opt_#*-}
+        if _flags_useBuiltin; then
+          _flags_opt_=${_flags_opt_#*-}
+        else
+          _flags_opt_=`${FLAGS_EXPR_CMD} -- "${_flags_opt_}" : '-\(.*\)'`
+        fi
         _flags_len_=${__FLAGS_LEN_SHORT}
         if _flags_itemInList "${_flags_opt_}" ${__flags_shortNames}; then
           # yes. match short name to long name. note purposeful off-by-one
@@ -722,7 +818,8 @@ _flags_parseGetopt()
     fi
 
     # set new flag value
-    _flags_usName_=`_flags_underscoreName ${_flags_name_}`
+    _flags_usName_=`_flags_removeExclamationName ${_flags_name_}`
+    _flags_usName_=`_flags_underscoreName ${_flags_usName_}`
     [ ${_flags_type_} -eq ${__FLAGS_TYPE_NONE} ] && \
         _flags_type_=`_flags_getFlagInfo \
             "${_flags_usName_}" ${__FLAGS_INFO_TYPE}`
@@ -747,7 +844,7 @@ _flags_parseGetopt()
         ;;
 
       ${__FLAGS_TYPE_FLOAT})
-        if _flags_validateFloat "${_flags_arg_}"; then
+        if _flags_validFloat "${_flags_arg_}"; then
           eval "FLAGS_${_flags_usName_}='${_flags_arg_}'"
         else
           flags_error="invalid float value (${_flags_arg_})"
@@ -757,7 +854,7 @@ _flags_parseGetopt()
         ;;
 
       ${__FLAGS_TYPE_INTEGER})
-        if _flags_validateInteger "${_flags_arg_}"; then
+        if _flags_validInt "${_flags_arg_}"; then
           eval "FLAGS_${_flags_usName_}='${_flags_arg_}'"
         else
           flags_error="invalid integer value (${_flags_arg_})"
@@ -798,10 +895,73 @@ _flags_parseGetopt()
   return ${flags_return}
 }
 
+# Perform some path using built-ins.
+#
+# Args:
+#   $@: string: math expression to evaluate
+# Output:
+#   integer: the result
+# Returns:
+#   bool: success of math evaluation
+_flags_math()
+{
+  if [ $# -eq 0 ]; then
+    flags_return=${FLAGS_FALSE}
+  elif _flags_useBuiltin; then
+    # Variable assignment is needed as workaround for Solaris Bourne shell,
+    # which cannot parse a bare $((expression)).
+    _flags_expr_='$(($@))'
+    eval echo ${_flags_expr_}
+    flags_return=$?
+    unset _flags_expr_
+  else
+    eval expr $@
+    flags_return=$?
+  fi
+
+  return ${flags_return}
+}
+
+# Cross-platform strlen() implementation.
+#
+# Args:
+#   _flags_str: string: to determine length of
+# Output:
+#   integer: length of string
+# Returns:
+#   bool: success of strlen evaluation
+_flags_strlen()
+{
+  _flags_str_=${1:-}
+
+  if [ -z "${_flags_str_}" ]; then
+    flags_output=0
+  elif _flags_useBuiltin; then
+    flags_output=${#_flags_str_}
+  else
+    flags_output=`${FLAGS_EXPR_CMD} -- "${_flags_str_}" : '.*'`
+  fi
+  flags_return=$?
+
+  unset _flags_str_
+  echo ${flags_output}
+  return ${flags_return}
+}
+
+# Use built-in helper function to enable unit testing.
+#
+# Args:
+#   None
+# Returns:
+#   bool: true if built-ins should be used
+_flags_useBuiltin()
+{
+  return ${__FLAGS_USE_BUILTIN}
+}
+
 #------------------------------------------------------------------------------
 # public functions
 #
-
 # A basic boolean flag. Boolean flags do not take any arguments, and their
 # value is either 1 (false) or 0 (true). For long flags, the false value is
 # specified on the command line by prepending the word 'no'. With short flags,
@@ -832,7 +992,7 @@ FLAGS()
 {
   # define a standard 'help' flag if one isn't already defined
   [ -z "${__flags_help_type:-}" ] && \
-      DEFINE_boolean 'help' false 'show this help' 'h'
+      DEFINE_boolean 'help!' false 'show this help' 'h'
 
   # parse options
   if [ $# -gt 0 ]; then
@@ -954,9 +1114,12 @@ flags_help()
         [ "${flags_short_}" != "${__FLAGS_NULL}" ] && \
             flags_flagStr_="${flags_flagStr_},"
         # add [no] to long boolean flag names, except the 'help' flag
-        [ ${flags_type_} -eq ${__FLAGS_TYPE_BOOLEAN} \
-          -a "${flags_usName_}" != 'help' ] && \
-            flags_boolStr_='[no]'
+        if [ ${flags_type_} -eq ${__FLAGS_TYPE_BOOLEAN} ]; then
+          _flags_itemInList "${flags_name_}" ${__flags_nonegateNames}
+           if [ $? -eq ${FLAGS_FALSE} ]; then
+              flags_boolStr_='[no]'
+           fi
+        fi
         flags_flagStr_="${flags_flagStr_}--${flags_boolStr_}${flags_name_}:"
       fi
 
@@ -975,8 +1138,10 @@ flags_help()
       flags_defaultStr_="(default: ${flags_defaultStr_})"
 
       flags_helpStr_="  ${flags_flagStr_}  ${flags_help_} ${flags_defaultStr_}"
-      flags_helpStrLen_=${#flags_helpStr_}
+      _flags_strlen "${flags_helpStr_}" >/dev/null
+      flags_helpStrLen_=${flags_output}
       flags_columns_=`_flags_columns`
+
       if [ ${flags_helpStrLen_} -lt ${flags_columns_} ]; then
         echo "${flags_helpStr_}" >&2
       else
@@ -986,7 +1151,9 @@ flags_help()
         flags_emptyStr_="`echo \"x${flags_flagStr_}x\" \
             |awk '{printf "%"length($0)-2"s", ""}'`"
         flags_helpStr_="  ${flags_emptyStr_}  ${flags_defaultStr_}"
-        flags_helpStrLen_=${#flags_helpStr_}
+        _flags_strlen "${flags_helpStr_}" >/dev/null
+        flags_helpStrLen_=${flags_output}
+
         if [ ${__FLAGS_GETOPT_VERS} -eq ${__FLAGS_GETOPT_VERS_STD} \
             -o ${flags_helpStrLen_} -lt ${flags_columns_} ]; then
           # indented to match help string
@@ -1015,7 +1182,8 @@ flags_help()
 flags_reset()
 {
   for flags_name_ in ${__flags_longNames}; do
-    flags_usName_=`_flags_underscoreName ${flags_name_}`
+    flags_usName_=`_flags_removeExclamationName ${flags_name_}`
+    flags_usName_=`_flags_underscoreName ${flags_usName_}`
     flags_strToEval_="unset FLAGS_${flags_usName_}"
     for flags_type_ in \
         ${__FLAGS_INFO_DEFAULT} \
