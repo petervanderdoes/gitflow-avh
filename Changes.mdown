@@ -14,7 +14,7 @@
 
 # Changelog
 
-#### 1.4.0-dev.56
+#### 1.4.0-dev.58
 [Peter van der Does][petervanderdoes]
 * Remember the base.  
   With the commands feature/hotfix/release start you can give a base from which 
@@ -37,6 +37,8 @@
   Besides other improvements this update eliminates the use of external system 
   calls on a majority of systems which in theory leads to a speed increase of 
   about 20%.
+* Use GNU getopt on BSD systems.  
+  BSD getopt doesn't support long options in commands but the GNU getopt does.
 
 [Alexandre Dutra][adutra]
 * Git refuses to delete local branch with "-d" if it is tracking a remote one.

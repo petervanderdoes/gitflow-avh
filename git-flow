@@ -49,6 +49,7 @@ Linux)
 	export GITFLOW_DIR=$(dirname "$(readlink -e "$0")")
 	;;
 FreeBSD|OpenBSD|NetBSD)
+	export FLAGS_GETOPT_CMD='/usr/local/bin/getopt'
 	export GITFLOW_DIR=$(dirname "$(realpath "$0")")
 	;;
 Darwin)
