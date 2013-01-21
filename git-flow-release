@@ -9,7 +9,7 @@
 #    http://github.com/petervanderdoes/gitflow
 #
 # Authors:
-# Copyright 2012 Peter van der Does. All rights reserved.
+# Copyright 2012,2013 Peter van der Does. All rights reserved.
 #
 # Original Author:
 # Copyright 2010 Vincent Driessen. All rights reserved.
@@ -35,259 +35,15 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-initialize() {
-	require_git_repo
-	require_gitflow_initialized
-	gitflow_load_settings
-	VERSION_PREFIX=$(git config --get gitflow.prefix.versiontag)
-	PREFIX=$(git config --get gitflow.prefix.release)
-}
+#
+# Function used by finish command to actually finish the release branch
+# Called when the base of the release is the $DEVELOP_BRANCH
+#
+_finish_from_develop() {
+	local opts merge_branch commit keepmsg remotebranchdeleted localbranchdeleted
 
-usage() {
-		OPTIONS_SPEC="\
-git flow release [list]
-git flow release start
-git flow release finish
-git flow release publish
-git flow release track
-git flow release delete
-
-Manage your feature branches.
-
-For more specific help type the command followed by --help
---
-"
-	flags_help
-}
-
-cmd_default() {
-	cmd_list "$@"
-}
-
-cmd_list() {
-		OPTIONS_SPEC="\
-git flow release [list] [-h] [-v]
-
-List existing release branches
---
-h,help!           Show this help
-v,verbose!        verbose (more) output
-"
-	local release_branches current_branch
-	local width branch len
-	local base develop_sha branch_sha nicename
-
-	# cmd_default may already define flags
-	# at this stage we can not use parse_args
-	if [ -z "${FLAGS_verbose}" ]; then
-		DEFINE_boolean verbose false 'verbose (more) output' v
-	fi
-
-	# Parse arguments
-	parse_args "$@"
-
-	release_branches=$(git_local_branches_prefixed "$PREFIX")
-	if [ -z "$release_branches" ]; then
-		warn "No release branches exist."
-		warn ""
-		warn "You can start a new release branch:"
-		warn ""
-		warn "    git flow release start <name> [<base>]"
-		warn ""
-		exit 0
-	fi
-
-	current_branch=$(git_current_branch)
-
-	# Determine column width first
-	width=0
-	for branch in $release_branches; do
-		len=${#branch}
-		width=$(max $width $len)
-	done
-	width=$(($width+3-${#PREFIX}))
-
-	for branch in $release_branches; do
-		base=$(git merge-base "$branch" "$DEVELOP_BRANCH")
-		develop_sha=$(git rev-parse "$DEVELOP_BRANCH")
-		branch_sha=$(git rev-parse "$branch")
-		if [ "$branch" = "$current_branch" ]; then
-			printf "* "
-		else
-			printf "  "
-		fi
-		if flag verbose; then
-			printf "%-${width}s" "${branch#$PREFIX}"
-			if [ "$branch_sha" = "$develop_sha" ]; then
-				printf "(no commits yet)"
-			else
-				nicename=$(git rev-parse --short "$base")
-				printf "(based on $nicename)"
-			fi
-		else
-			printf "%s" "${branch#$PREFIX}"
-		fi
-		echo
-	done
-}
-
-cmd_help() {
-	usage
-	exit 0
-}
-
-# Parse arguments and set common variables
-parse_args() {
-	FLAGS "$@" || exit $?
-	eval set -- "${FLAGS_ARGV}"
-
-	# Read arguments into global variables
-	VERSION=$1
-	BRANCH=$PREFIX$VERSION
-}
-
-require_no_existing_release_branches() {
-	local release_branches first_branch
-
-	release_branches=$(git_local_branches_prefixed "$PREFIX")
-	first_branch=$(echo ${release_branches} | head -n1)
-
-	first_branch=${first_branch#$PREFIX}
-	[ -z "$release_branches" ] || die "There is an existing release branch '$first_branch'. Finish that one first."
-}
-
-cmd_start() {
-	OPTIONS_SPEC="\
-git flow release start [options] <version>
-
-Start a new release branch
---
-h,help!           Show this help
-showcommands!    Show git commands while executing them
-F,fetch    fetch from $ORIGIN before performing finish
-v,verbose! verbose (more) output
-"
-	local base
-
-	# Define flags
-	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
-
-	# Parse arguments
-	parse_args "$@"
-	eval set -- "${FLAGS_ARGV}"
-	base=${2:-$DEVELOP_BRANCH}
-
-	# Run filter on the version
-	VERSION=$(run_filter_hook release-start-version $VERSION)
-
-	# As VERSION might have changed reset BRANCH with new VERSION
-	BRANCH=$PREFIX$VERSION
-
-	gitflow_require_version_arg
-	git_is_ancestor "$base" "$DEVELOP_BRANCH"  || die "Given base '$base' is not a valid commit on '$DEVELOP_BRANCH'."
-	require_no_existing_release_branches
-
-	# Sanity checks
-	require_clean_working_tree
-	require_branch_absent "$BRANCH"
-	require_tag_absent "$VERSION_PREFIX$VERSION"
-	if flag fetch; then
-		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
-	fi
-	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
-		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
-	fi
-
-	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$base"
-
-	# Create branch
-	git_do checkout -b "$BRANCH" "$base" || die "Could not create release branch '$BRANCH'."
-
-	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$base"
-
-	echo
-	echo "Summary of actions:"
-	echo "- A new branch '$BRANCH' was created, based on '$base'"
-	echo "- You are now on branch '$(git_current_branch)'"
-	echo
-	echo "Follow-up actions:"
-	echo "- Bump the version number now!"
-	echo "- Start committing last-minute fixes in preparing your release"
-	echo "- When done, run:"
-	echo
-	echo "     git flow release finish '$VERSION'"
-	echo
-}
-
-cmd_finish() {
-	OPTIONS_SPEC="\
-git flow release finish [-h] [-F] [-s] [-u] [-m | -f] [-p] [-k] [-n] [-b] [-S] <version>
-
-
-Finish a release branch
---
-h,help          Show this help
-showcommands!    Show git commands while executing them
-F,fetch 		Fetch from origin before performing finish
-s,sign!         Sign the release tag cryptographically
-u,signingkey! 	Use the given GPG-key for the digital signature (implies -s)
-m,message! 		Use the given tag message
-f,messagefile= 	Use the contents of the given file as a tag message
-p,push 			Push to origin after performing finish
-k,keep          Keep branch after performing finish
-keepremote      Keep the remote branchk
-keeplocal 		Keep the local branch
-n,tag 			Don't tag this release
-b,nobackmerge 	Don't back-merge master, or tag if applicable, in develop
-S,squash 		Squash release during merge
-"
-	local opts merge_branch commit remotebranch keepmsg
-
-	# Define flags
-	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
-	DEFINE_boolean sign false "sign the release tag cryptographically" s
-	DEFINE_string signingkey "" "use the given GPG-key for the digital signature (implies -s)" u
-	DEFINE_string message "" "use the given tag message" m
-	DEFINE_string messagefile "" "use the contents of the given file as a tag message" f
-	DEFINE_boolean push false "push to $ORIGIN after performing finish" p
-	DEFINE_boolean keep false "keep branch after performing finish" k
-	DEFINE_boolean keepremote false "keep the remote branch"
-	DEFINE_boolean keeplocal false "keep the local branch"
-	DEFINE_boolean notag false "don't tag this release" n
-	DEFINE_boolean nobackmerge false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
-	DEFINE_boolean squash false "squash release during merge" S
-
-	# Parse arguments
-	parse_args "$@"
-
-	# Run filter on the version
-	VERSION=$(run_filter_hook release-finish-version $VERSION)
-
-	# As VERSION might have changed reset BRANCH with new VERSION
-	BRANCH=$PREFIX$VERSION
-
-	gitflow_require_version_arg
-
-	# Handle flags that imply other flags
-	if [ "$FLAGS_signingkey" != "" ]; then
-		FLAGS_sign=$FLAGS_TRUE
-	fi
-
-	# Keeping both branches implies the --keep flag to be true.
-	if flag keepremote && flag keeplocal; then
-		FLAGS_keep=$FLAGS_TRUE
-	fi
-
-	# Sanity checks
-	require_branch "$BRANCH"
-	require_clean_working_tree
-
-	# We always fetch the Branch from Origin
-	# This is done to avoid possible commits on the remote that are not
-	# merged into the local branch
-	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-			git_fetch_branch "$ORIGIN" "$BRANCH"
-	fi
+	remotebranchdeleted=$FLAGS_FALSE
+	localbranchdeleted=$FLAGS_FALSE
 
 	# Update local branches with remote branches
 	if flag fetch; then
@@ -385,18 +141,30 @@ S,squash 		Squash release during merge
 
 	# Delete branch
 	if noflag keep; then
+
 		if [ "$BRANCH" = "$(git_current_branch)" ]; then
 			git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
 		fi
-		if noflag keeplocal; then
-			git_do branch -d "$BRANCH"
-		fi
-		if noflag keepremote; then
-			remotebranch=0
+
+		# Always delete remote first
+		if noflag keepremote;then
 			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-				remotebranch=1
-				git_remote_branch_delete "$BRANCH"
+				git_remote_branch_delete "$BRANCH" && remotebranchdeleted=$FLAGS_TRUE
 			fi
+		fi
+
+		# Delete local after remote to avoid warnings
+		if noflag keeplocal; then
+			if flag force_delete; then
+				git_do branch -D "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
+			else
+				git_do branch -d "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
+			fi
+		fi
+
+		# no more branches: we can safely remove config section
+		if ! git_remote_branch_exists "$ORIGIN/$BRANCH" -a ! git_local_branch_exists "$BRANCH"; then
+			gitflow_config_remove_base_section "$BRANCH"
 		fi
 	fi
 
@@ -422,20 +190,21 @@ S,squash 		Squash release during merge
 	[ "$commit" = "$BRANCH" ] && echo "- Release branch '$BRANCH' has been merged into '$DEVELOP_BRANCH'"
 
 	if noflag keep; then
-		keepmsg="'has been deleted"
-		if flag keeplocal; then
-			local keepmsg="is locally still available."
-			if [ $remotebranch -eq 1 ]; then
-				keepmsg=$keepmsg" It is deleted from '$ORIGIN'."
-			fi
+		if [ $localbranchdeleted ]; then
+			keepmsg="has been locally deleted"
+		else
+			keepmsg="is still locally available"
 		fi
-		if flag keepremote; then
-			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-				keepmsg="is remotely still available. It is deleted locally."
-			fi
+		if [ $remotebranchdeleted ]; then
+			keepmsg=$keepmsg"; it has been remotely deleted from '$ORIGIN'"
+		elif git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			keepmsg=$keepmsg"; it is still remotely available on '$ORIGIN'"
 		fi
 	else
-		keepmsg="is still available"
+		keepmsg="is still locally available"
+		if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			keepmsg=$keepmsg"; it is still remotely available on '$ORIGIN'"
+		fi
 	fi
 	echo "- Release branch '$BRANCH' "$keepmsg
 
@@ -444,6 +213,422 @@ S,squash 		Squash release during merge
 	fi
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo
+}
+
+#
+# Function used by finish command to actually finish the release branch
+# Called when the base of the release is NOT the $DEVELOP_BRANCH
+#
+
+_finish_base() {
+	local opts merge_branch commit keepmsg localbranchdeleted remotebranchdeleted
+
+	remotebranchdeleted=$FLAGS_FALSE
+	localbranchdeleted=$FLAGS_FALSE
+
+	# Update local branches with remote branches
+	if flag fetch; then
+		git_fetch_branch "$ORIGIN" "$BASE_BRANCH"
+	fi
+
+	# Check if the local branches have all the commits from the remote branches
+	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
+	fi
+	if git_remote_branch_exists "$ORIGIN/$BASE_BRANCH"; then
+		require_branches_equal "$BASE_BRANCH" "$ORIGIN/$BASE_BRANCH"
+	fi
+
+	if noflag notag; then
+		# We ask for a tag, be sure it does not exists or
+		# points to the latest hotfix commit
+		if git_tag_exists "$VERSION_PREFIX$VERSION"; then
+			git_compare_refs  "$BRANCH" "$VERSION_PREFIX$VERSION"^2 2>/dev/null
+			[ $? -eq 0 ] || die "Tag already exists and does not point to release branch '$BRANCH'"
+		fi
+	fi
+
+	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+
+	git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
+
+	if noflag notag; then
+		# Try to tag the release.
+		# In case a previous attempt to finish this release branch has failed,
+		# but the tag was set successful, we skip it now
+		if ! git_tag_exists "$VERSION_PREFIX$VERSION"; then
+			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
+				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
+			fi
+			opts="-a"
+			flag sign && opts="$opts -s"
+			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
+			[ "$FLAGS_message" != "" ] && opts="$opts -m '$FLAGS_message'"
+			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
+			eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
+		fi
+	fi
+
+	merge_branch="$BRANCH"
+
+	# Try to merge into develop.
+	# In case a previous attempt to finish this release branch has failed,
+	# but the merge into develop was successful, we skip it now
+	if ! git_is_branch_merged_into "$merge_branch" "$BASE_BRANCH"; then
+		git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
+
+		# Accounting for 'git describe', if a release is tagged
+		# we use the tag commit instead of the branch.
+		if noflag notag; then
+			commit="$VERSION_PREFIX$VERSION"
+		else
+			commit="$BRANCH"
+		fi
+
+		if noflag squash; then
+			git_do merge --no-ff "$commit" || die "There were merge conflicts." # TODO: What do we do now?
+		else
+			git_do merge --squash "$commit" || die "There were merge conflicts." # TODO: What do we do now?
+			git_do commit
+		fi
+	fi
+
+	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+
+	# Delete branch
+	if noflag keep; then
+
+		# Always delete remote first
+		if noflag keepremote;then
+			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+				git_remote_branch_delete "$BRANCH" && remotebranchdeleted=$FLAGS_TRUE
+			fi
+		fi
+
+		# Delete local after remote to avoid warnings
+		if noflag keeplocal; then
+			if [ "$BRANCH" = "$(git_current_branch)" ]; then
+				git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
+			fi
+			if flag force_delete; then
+				git_do branch -D "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
+			else
+				git_do branch -d "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
+			fi
+		fi
+
+		# no more branches: we can safely remove config section
+		if ! git_remote_branch_exists "$ORIGIN/$BRANCH" -a ! git_local_branch_exists "$BRANCH"; then
+			gitflow_config_remove_base_section "$BRANCH"
+		fi
+	fi
+
+	if flag push; then
+		git_do push "$ORIGIN" "$BASE_BRANCH" || die "Could not push branch '$BASE_BRANCH' to remote '$ORIGIN'."
+		if noflag notag; then
+			git_do push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
+		fi
+	fi
+
+	echo
+	echo "Summary of actions:"
+	if flag fetch; then
+		echo "- Latest objects have been fetched from '$ORIGIN'"
+	fi
+	if noflag notag; then
+		echo "- The release was tagged '$VERSION_PREFIX$VERSION'"
+	fi
+	[ "$commit" = "$VERSION_PREFIX$VERSION" ] && echo "- Release tag '$VERSION_PREFIX$VERSION' has been merged into '$BASE_BRANCH'"
+	[ "$commit" = "$BRANCH" ] && echo "- Release branch '$BRANCH' has been merged into '$BASE_BRANCH'"
+	if noflag keep; then
+		if [ $localbranchdeleted ]; then
+			keepmsg="has been locally deleted"
+		else
+			keepmsg="is still locally available"
+		fi
+		if [ $remotebranchdeleted ]; then
+			keepmsg=$keepmsg"; it has been remotely deleted from '$ORIGIN'"
+		elif git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			keepmsg=$keepmsg"; it is still remotely available on '$ORIGIN'"
+		fi
+	else
+		keepmsg="is still locally available"
+		if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			keepmsg=$keepmsg"; it is still remotely available on '$ORIGIN'"
+		fi
+	fi
+	echo "- Release branch '$BRANCH' "$keepmsg
+
+	if flag push; then
+		echo "- '$BASE_BRANCH' and tags have been pushed to '$ORIGIN'"
+	fi
+	echo "- You are now on branch '$(git_current_branch)'"
+	echo
+}
+initialize() {
+	require_git_repo
+	require_gitflow_initialized
+	gitflow_load_settings
+	VERSION_PREFIX=$(git config --get gitflow.prefix.versiontag)
+	PREFIX=$(git config --get gitflow.prefix.release)
+}
+
+usage() {
+		OPTIONS_SPEC="\
+git flow release [list]
+git flow release start
+git flow release finish
+git flow release publish
+git flow release track
+git flow release delete
+
+Manage your feature branches.
+
+For more specific help type the command followed by --help
+--
+"
+	flags_help
+}
+
+cmd_default() {
+	cmd_list "$@"
+}
+
+cmd_list() {
+		OPTIONS_SPEC="\
+git flow release [list] [-h] [-v]
+
+List existing release branches
+--
+h,help!           Show this help
+v,verbose!        verbose (more) output
+"
+	local release_branches current_branch
+	local width branch len
+	local base develop_sha branch_sha nicename
+
+	# cmd_default may already define flags
+	# at this stage we can not use parse_args
+	if [ -z "${FLAGS_verbose}" ]; then
+		DEFINE_boolean 'verbose' false 'verbose (more) output' v
+	fi
+
+	# Parse arguments
+	parse_args "$@"
+
+	release_branches=$(git_local_branches_prefixed "$PREFIX")
+	if [ -z "$release_branches" ]; then
+		warn "No release branches exist."
+		warn ""
+		warn "You can start a new release branch:"
+		warn ""
+		warn "    git flow release start <name> [<base>]"
+		warn ""
+		exit 0
+	fi
+
+	current_branch=$(git_current_branch)
+
+	# Determine column width first
+	width=0
+	for branch in $release_branches; do
+		len=${#branch}
+		width=$(max $width $len)
+	done
+	width=$(($width+3-${#PREFIX}))
+
+	for branch in $release_branches; do
+		base=$(git merge-base "$branch" "$DEVELOP_BRANCH")
+		develop_sha=$(git rev-parse "$DEVELOP_BRANCH")
+		branch_sha=$(git rev-parse "$branch")
+		if [ "$branch" = "$current_branch" ]; then
+			printf "* "
+		else
+			printf "  "
+		fi
+		if flag verbose; then
+			printf "%-${width}s" "${branch#$PREFIX}"
+			if [ "$branch_sha" = "$develop_sha" ]; then
+				printf "(no commits yet)"
+			else
+				nicename=$(git rev-parse --short "$base")
+				printf "(based on $nicename)"
+			fi
+		else
+			printf "%s" "${branch#$PREFIX}"
+		fi
+		echo
+	done
+}
+
+cmd_help() {
+	usage
+	exit 0
+}
+
+# Parse arguments and set common variables
+parse_args() {
+	FLAGS "$@" || exit $?
+	eval set -- "${FLAGS_ARGV}"
+
+	# Read arguments into global variables
+	VERSION=$1
+	BRANCH=$PREFIX$VERSION
+}
+
+require_no_existing_release_branches() {
+	local release_branches first_branch
+
+	release_branches=$(git_local_branches_prefixed "$PREFIX")
+	first_branch=$(echo ${release_branches} | head -n1)
+
+	first_branch=${first_branch#$PREFIX}
+	[ -z "$release_branches" ] || die "There is an existing release branch '$first_branch'. Finish that one first."
+}
+
+cmd_start() {
+	OPTIONS_SPEC="\
+git flow release start [options] <version> [<base>]
+
+Start a new release branch
+--
+h,help!           Show this help
+showcommands!    Show git commands while executing them
+F,fetch    fetch from $ORIGIN before performing finish
+v,verbose! verbose (more) output
+"
+	local base
+
+	# Define flags
+	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
+
+	# Parse arguments
+	parse_args "$@"
+	eval set -- "${FLAGS_ARGV}"
+	base=${2:-$DEVELOP_BRANCH}
+
+	# Run filter on the version
+	VERSION=$(run_filter_hook release-start-version $VERSION)
+
+	# As VERSION might have changed reset BRANCH with new VERSION
+	BRANCH=$PREFIX$VERSION
+
+	require_base_is_local_branch "$base"
+	gitflow_require_version_arg
+	gitflow_config_set_base_branch $base $BRANCH
+
+	require_no_existing_release_branches
+
+	# Sanity checks
+	require_clean_working_tree
+	require_branch_absent "$BRANCH"
+	require_tag_absent "$VERSION_PREFIX$VERSION"
+	if flag fetch; then
+		git_fetch_branch "$ORIGIN" "$base"
+	fi
+	if git_remote_branch_exists "$ORIGIN/$base"; then
+		require_branches_equal "$base" "$ORIGIN/$base"
+	fi
+
+	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$base"
+
+	# Create branch
+	git_do checkout -b "$BRANCH" "$base" || die "Could not create release branch '$BRANCH'."
+
+	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$base"
+
+	echo
+	echo "Summary of actions:"
+	echo "- A new branch '$BRANCH' was created, based on '$base'"
+	echo "- You are now on branch '$(git_current_branch)'"
+	echo
+	echo "Follow-up actions:"
+	echo "- Bump the version number now!"
+	echo "- Start committing last-minute fixes in preparing your release"
+	echo "- When done, run:"
+	echo
+	echo "     git flow release finish '$VERSION'"
+	echo
+}
+
+cmd_finish() {
+	OPTIONS_SPEC="\
+git flow release finish [-h] [-F] [-s] [-u] [-m | -f] [-p] [-k] [-n] [-b] [-S] <version>
+
+
+Finish a release branch
+--
+h,help          Show this help
+showcommands!   Show git commands while executing them
+F,fetch         Fetch from origin before performing finish
+s,sign!         Sign the release tag cryptographically
+u,signingkey!   Use the given GPG-key for the digital signature (implies -s)
+m,message!      Use the given tag message
+f,messagefile=  Use the contents of the given file as a tag message
+p,push          Push to origin after performing finish
+k,keep          Keep branch after performing finish
+keepremote      Keep the remote branchk
+keeplocal       Keep the local branch
+D,force_delete  Force delete release branch after finish
+n,tag           Don't tag this release
+b,nobackmerge   Don't back-merge master, or tag if applicable, in develop
+S,squash        Squash release during merge
+"
+	# Define flags
+	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
+	DEFINE_boolean 'sign' false "sign the release tag cryptographically" s
+	DEFINE_string 'signingkey' "" "use the given GPG-key for the digital signature (implies -s)" u
+	DEFINE_string 'message' "" "use the given tag message" m
+	DEFINE_string 'messagefile' "" "use the contents of the given file as a tag message" f
+	DEFINE_boolean 'push' false "push to $ORIGIN after performing finish" p
+	DEFINE_boolean 'keep' false "keep branch after performing finish" k
+	DEFINE_boolean 'keepremote' false "keep the remote branch"
+	DEFINE_boolean 'keeplocal' false "keep the local branch"
+	DEFINE_boolean 'force'_delete false "force delete release branch after finish" D
+	DEFINE_boolean 'notag' false "don't tag this release" n
+	DEFINE_boolean 'nobackmerge' false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
+	DEFINE_boolean 'squash' false "squash release during merge" S
+
+	# Parse arguments
+	parse_args "$@"
+
+	# Run filter on the version
+	VERSION=$(run_filter_hook release-finish-version $VERSION)
+
+	# As VERSION might have changed reset BRANCH with new VERSION
+	BRANCH=$PREFIX$VERSION
+
+	gitflow_require_version_arg
+	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
+	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
+	git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't finish the release branch '$BRANCH'."
+
+	# Handle flags that imply other flags
+	if [ "$FLAGS_signingkey" != "" ]; then
+		FLAGS_sign=$FLAGS_TRUE
+	fi
+
+	# Keeping both branches implies the --keep flag to be true.
+	if flag keepremote && flag keeplocal; then
+		FLAGS_keep=$FLAGS_TRUE
+	fi
+
+	# Sanity checks
+	require_branch "$BRANCH"
+	require_clean_working_tree
+
+	# We always fetch the Branch from Origin
+	# This is done to avoid possible commits on the remote that are not
+	# merged into the local branch
+	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			git_fetch_branch "$ORIGIN" "$BRANCH"
+	fi
+
+	if [ "$BASE_BRANCH" = "$DEVELOP_BRANCH" ]; then
+		_finish_from_develop
+	else
+		_finish_base
+	fi
 }
 
 cmd_branch() {
@@ -467,14 +652,14 @@ S,squash 		Squash release during merge
 	local opts
 
 	# Define flags
-	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
-	DEFINE_boolean sign false "sign the release tag cryptographically" s
-	DEFINE_string signingkey "" "use the given GPG-key for the digital signature (implies -s)" u
-	DEFINE_string message "" "use the given tag message" m
-	DEFINE_string messagefile "" "use the contents of the given file as a tag message" f
-	DEFINE_boolean push false "push to $ORIGIN after performing finish" p
-	DEFINE_boolean notag false "don't tag this release" n
-	DEFINE_boolean squash false "squash release during merge" S
+	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
+	DEFINE_boolean 'sign' false "sign the release tag cryptographically" s
+	DEFINE_string 'signingkey' "" "use the given GPG-key for the digital signature (implies -s)" u
+	DEFINE_string 'message' "" "use the given tag message" m
+	DEFINE_string 'messagefile' "" "use the contents of the given file as a tag message" f
+	DEFINE_boolean 'push' false "push to $ORIGIN after performing finish" p
+	DEFINE_boolean 'notag' false "don't tag this release" n
+	DEFINE_boolean 'squash' false "squash release during merge" S
 
 	# Parse arguments
 	FLAGS "$@" || exit $?
@@ -673,8 +858,8 @@ r,remote Delete remote branch
 	local current_branch
 
 	# Define flags
-	DEFINE_boolean force false "force deletion" f
-	DEFINE_boolean remote false "delete remote branch" r
+	DEFINE_boolean 'force' false "force deletion" f
+	DEFINE_boolean 'remote' false "delete remote branch" r
 
 	# Parse arguments
 	parse_args "$@"

@@ -10,32 +10,66 @@
 [pcragone]: https://github.com/pcragone
 [mykehsd]: https://github.com/mykehsd
 [jeromebaum]: https://github.com/jeromebaum 
+[adutra]: https://github.com/adutra
 
 # Changelog
+
+#### 1.4.0
+[Peter van der Does][petervanderdoes]
+* Remember the base.  
+  With the commands feature/hotfix/release start you can give a base from which 
+  the new branch will be created. Upon finishing this branch it will 
+  automatically merge the branch back into the base as given during the start.  
+  If no base is given the normal functionality will be followed.  
+  With the hotfix and release, if a base is given and it's not the 
+  DEVELOP_BRANCH, the branch will *NOT* be merged back into the $DEVELOP_BRANCH 
+  upon finishing this branch.
+* New config command.  
+  git flow config base. This can be used to set and get the base for 
+  feature/hotfix/release branches so it can be used when finishing these 
+  branches.
+* Get the correct working directory when the git-flow file is a symbolic link.
+* Don't check/compare hotfix and base branch when branch is merged already.
+* Remove export POSIXLY_CORRECT.  
+  Setting this environment variable can mess things up when git-flow is used in 
+  combination with other shell scripts.
+* Update gitflow-shFlags from upstream.  
+  Besides other improvements this update eliminates the use of external system 
+  calls on a majority of systems which in theory leads to a speed increase of 
+  about 20%.
+* Use GNU getopt on BSD systems.  
+  BSD getopt doesn't support long options in commands but the GNU getopt does.
+
+[Alexandre Dutra][adutra]
+* Git refuses to delete local branch with "-d" if it is tracking a remote one.
+* Can't always delete current release/hotfix local branch on finish  
+  Situation can occur you are on the local branch the script wants to delete, if
+  you are you can't delete that branch. We'll switch to the base branch when 
+  you are deleting the branch you currently are on.
 
 #### 1.3.1
 * Bugix: git flow config list results in error.
 
 #### 1.3.0
 [Peter van der Does][petervanderdoes]
-* Make name in feature publish optional.    
+* Make name in feature publish optional.  
   Instead of always having to add the branch when doing a git flow feature 
-  publish, the name should be optional.    
+  publish, the name should be optional.  
   When a name isn't given, the current branch, if it's a feature branch, 
   will be published.
-* Add option to select configuration file usage    
+* Add option to select configuration file usage  
   As with the regular git config, git flow init now has the 
   option --file, --global, --system and --local. --local is default.
 * Add a new command.  
   New command git flow config is added.  
   With this command you can see your current git flow configuration and you 
   can also set the options.
-* Environment settings for git-flow only.    
+* Environment settings for git-flow only.  
   With git you can set environment variables to change behavior, like 
-  GIT_MERGE_AUTOEDIT for example.    
+  GIT_MERGE_AUTOEDIT for example.  
   You can add these exports to the file ~/.gitflow_export if you only want 
-  to set the environment variable for git-flow.    
-* Bugfix: Missing command hotfix track.    
+  to set the environment variable for git-flow.  
+* Bugfix: Missing command hotfix track.  
   The command git flow hotfix track is not implemented.
 
 #### 1.2.1
@@ -92,7 +126,7 @@
   Bug found by [Daniel Dehennin][baby-gnu].
   
 * Clean up code.  
-  Remove all porcelain commands.    
+  Remove all porcelain commands.  
   Refactor code.
   
 * Improve the back-merge functionality.  
@@ -100,7 +134,7 @@
   doesn't want to back-merge but rather merge the release branch into
   develop.
   
-* Add the sub-action delete to sub-commands feature, release and hotfix.    
+* Add the sub-action delete to sub-commands feature, release and hotfix.  
   The sub-commands feature, release and hotfix now have a new sub-action, 
   delete. With that action you can delete the branches, locally and remote.
   The action has two options, -f and -r. With -f you can force the deletion,
@@ -135,11 +169,11 @@
   that developers can squash commits into one large one.
 
 [Peter Ragone][pcragone]
-* Add init to git-flow-{feature,release,hotfix,support}.   
+* Add init to git-flow-{feature,release,hotfix,support}.  
   Fixes the relatively minor issue where 'git flow subcommand help' 
   gives "Not a gitflow-enabled repo yet".
   
-* Special thanks to the following individual:    
+* Special thanks to the following individual:  
   [Gert Van Gool][gvangool]
   
 #### 1.0-avh
@@ -147,13 +181,13 @@
 
 * Remove trailing whitespace.
 
-* Updated from latest develop branch from nvie.    
+* Updated from latest develop branch from nvie.  
   Some features were still missing.
   
 * Remove the submodule shFlags.  
   Instead of the submodule we'll just use the file.
   
-* When finishing a release or hotfix, use tag for back-merging if available.    
+* When finishing a release or hotfix, use tag for back-merging if available.  
   When a release or hotfix branch is tagged, the tag is never merged into the
   develop branch, it is preferable to have the tag in the develop branch as
   well, for use with git describe for example.
@@ -167,7 +201,7 @@
   passed to the script,
 
 [Steve Streeting][sinbad]
-* Fixes the suggested name for the integration branch.    
+* Fixes the suggested name for the integration branch.  
   When git init -d is executed on a repo with multiple branches, the
   suggested name for the integration branch could possibly be the same name
   that was already selected for the production release branch.  

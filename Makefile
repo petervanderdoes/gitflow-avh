@@ -1,6 +1,6 @@
 #
 # Authors:
-# Copyright 2012 Peter van der Does. All rights reserved.
+# Copyright 2012,2013 Peter van der Does. All rights reserved.
 #
 # Original Author:
 # Copyright 2010 Vincent Driessen. All rights reserved.

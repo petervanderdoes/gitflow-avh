@@ -9,7 +9,7 @@
 #    http://github.com/petervanderdoes/gitflow
 #
 # Authors:
-# Copyright 2012 Peter van der Does. All rights reserved.
+# Copyright 2012,2013 Peter van der Does. All rights reserved.
 #
 # Original Author:
 # Copyright 2010 Vincent Driessen. All rights reserved.
@@ -48,13 +48,23 @@ escape() {
 	echo "$1" | sed 's/\([\.\$\*]\)/\\\1/g'
 }
 
-# Set logic
-has() {
-	local item
+#
+# String contains function
+# $1 haystack
+# $2 Needle
+#
+contains() {
+	local return
 
-	item=$1
-	shift
-	echo " $@ " | grep -q " $(escape $item) "
+	case $1 in
+		*$2*)
+			return=$FLAGS_TRUE
+			;;
+		*)
+			return=$FLAGS_FALSE
+			;;
+	esac
+	return $return
 }
 
 # Basic math
@@ -274,6 +284,8 @@ gitflow_load_settings() {
 	export MASTER_BRANCH=$(git config --get gitflow.branch.master)
 	export DEVELOP_BRANCH=$(git config --get gitflow.branch.develop)
 	export ORIGIN=$(git config --get gitflow.origin || echo origin)
+
+	GITFLOW_CONFIG=$DOT_GIT_DIR/gitflow_config
 }
 
 #
@@ -346,6 +358,55 @@ gitflow_is_prefixed_branch() {
 	esac
 	return $return
 }
+#
+# Update the gitflow_config with the base of a new git-flow branch
+#
+# @param $1 Base of the new branch
+# @param $2 Name of the branch
+#
+gitflow_config_set_base_branch() {
+	local base branch
+
+	base=$1
+	branch=$2
+	$(git config --file=$GITFLOW_CONFIG "branch.$branch.base" $base)
+}
+
+#
+# Get the base of a branch as set by gitflow_set_branch
+#
+# @param $1 Name of the branch
+# @return string|empty String when a base is found otherwise empty
+#
+gitflow_config_get_base_branch() {
+	local branch
+
+	branch=$1
+	echo $(git config --file=$GITFLOW_CONFIG --get "branch.$branch.base")
+}
+
+#
+# Remove the section that contains the base of a branch as set by gitflow_set_branch
+#
+# @param $1 Name of the branch
+#
+gitflow_config_remove_base_section() {
+	local branch
+
+	branch=$1
+	$(git config --file=$GITFLOW_CONFIG --remove-section "branch.$branch" 2>/dev/null)
+}
+
+#
+# Remove the base of the git-flow branch from the gitflow_config
+# @param $1 Name of the branch
+#
+gitflow_config_remove_base_branch() {
+	local base
+
+	base=$1
+	$(git config --file=$GITFLOW_CONFIG --unset "branch.$branch.base" 2>/dev/null)
+}
 
 #
 # Assertions for use in git-flow subcommands
@@ -370,6 +431,10 @@ require_clean_working_tree() {
 	if [ $result -eq 2 ]; then
 		die "Index contains uncommited changes. Aborting."
 	fi
+}
+
+require_base_is_local_branch() {
+	git_local_branch_exists "$1" || die "Base '$1' needs to be a branch. It does not exist and is required."
 }
 
 require_local_branch() {

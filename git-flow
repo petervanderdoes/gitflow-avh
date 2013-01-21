@@ -10,7 +10,7 @@
 #    http://github.com/petervanderdoes/gitflow
 #
 # Authors:
-# Copyright 2012 Peter van der Does. All rights reserved.
+# Copyright 2012,2013 Peter van der Does. All rights reserved.
 #
 # Original Author:
 # Copyright 2010 Vincent Driessen. All rights reserved.
@@ -36,22 +36,48 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 #
-
-# Set this to workaround expr problems in shFlags on FreeBSD
-if uname -s | egrep -iq 'bsd'; then export EXPR_COMPAT=1; fi
-
 # enable debug mode
 if [ "$DEBUG" = "yes" ]; then
 	set -x
 fi
 
-# The sed expression here replaces all backslashes by forward slashes.
-# This helps our Windows users, while not bothering our Unix users.
-export GITFLOW_DIR=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+# Setup the GITFLOW_DIR for different operating systems.
+# This is mostly to make sure that we get the correct directory when the
+# git-flow file is a symbolic link
+case $(uname -s) in
+Linux)
+	export GITFLOW_DIR=$(dirname "$(readlink -e "$0")")
+	;;
+FreeBSD|OpenBSD|NetBSD)
+	export FLAGS_GETOPT_CMD='/usr/local/bin/getopt'
+	export GITFLOW_DIR=$(dirname "$(realpath "$0")")
+	;;
+Darwin)
+	PRG="$0"
+	while [ -h "$PRG" ]; do
+		link=$(readlink "$0")
+		if expr "$link" : '/.*' > /dev/null; then
+			PRG="$link"
+		else
+			PRG="$(dirname "$PRG")/$link"
+		fi
+	done
+	export GITFLOW_DIR=$(dirname "$PRG")
+	;;
+*MINGW*)
+	export GITFLOW_DIR=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+	;;
+
+*)
+	# The sed expression here replaces all backslashes by forward slashes.
+	# This helps our Windows users, while not bothering our Unix users.)
+	export GITFLOW_DIR=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+	;;
+esac
 
 # Extra environment settings
 if [ -f ~/.gitflow_export ]; then
-        . ~/.gitflow_export
+	. ~/.gitflow_export
 fi
 
 usage() {
@@ -75,11 +101,6 @@ main() {
 		exit 1
 	fi
 
-	# This environmental variable fixes non-POSIX getopt style argument
-	# parsing, effectively breaking git-flow subcommand parsing on several
-	# Linux platforms.
-	export POSIXLY_CORRECT=1
-
 	# Use the shFlags project to parse the command line arguments
 	. "$GITFLOW_DIR/gitflow-shFlags"
 	FLAGS_PARENT="git flow"
@@ -88,11 +109,7 @@ main() {
 	. "$GITFLOW_DIR/gitflow-common"
 
 	# allow user to request git action logging
-	DEFINE_boolean showcommands false 'Show actions taken (git commands)'
-
-	# do actual parsing
-	FLAGS "$@" || exit $?
-	eval set -- "${FLAGS_ARGV}"
+	DEFINE_boolean 'showcommands' false 'Show actions taken (git commands)'
 
 	# Sanity checks
 	SUBCOMMAND="$1"; shift
@@ -106,13 +123,26 @@ main() {
 	. "$GITFLOW_DIR/git-flow-$SUBCOMMAND"
 	FLAGS_PARENT="git flow $SUBCOMMAND"
 
-	# Test if the first argument is a flag (i.e. starts with '-')
-	# in that case, we interpret this arg as a flag for the default
-	# command
-	SUBACTION="default"
-	if [ "$1" != "" ] && { ! echo "$1" | grep -q "^-"; } then
-		SUBACTION="$1"; shift
+	# If the first argument is a flag, it starts with '-', we interpret this
+	# argument as a flag for the default command.
+	if startswith "$1" "-"; then
+		SUBACTION="default"
+	elif [ -z "$1" ]; then
+		SUBACTION="default"
+	else
+		SUBACTION="$1"
+		shift
+		# Do not allow direct calls to subactions with an underscore.
+		if $(contains "$SUBACTION" "_"); then
+			warn "Unknown subcommand: '$SUBACTION'"
+			usage
+			exit 1
+		fi
+		# Replace the dash with an underscore as bash doesn't allow a dash
+		# in the function name.
+		SUBACTION=$(echo "$SUBACTION" |tr '-' '_')
 	fi
+
 	if ! type "cmd_$SUBACTION" >/dev/null 2>&1; then
 		warn "Unknown subcommand: '$SUBACTION'"
 		usage

@@ -9,7 +9,7 @@
 #    http://github.com/petervanderdoes/gitflow
 #
 # Authors:
-# Copyright 2012 Peter van der Does. All rights reserved.
+# Copyright 2012,2013 Peter van der Does. All rights reserved.
 #
 #
 # Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,7 @@ usage() {
 	OPTIONS_SPEC="\
 git flow config [list]
 git flow config set
+git flow config base
 
 Manage the git-flow configuration.
 
@@ -96,10 +97,10 @@ file= use given config file
 	local output
 
 	# Define flags
-	DEFINE_boolean local false 'use repository config file'
-	DEFINE_boolean global false 'use global config file'
-	DEFINE_boolean system false 'use system config file'
-	DEFINE_string file "" 'use given config file'
+	DEFINE_boolean 'local' false 'use repository config file'
+	DEFINE_boolean 'global' false 'use global config file'
+	DEFINE_boolean 'system' false 'use system config file'
+	DEFINE_string 'file' "" 'use given config file'
 
 	# Parse arguments
 	parse_args "$@"
@@ -143,10 +144,10 @@ file= use given config file
 	local value cfg_option txt
 
 	# Define flags
-	DEFINE_boolean local false 'use repository config file'
-	DEFINE_boolean global false 'use global config file'
-	DEFINE_boolean system false 'use system config file'
-	DEFINE_string file "" 'use given config file'
+	DEFINE_boolean 'local' false 'use repository config file'
+	DEFINE_boolean 'global' false 'use global config file'
+	DEFINE_boolean 'system' false 'use system config file'
+	DEFINE_string 'file' "" 'use given config file'
 
 	# Parse arguments
 	parse_args "$@"
@@ -248,7 +249,55 @@ file= use given config file
 	echo
 }
 
+cmd_base () {
+		OPTIONS_SPEC="\
+git flow config base [<options>] <branch> [<base>]
+
+Set the given <base> for the given <branch>
+--
+h,help!           Show this help
+get               Get the base for the given branch (default behavior).
+set               Set the given base for the given branch.
+"
+
+	DEFINE_boolean 'get' true 'Get the base for the given branch (default behavior).'
+	DEFINE_boolean 'set' false 'Set the given base for the given branch.'
+
+	FLAGS "$@" || exit $?
+	eval set -- "${FLAGS_ARGV}"
+
+	if flag 'set'; then
+		[ -z "$1" ] && die_help 'No branch given'
+		[ -z "$2" ] && die_help 'No base given'
+		__set_base "$@"
+	else
+		[ -z "$1" ] && die_help 'No branch given'
+		__get_base "$@"
+	fi
+}
+
 cmd_help() {
 	usage
 	exit 0
+}
+
+# Private functions
+__set_base () {
+
+	require_branch "$1"
+	git_branch_exists "$2" || die_help "Given base doesn't exists or is not a branch."
+
+	gitflow_config_set_base_branch "$2" "$1"
+}
+
+__get_base () {
+	local base
+
+	base=$(gitflow_config_get_base_branch "$1")
+	echo
+	if [ -z "$base" ]; then
+		echo "Base branch not set for branch '"$1"'"
+	else
+		echo "Base branch for branch '"$1"' set to '"$base"'"
+	fi
 }
