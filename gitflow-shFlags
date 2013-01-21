@@ -396,7 +396,16 @@ _flags_underscoreName()
 #   string: exclamation stripped from name
 _flags_removeExclamationName()
 {
-  echo $1 |sed 's/!$//'
+  _flags_opt_=$1
+  if _flags_isNegate "${_flags_opt_} ; then
+    if _flags_useBuiltin; then
+      echo ${_flags_opt_%!*}
+    else
+      echo ${_flags_opt_}|sed 's/!$//'
+    fi
+  fi
+  unset _flags_opt_
+  return ${FLAGS_TRUE}
 }
 
 # Check if a flag ends in an exclamation mark,
