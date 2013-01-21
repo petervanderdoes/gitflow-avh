@@ -14,7 +14,7 @@
 
 # Changelog
 
-#### 1.4.0-dev.59
+#### 1.4.0-rc.1
 [Peter van der Does][petervanderdoes]
 * Remember the base.  
   With the commands feature/hotfix/release start you can give a base from which 
