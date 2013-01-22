@@ -14,6 +14,9 @@
 
 # Changelog
 
+#### 1.4.1-rc.1
+* Preparation hotfix.
+
 #### 1.4.0
 [Peter van der Does][petervanderdoes]
 * Remember the base.  
