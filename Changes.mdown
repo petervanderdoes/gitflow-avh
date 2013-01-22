@@ -15,7 +15,7 @@
 # Changelog
 
 #### 1.4.1
-* Preparation hotfix.
+* Bugfix: Missed quotation mark
 
 #### 1.4.0
 [Peter van der Does][petervanderdoes]
