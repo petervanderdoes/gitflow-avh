@@ -397,7 +397,7 @@ _flags_underscoreName()
 _flags_removeExclamationName()
 {
   _flags_opt_=$1
-  if _flags_isNegate "${_flags_opt_} ; then
+  if _flags_isNegate "${_flags_opt_}"; then
     if _flags_useBuiltin; then
       echo ${_flags_opt_%!*}
     else

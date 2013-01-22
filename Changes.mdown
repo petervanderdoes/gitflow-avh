@@ -20,6 +20,9 @@
   This gives the ability to never fast-forward a merge, even when it's only 
   one commit. 
 
+#### 1.4.1
+* Bugfix: Missed quotation mark
+
 #### 1.4.0
 [Peter van der Does][petervanderdoes]
 * Remember the base.  
