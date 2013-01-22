@@ -398,11 +398,13 @@ _flags_removeExclamationName()
 {
   _flags_opt_=$1
   if _flags_isNegate "${_flags_opt_}"; then
-    if _flags_useBuiltin; then
-      echo ${_flags_opt_%!*}
-    else
-      echo ${_flags_opt_}|sed 's/!$//'
-    fi
+    echo ${_flags_opt_}
+  else
+      if _flags_useBuiltin; then
+        echo ${_flags_opt_%!*}
+      else
+        echo ${_flags_opt_}|sed 's/!$//'
+      fi
   fi
   unset _flags_opt_
   return ${FLAGS_TRUE}

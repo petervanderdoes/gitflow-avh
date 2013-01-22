@@ -15,7 +15,7 @@
 # Changelog
 
 #### 1.4.2-rc.1
-* Preparation hotfix.
+* Bugfix: Update from upstream for shFlags
 
 #### 1.4.1
 * Bugfix: Missed quotation mark
