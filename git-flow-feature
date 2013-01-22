@@ -278,6 +278,7 @@ keepremote!    Keep the remote branch
 keeplocal!     Keep the local branch
 D,force_delete Force delete feature branch after finish
 S,squash       Squash feature during merge
+no-ff!          Never fast-forward during the merge
 "
 	local finish_base
 
@@ -289,6 +290,7 @@ S,squash       Squash feature during merge
 	DEFINE_boolean 'keeplocal' false "keep the local branch"
 	DEFINE_boolean 'force_delete' false "force delete feature branch after finish" D
 	DEFINE_boolean 'squash' false "squash feature during merge" S
+	DEFINE_boolean 'no-ff!' false "Don't fast-forward ever during merge "
 
 	# Parse arguments
 	parse_args "$@"
@@ -386,8 +388,8 @@ S,squash       Squash feature during merge
 
 	# Merge into BASE
 	git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
-	if [ "$(git rev-list -n2 "$BASE_BRANCH..$BRANCH" | wc -l)" -eq 1 ]; then
-		git_do merge --ff "$BRANCH"
+	if noflag no-ff && [ "$(git rev-list -n2 "$BASE_BRANCH..$BRANCH" | wc -l)" -eq 1 ]; then
+			git_do merge --ff "$BRANCH"
 	else
 		if noflag squash; then
 			git_do merge --no-ff "$BRANCH"
