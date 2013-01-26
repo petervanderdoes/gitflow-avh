@@ -136,6 +136,26 @@ _gf_overrideBooleanFlag() {
 			;;
 		esac
 	fi
+	unset _variable _env_var
+	return ${FLAGS_TRUE}
+}
+
+# _gf_overrideStringFlag()
+#
+# Override a string flag
+#
+# Param $1: string The name of the environment variable
+# Param $2: string The flag name
+#
+_gf_overrideStringFlag() {
+	local _variable _env_var
+
+	_env_var="GITFLOW_FLAG_"$1
+	eval "_variable=\$${_env_var}"
+	if [ -n ${_variable} ]; then
+		eval "FLAGS_${2}=${_variable}"
+	fi
+	unset _variable _env_var
 	return ${FLAGS_TRUE}
 }
 
