@@ -507,6 +507,8 @@ v,verbose! verbose (more) output
 	eval set -- "${FLAGS_ARGV}"
 	base=${2:-$DEVELOP_BRANCH}
 
+	_gf_overrideBooleanFlag "RELEASE_START_FETCH" "fetch"
+
 	# Run filter on the version
 	VERSION=$(run_filter_hook release-start-version $VERSION)
 
@@ -592,6 +594,20 @@ S,squash        Squash release during merge
 	# Parse arguments
 	parse_args "$@"
 
+	_gf_overrideBooleanFlag "RELEASE_FINISH_FETCH" "fetch"
+	_gf_overrideBooleanFlag "RELEASE_FINISH_SIGN" "sign"
+	_gf_overrideBooleanFlag "RELEASE_FINISH_PUSH" "push"
+	_gf_overrideBooleanFlag "RELEASE_FINISH_KEEP" "keep"
+	_gf_overrideBooleanFlag "RELEASE_FINISH_KEEPREMOTE" "keepremote"
+	_gf_overrideBooleanFlag "RELEASE_FINISH_KEEPLOCAL" "keeplocal"
+	_gf_overrideBooleanFlag "RELEASE_FINISH_FORCE_DELETE" "force_delete"
+	_gf_overrideBooleanFlag "RELEASE_FINISH_NOTAG" "notag"
+	_gf_overrideBooleanFlag "RELEASE_FINISH_NOBACKMERGE" "nobackmerge"
+	_gf_overrideBooleanFlag "RELEASE_FINISH_SQUASH" "squash"
+	_gf_overrideStringFlag "RELEASE_FINISH_SIGNINGKEY" "signingkey"
+	_gf_overrideStringFlag "RELEASE_FINISH_MESSAGE" "message"
+	_gf_overrideStringFlag "RELEASE_FINISH_MESSAGEFILE" "messagefile"
+
 	# Run filter on the version
 	VERSION=$(run_filter_hook release-finish-version $VERSION)
 
@@ -664,6 +680,15 @@ S,squash 		Squash release during merge
 	# Parse arguments
 	FLAGS "$@" || exit $?
 	eval set -- "${FLAGS_ARGV}"
+
+	_gf_overrideBooleanFlag "RELEASE_BRANCH_FETCH" "fetch"
+	_gf_overrideBooleanFlag "RELEASE_BRANCH_SIGN" "sign"
+	_gf_overrideBooleanFlag "RELEASE_BRANCH_PUSH" "push"
+	_gf_overrideBooleanFlag "RELEASE_BRANCH_NOTAG" "notag"
+	_gf_overrideBooleanFlag "RELEASE_BRANCH_SQUASH" "squash"
+	_gf_overrideStringFlag "RELEASE_BRANCH_SIGNINGKEY" "signingkey"
+	_gf_overrideStringFlag "RELEASE_BRANCH_MESSAGE" "message"
+	_gf_overrideStringFlag "RELEASE_BRANCH_MESSAGEFILE" "messagefile"
 
 	# Read arguments into global variables
 	VERSION=$1
@@ -863,6 +888,9 @@ r,remote Delete remote branch
 
 	# Parse arguments
 	parse_args "$@"
+
+	_gf_overrideBooleanFlag "RELEASE_DELETE_FETCH" "fetch"
+	_gf_overrideBooleanFlag "RELEASE_DELETE_REMOTE" "remote"
 
 	gitflow_require_version_arg
 
