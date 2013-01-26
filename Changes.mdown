@@ -19,6 +19,8 @@
 * Add flag no-ff to feature finish.  
   This gives the ability to never fast-forward a merge, even when it's only 
   one commit. 
+* Bugfix: Error in a long flag name for release finish
+
 
 #### 1.4.2
 * Bugfix: Update from upstream for shFlags
