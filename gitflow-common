@@ -79,6 +79,66 @@ endswith() { [ "$1" != "${1%$2}" ]; }
 flag() { local FLAG; eval FLAG='$FLAGS_'$1; [ $FLAG -eq $FLAGS_TRUE ]; }
 noflag() { local FLAG; eval FLAG='$FLAGS_'$1; [ $FLAG -ne $FLAGS_TRUE ]; }
 
+# _gf_determineBoolean
+# Check if given value can be interpreted as a boolean
+#
+# This function determines if the passed parameter is a valid boolean value.
+#
+# Param $1: string Value to check if it's a valid boolean
+#
+# Return: string FLAGS_TRUE|FLAGS_FALSE|FLAGS_ERROR
+#	FLAGS_TRUE if the parameter is a boolean TRUE
+#	FLAGS_FALSE if the parameter is a boolean FALSE
+#	FLAGS_ERROR if the parameter is not a boolean
+#
+_gf_determineBoolean() {
+	local _return _value
+	_value="${1}"
+	case "${_value}" in
+	${FLAGS_TRUE} | [yY] | [yY][eE][sS] | [tT] | [tT][rR][uU][eE])
+		_return=${FLAGS_TRUE}
+		;;
+	${FLAGS_FALSE} | [nN] | [nN][oO] | [fF] | [fF][aA][lL][sS][eE])
+		_return=${FLAGS_FALSE}
+		;;
+
+	*)
+		_return=${FLAGS_ERROR}
+		;;
+	esac
+	unset _value
+	return ${_return}
+}
+
+# _gf_overrideBooleanFlag()
+#
+# Override a boolean flag
+#
+# Param $1: string The name of the environment variable
+# Param $2: string The flag name
+#
+_gf_overrideBooleanFlag() {
+	local _variable _env_var
+
+	_env_var="GITFLOW_FLAG_"$1
+	eval "_variable=\$${_env_var}"
+	if [ -n ${_variable} ]; then
+		_gf_determineBoolean ${_variable}
+		case "$?" in
+		${FLAGS_TRUE})
+			eval "FLAGS_${2}=${FLAGS_TRUE}"
+			;;
+		${FLAGS_FALSE})
+			eval "FLAGS_${2}=${FLAGS_FALSE}"
+			;;
+		${FLAGS_ERROR})
+			warn "Invalid value for ${2}"
+			;;
+		esac
+	fi
+	return ${FLAGS_TRUE}
+}
+
 #
 # Git specific common functionality
 #
