@@ -226,7 +226,7 @@ F,fetch Fetch from origin before performing local operation
 	eval set -- "${FLAGS_ARGV}"
 	base=${2:-$DEVELOP_BRANCH}
 
-	_gf_overrideBooleanFlag "FEATURE_START_FETCH" "fetch"
+	gitflow_override_flag_boolean "FEATURE_START_FETCH" "fetch"
 
 	require_base_is_local_branch "$base"
 	gitflow_require_name_arg
@@ -297,14 +297,14 @@ no-ff!          Never fast-forward during the merge
 	# Parse arguments
 	parse_args "$@"
 
-	_gf_overrideBooleanFlag "FEATURE_FINISH_FETCH" "fetch"
-	_gf_overrideBooleanFlag "FEATURE_FINISH_REBASE" "rebase"
-	_gf_overrideBooleanFlag "FEATURE_FINISH_KEEP" "keep"
-	_gf_overrideBooleanFlag "FEATURE_FINISH_KEEPREMOTE" "keepremote"
-	_gf_overrideBooleanFlag "FEATURE_FINISH_KEEPLOCAL" "keeplocal"
-	_gf_overrideBooleanFlag "FEATURE_FINISH_FORCE_DELETE" "force_delete"
-	_gf_overrideBooleanFlag "FEATURE_FINISH_SQUASH" "squash"
-	_gf_overrideBooleanFlag "FEATURE_FINISH_NO_FF" "no_ff"
+	gitflow_override_flag_boolean "FEATURE_FINISH_FETCH" "fetch"
+	gitflow_override_flag_boolean "FEATURE_FINISH_REBASE" "rebase"
+	gitflow_override_flag_boolean "FEATURE_FINISH_KEEP" "keep"
+	gitflow_override_flag_boolean "FEATURE_FINISH_KEEPREMOTE" "keepremote"
+	gitflow_override_flag_boolean "FEATURE_FINISH_KEEPLOCAL" "keeplocal"
+	gitflow_override_flag_boolean "FEATURE_FINISH_FORCE_DELETE" "force_delete"
+	gitflow_override_flag_boolean "FEATURE_FINISH_SQUASH" "squash"
+	gitflow_override_flag_boolean "FEATURE_FINISH_NO_FF" "no_ff"
 
 	expand_nameprefix_arg_or_current
 
@@ -650,7 +650,7 @@ i,interactive     Do an interactive rebase
 	# Parse arguments
 	parse_args "$@"
 
-	_gf_overrideBooleanFlag "FEATURE_REBASE_INTERACTIVE" "interactive"
+	gitflow_override_flag_boolean "FEATURE_REBASE_INTERACTIVE" "interactive"
 
 	expand_nameprefix_arg_or_current
 	warn "Will try to rebase '$NAME'..."
@@ -760,8 +760,8 @@ r,remote          Delete remote branch
 	parse_args "$@"
 
 	# Check if we need to override the flags
-	_gf_overrideBooleanFlag "FEATURE_DELETE_FORCE" "force"
-	_gf_overrideBooleanFlag "FEATURE_DELETE_REMOTE" "remote"
+	gitflow_override_flag_boolean "FEATURE_DELETE_FORCE" "force"
+	gitflow_override_flag_boolean "FEATURE_DELETE_REMOTE" "remote"
 
 	expand_nameprefix_arg
 

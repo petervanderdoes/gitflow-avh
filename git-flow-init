@@ -86,7 +86,7 @@ file= use given config file
 	parse_args "$@"
 
 	# Check if we need to override the flags
-	_gf_overrideBooleanFlag "INIT_DEFAULTS" "defaults"
+	gitflow_override_flag_boolean "INIT_DEFAULTS" "defaults"
 
 	if [ "$FLAGS_file" != "" ]; then
 		gitflow_config_option="--file '$FLAGS_file''"
