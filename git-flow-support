@@ -163,6 +163,8 @@ F,fetch           Fetch from origin before performing finish
 	# Parse arguments
 	parse_args "$@"
 
+	_gf_overrideBooleanFlag "SUPPORT_START_FETCH" "fetch"
+
 	gitflow_require_version_arg
 	gitflow_require_base_arg
 
