@@ -20,6 +20,7 @@
   This gives the ability to never fast-forward a merge, even when it's only 
   one commit. 
 * Bugfix: Error in a long flag name for release finish
+* Function in gitflow-shFlags refactored to make it faster.
 
 
 #### 1.4.2
