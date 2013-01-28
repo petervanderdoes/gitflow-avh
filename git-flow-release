@@ -507,6 +507,8 @@ v,verbose! verbose (more) output
 	eval set -- "${FLAGS_ARGV}"
 	base=${2:-$DEVELOP_BRANCH}
 
+	gitflow_override_flag_boolean "RELEASE_START_FETCH" "fetch"
+
 	# Run filter on the version
 	VERSION=$(run_filter_hook release-start-version $VERSION)
 
@@ -592,6 +594,20 @@ S,squash        Squash release during merge
 	# Parse arguments
 	parse_args "$@"
 
+	gitflow_override_flag_boolean "RELEASE_FINISH_FETCH" "fetch"
+	gitflow_override_flag_boolean "RELEASE_FINISH_SIGN" "sign"
+	gitflow_override_flag_boolean "RELEASE_FINISH_PUSH" "push"
+	gitflow_override_flag_boolean "RELEASE_FINISH_KEEP" "keep"
+	gitflow_override_flag_boolean "RELEASE_FINISH_KEEPREMOTE" "keepremote"
+	gitflow_override_flag_boolean "RELEASE_FINISH_KEEPLOCAL" "keeplocal"
+	gitflow_override_flag_boolean "RELEASE_FINISH_FORCE_DELETE" "force_delete"
+	gitflow_override_flag_boolean "RELEASE_FINISH_NOTAG" "notag"
+	gitflow_override_flag_boolean "RELEASE_FINISH_NOBACKMERGE" "nobackmerge"
+	gitflow_override_flag_boolean "RELEASE_FINISH_SQUASH" "squash"
+	gitflow_override_flag_string "RELEASE_FINISH_SIGNINGKEY" "signingkey"
+	gitflow_override_flag_string "RELEASE_FINISH_MESSAGE" "message"
+	gitflow_override_flag_string "RELEASE_FINISH_MESSAGEFILE" "messagefile"
+
 	# Run filter on the version
 	VERSION=$(run_filter_hook release-finish-version $VERSION)
 
@@ -664,6 +680,15 @@ S,squash 		Squash release during merge
 	# Parse arguments
 	FLAGS "$@" || exit $?
 	eval set -- "${FLAGS_ARGV}"
+
+	gitflow_override_flag_boolean "RELEASE_BRANCH_FETCH" "fetch"
+	gitflow_override_flag_boolean "RELEASE_BRANCH_SIGN" "sign"
+	gitflow_override_flag_boolean "RELEASE_BRANCH_PUSH" "push"
+	gitflow_override_flag_boolean "RELEASE_BRANCH_NOTAG" "notag"
+	gitflow_override_flag_boolean "RELEASE_BRANCH_SQUASH" "squash"
+	gitflow_override_flag_string "RELEASE_BRANCH_SIGNINGKEY" "signingkey"
+	gitflow_override_flag_string "RELEASE_BRANCH_MESSAGE" "message"
+	gitflow_override_flag_string "RELEASE_BRANCH_MESSAGEFILE" "messagefile"
 
 	# Read arguments into global variables
 	VERSION=$1
@@ -863,6 +888,9 @@ r,remote Delete remote branch
 
 	# Parse arguments
 	parse_args "$@"
+
+	gitflow_override_flag_boolean "RELEASE_DELETE_FETCH" "fetch"
+	gitflow_override_flag_boolean "RELEASE_DELETE_REMOTE" "remote"
 
 	gitflow_require_version_arg
 

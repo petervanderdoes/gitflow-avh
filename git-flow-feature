@@ -226,6 +226,8 @@ F,fetch Fetch from origin before performing local operation
 	eval set -- "${FLAGS_ARGV}"
 	base=${2:-$DEVELOP_BRANCH}
 
+	gitflow_override_flag_boolean "FEATURE_START_FETCH" "fetch"
+
 	require_base_is_local_branch "$base"
 	gitflow_require_name_arg
 	gitflow_config_set_base_branch $base $BRANCH
@@ -294,6 +296,15 @@ no-ff!          Never fast-forward during the merge
 
 	# Parse arguments
 	parse_args "$@"
+
+	gitflow_override_flag_boolean "FEATURE_FINISH_FETCH" "fetch"
+	gitflow_override_flag_boolean "FEATURE_FINISH_REBASE" "rebase"
+	gitflow_override_flag_boolean "FEATURE_FINISH_KEEP" "keep"
+	gitflow_override_flag_boolean "FEATURE_FINISH_KEEPREMOTE" "keepremote"
+	gitflow_override_flag_boolean "FEATURE_FINISH_KEEPLOCAL" "keeplocal"
+	gitflow_override_flag_boolean "FEATURE_FINISH_FORCE_DELETE" "force_delete"
+	gitflow_override_flag_boolean "FEATURE_FINISH_SQUASH" "squash"
+	gitflow_override_flag_boolean "FEATURE_FINISH_NO_FF" "no_ff"
 
 	expand_nameprefix_arg_or_current
 
@@ -639,6 +650,8 @@ i,interactive     Do an interactive rebase
 	# Parse arguments
 	parse_args "$@"
 
+	gitflow_override_flag_boolean "FEATURE_REBASE_INTERACTIVE" "interactive"
+
 	expand_nameprefix_arg_or_current
 	warn "Will try to rebase '$NAME'..."
 	require_clean_working_tree
@@ -745,6 +758,10 @@ r,remote          Delete remote branch
 
 	# Parse arguments
 	parse_args "$@"
+
+	# Check if we need to override the flags
+	gitflow_override_flag_boolean "FEATURE_DELETE_FORCE" "force"
+	gitflow_override_flag_boolean "FEATURE_DELETE_REMOTE" "remote"
 
 	expand_nameprefix_arg
 

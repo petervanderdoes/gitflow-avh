@@ -79,6 +79,37 @@ endswith() { [ "$1" != "${1%$2}" ]; }
 flag() { local FLAG; eval FLAG='$FLAGS_'$1; [ $FLAG -eq $FLAGS_TRUE ]; }
 noflag() { local FLAG; eval FLAG='$FLAGS_'$1; [ $FLAG -ne $FLAGS_TRUE ]; }
 
+# gf_determine_boolean
+# Check if given value can be interpreted as a boolean
+#
+# This function determines if the passed parameter is a valid boolean value.
+#
+# Param $1: string Value to check if it's a valid boolean
+#
+# Return: string FLAGS_TRUE|FLAGS_FALSE|FLAGS_ERROR
+#	FLAGS_TRUE if the parameter is a boolean TRUE
+#	FLAGS_FALSE if the parameter is a boolean FALSE
+#	FLAGS_ERROR if the parameter is not a boolean
+#
+gf_determine_boolean() {
+	local _return _value
+	_value="${1}"
+	case "${_value}" in
+	${FLAGS_TRUE} | [yY] | [yY][eE][sS] | [tT] | [tT][rR][uU][eE])
+		_return=${FLAGS_TRUE}
+		;;
+	${FLAGS_FALSE} | [nN] | [nN][oO] | [fF] | [fF][aA][lL][sS][eE])
+		_return=${FLAGS_FALSE}
+		;;
+
+	*)
+		_return=${FLAGS_ERROR}
+		;;
+	esac
+	unset _value
+	return ${_return}
+}
+
 #
 # Git specific common functionality
 #
@@ -406,6 +437,55 @@ gitflow_config_remove_base_branch() {
 
 	base=$1
 	$(git config --file=$GITFLOW_CONFIG --unset "branch.$branch.base" 2>/dev/null)
+}
+
+# gitflow_override_flag_boolean()
+#
+# Override a boolean flag
+#
+# Param $1: string The name of the environment variable
+# Param $2: string The flag name
+#
+gitflow_override_flag_boolean() {
+	local _variable _env_var
+
+	_env_var="GITFLOW_FLAG_"$1
+	eval "_variable=\$${_env_var}"
+	if [ -n ${_variable} ]; then
+		gf_determine_boolean ${_variable}
+		case "$?" in
+		${FLAGS_TRUE})
+			eval "FLAGS_${2}=${FLAGS_TRUE}"
+			;;
+		${FLAGS_FALSE})
+			eval "FLAGS_${2}=${FLAGS_FALSE}"
+			;;
+		${FLAGS_ERROR})
+			warn "Invalid value for ${2}"
+			;;
+		esac
+	fi
+	unset _variable _env_var
+	return ${FLAGS_TRUE}
+}
+
+# gitflow_override_flag_string()
+#
+# Override a string flag
+#
+# Param $1: string The name of the environment variable
+# Param $2: string The flag name
+#
+gitflow_override_flag_string() {
+	local _variable _env_var
+
+	_env_var="GITFLOW_FLAG_"$1
+	eval "_variable=\$${_env_var}"
+	if [ -n ${_variable} ]; then
+		eval "FLAGS_${2}=${_variable}"
+	fi
+	unset _variable _env_var
+	return ${FLAGS_TRUE}
 }
 
 #
