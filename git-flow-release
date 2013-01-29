@@ -82,6 +82,7 @@ _finish_from_develop() {
 				git_do merge --no-ff "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
 			else
 				git_do merge --squash "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+				flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$MASTER_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
 				git_do commit
 			fi
 	fi
@@ -133,6 +134,7 @@ _finish_from_develop() {
 			git_do merge --no-ff "$commit" || die "There were merge conflicts." # TODO: What do we do now?
 		else
 			git_do merge --squash "$commit" || die "There were merge conflicts." # TODO: What do we do now?
+			flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$DEVELOP_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
 			git_do commit
 		fi
 	fi
@@ -289,6 +291,7 @@ _finish_base() {
 			git_do merge --no-ff "$commit" || die "There were merge conflicts." # TODO: What do we do now?
 		else
 			git_do merge --squash "$commit" || die "There were merge conflicts." # TODO: What do we do now?
+			flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$BASE_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
 			git_do commit
 		fi
 	fi
@@ -590,6 +593,7 @@ S,squash        Squash release during merge
 	DEFINE_boolean 'notag' false "don't tag this release" n
 	DEFINE_boolean 'nobackmerge' false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
 	DEFINE_boolean 'squash' false "squash release during merge" S
+	DEFINE_boolean 'squash-info' false "add branch info during squash"
 
 	# Parse arguments
 	parse_args "$@"
@@ -604,6 +608,7 @@ S,squash        Squash release during merge
 	gitflow_override_flag_boolean "RELEASE_FINISH_NOTAG" "notag"
 	gitflow_override_flag_boolean "RELEASE_FINISH_NOBACKMERGE" "nobackmerge"
 	gitflow_override_flag_boolean "RELEASE_FINISH_SQUASH" "squash"
+	gitflow_override_flag_boolean "FEATURE_FINISH_SQUASH_INFO" "squash_info"
 	gitflow_override_flag_string "RELEASE_FINISH_SIGNINGKEY" "signingkey"
 	gitflow_override_flag_string "RELEASE_FINISH_MESSAGE" "message"
 	gitflow_override_flag_string "RELEASE_FINISH_MESSAGEFILE" "messagefile"
@@ -676,6 +681,7 @@ S,squash 		Squash release during merge
 	DEFINE_boolean 'push' false "push to $ORIGIN after performing finish" p
 	DEFINE_boolean 'notag' false "don't tag this release" n
 	DEFINE_boolean 'squash' false "squash release during merge" S
+	DEFINE_boolean 'squash-info' false "add branch info during squash"
 
 	# Parse arguments
 	FLAGS "$@" || exit $?
@@ -686,6 +692,7 @@ S,squash 		Squash release during merge
 	gitflow_override_flag_boolean "RELEASE_BRANCH_PUSH" "push"
 	gitflow_override_flag_boolean "RELEASE_BRANCH_NOTAG" "notag"
 	gitflow_override_flag_boolean "RELEASE_BRANCH_SQUASH" "squash"
+	gitflow_override_flag_boolean "FEATURE_FINISH_SQUASH_INFO" "squash_info"
 	gitflow_override_flag_string "RELEASE_BRANCH_SIGNINGKEY" "signingkey"
 	gitflow_override_flag_string "RELEASE_BRANCH_MESSAGE" "message"
 	gitflow_override_flag_string "RELEASE_BRANCH_MESSAGEFILE" "messagefile"
@@ -747,6 +754,7 @@ S,squash 		Squash release during merge
 				git_do merge --no-ff "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
 			else
 				git_do merge --squash "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+				flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$MASTER_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
 				git_do commit
 			fi
 	fi

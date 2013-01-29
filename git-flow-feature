@@ -292,6 +292,7 @@ no-ff!          Never fast-forward during the merge
 	DEFINE_boolean 'keeplocal' false "keep the local branch"
 	DEFINE_boolean 'force_delete' false "force delete feature branch after finish" D
 	DEFINE_boolean 'squash' false "squash feature during merge" S
+	DEFINE_boolean 'squash-info' false "add branch info during squash"
 	DEFINE_boolean 'no-ff!' false "Don't fast-forward ever during merge "
 
 	# Parse arguments
@@ -304,6 +305,7 @@ no-ff!          Never fast-forward during the merge
 	gitflow_override_flag_boolean "FEATURE_FINISH_KEEPLOCAL" "keeplocal"
 	gitflow_override_flag_boolean "FEATURE_FINISH_FORCE_DELETE" "force_delete"
 	gitflow_override_flag_boolean "FEATURE_FINISH_SQUASH" "squash"
+	gitflow_override_flag_boolean "FEATURE_FINISH_SQUASH_INFO" "squash_info"
 	gitflow_override_flag_boolean "FEATURE_FINISH_NO_FF" "no_ff"
 
 	expand_nameprefix_arg_or_current
@@ -412,6 +414,7 @@ no-ff!          Never fast-forward during the merge
 		fi
 	else
 		git_do merge --squash "$BRANCH"
+		flag squash_info && gitflow_create_squash_message "Merged feature branch '$BRANCH'" "$BASE_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
 		git_do commit
 	fi
 
