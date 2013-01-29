@@ -14,13 +14,18 @@
 
 # Changelog
 
-#### 1.5.0-dev.17
+#### 1.5.0-dev.23
 [Peter van der Does][petervanderdoes]
 * Add flag no-ff to feature finish.  
   This gives the ability to never fast-forward a merge, even when it's only 
   one commit. 
 * Bugfix: Error in a long flag name for release finish
 * Function in gitflow-shFlags refactored to make it faster.
+* Add flag --squash-info to release/feature finish.  
+  When you use the flag --squash while finishing a release or feature branch, 
+  the logs don;t make it clear which branch you merged. The new flag will add 
+  an extra comment to the commit message, stating which branch was used for the 
+  merge.
 
 
 #### 1.4.2
