@@ -488,6 +488,14 @@ gitflow_override_flag_string() {
 	return ${FLAGS_TRUE}
 }
 
+gitflow_squash_message() {
+	echo Squashed commit of the following:
+	echo
+	echo $1
+	echo
+	git log --no-merges --pretty=medium ^"$2" $3
+}
+
 #
 # Assertions for use in git-flow subcommands
 #

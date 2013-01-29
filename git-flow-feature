@@ -412,6 +412,7 @@ no-ff!          Never fast-forward during the merge
 		fi
 	else
 		git_do merge --squash "$BRANCH"
+		gitflow_squash_message "Merged feature branch '$BRANCH'" "$BASE_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
 		git_do commit
 	fi
 

@@ -82,6 +82,7 @@ _finish_from_develop() {
 				git_do merge --no-ff "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
 			else
 				git_do merge --squash "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+				gitflow_squash_message "Merged release branch '$BRANCH'" "$MASTER_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
 				git_do commit
 			fi
 	fi
@@ -133,6 +134,7 @@ _finish_from_develop() {
 			git_do merge --no-ff "$commit" || die "There were merge conflicts." # TODO: What do we do now?
 		else
 			git_do merge --squash "$commit" || die "There were merge conflicts." # TODO: What do we do now?
+			gitflow_squash_message "Merged release branch '$BRANCH'" "$DEVELOP_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
 			git_do commit
 		fi
 	fi
@@ -289,6 +291,7 @@ _finish_base() {
 			git_do merge --no-ff "$commit" || die "There were merge conflicts." # TODO: What do we do now?
 		else
 			git_do merge --squash "$commit" || die "There were merge conflicts." # TODO: What do we do now?
+			gitflow_squash_message "Merged release branch '$BRANCH'" "$BASE_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
 			git_do commit
 		fi
 	fi
@@ -747,6 +750,7 @@ S,squash 		Squash release during merge
 				git_do merge --no-ff "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
 			else
 				git_do merge --squash "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+				gitflow_squash_message "Merged release branch '$BRANCH'" "$MASTER_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
 				git_do commit
 			fi
 	fi
