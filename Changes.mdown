@@ -26,7 +26,7 @@
   the logs don;t make it clear which branch you merged. The new flag will add 
   an extra comment to the commit message, stating which branch was used for the 
   merge.
-
+* Bugfix: The contrib gitflow-installer.sh shows wrong installation instructions.
 
 #### 1.4.2
 * Bugfix: Update from upstream for shFlags

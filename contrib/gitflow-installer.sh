@@ -9,6 +9,15 @@
 
 # Updated for the fork at petervanderdoes
 
+usage() {
+	echo "Usage: [environment] gitflow-installer.sh [install|uninstall] [stable|develop]"
+	echo "Environment:"
+	echo "   PREFIX=$PREFIX"
+	echo "   REPO_HOME=$REPO_HOME"
+	echo "   REPO_NAME=$REPO_NAME"
+	exit 1
+}
+
 # Does this need to be smarter for each host OS?
 if [ -z "$PREFIX" ] ; then
 	PREFIX="/usr/local"
@@ -49,20 +58,12 @@ uninstall)
 	exit
 	;;
 help)
-	echo "Usage: [environment] gitflow-installer.sh [install|uninstall] [master|develop]"
-	echo "Environment:"
-	echo "   PREFIX=$PREFIX"
-	echo "   REPO_HOME=$REPO_HOME"
-	echo "   REPO_NAME=$REPO_NAME"
+	usage
 	exit
 	;;
 install)
 	if [ -z $2 ]; then
-		echo "Usage: [environment] gitflow-installer.sh [install|uninstall] [master|develop]"
-		echo "Environment:"
-		echo "   PREFIX=$PREFIX"
-		echo "   REPO_HOME=$REPO_HOME"
-		echo "   REPO_NAME=$REPO_NAME"
+		usage
 		exit
 	fi
 	echo "Installing git-flow to $BINDIR"
@@ -87,11 +88,7 @@ install)
 		cd "$OLDPWD"
 		;;
 	*)
-		echo "Usage: [environment] gitflow-installer.sh [install|uninstall] [master|develop]"
-		echo "Environment:"
-		echo "   PREFIX=$PREFIX"
-		echo "   REPO_HOME=$REPO_HOME"
-		echo "   REPO_NAME=$REPO_NAME"
+		usage
 		exit
 		;;
 	esac
@@ -109,11 +106,7 @@ install)
 	exit
 	;;
 *)
-	echo "Usage: [environment] gitflow-installer.sh [install|uninstall] [master|develop]"
-	echo "Environment:"
-	echo "   PREFIX=$PREFIX"
-	echo "   REPO_HOME=$REPO_HOME"
-	echo "   REPO_NAME=$REPO_NAME"
+	usage
 	exit
 	;;
 esac
