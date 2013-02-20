@@ -138,11 +138,16 @@ cmd_help() {
 
 # Parse arguments and set common variables
 parse_args() {
+	local current_branch
 	FLAGS "$@" || exit $?
 	eval set -- "${FLAGS_ARGV}"
 
 	# Read arguments into global variables
 	VERSION=$1
+	current_branch=`git_current_branch`
+	if [[ $VERSION == "" ]] && [[ $current_branch == $PREFIX* ]]; then
+		VERSION=${current_branch//$PREFIX/}
+	fi
 	BRANCH=$PREFIX$VERSION
 }
 
