@@ -226,6 +226,8 @@ F,fetch Fetch from origin before performing local operation
 	eval set -- "${FLAGS_ARGV}"
 	base=${2:-$DEVELOP_BRANCH}
 
+	gitflow_override_flag_boolean "FEATURE_START_FETCH" "fetch"
+
 	require_base_is_local_branch "$base"
 	gitflow_require_name_arg
 	gitflow_config_set_base_branch $base $BRANCH
@@ -278,6 +280,7 @@ keepremote!    Keep the remote branch
 keeplocal!     Keep the local branch
 D,force_delete Force delete feature branch after finish
 S,squash       Squash feature during merge
+no-ff!          Never fast-forward during the merge
 "
 	local finish_base
 
@@ -289,9 +292,21 @@ S,squash       Squash feature during merge
 	DEFINE_boolean 'keeplocal' false "keep the local branch"
 	DEFINE_boolean 'force_delete' false "force delete feature branch after finish" D
 	DEFINE_boolean 'squash' false "squash feature during merge" S
+	DEFINE_boolean 'squash-info' false "add branch info during squash"
+	DEFINE_boolean 'no-ff!' false "Don't fast-forward ever during merge "
 
 	# Parse arguments
 	parse_args "$@"
+
+	gitflow_override_flag_boolean "FEATURE_FINISH_FETCH" "fetch"
+	gitflow_override_flag_boolean "FEATURE_FINISH_REBASE" "rebase"
+	gitflow_override_flag_boolean "FEATURE_FINISH_KEEP" "keep"
+	gitflow_override_flag_boolean "FEATURE_FINISH_KEEPREMOTE" "keepremote"
+	gitflow_override_flag_boolean "FEATURE_FINISH_KEEPLOCAL" "keeplocal"
+	gitflow_override_flag_boolean "FEATURE_FINISH_FORCE_DELETE" "force_delete"
+	gitflow_override_flag_boolean "FEATURE_FINISH_SQUASH" "squash"
+	gitflow_override_flag_boolean "FEATURE_FINISH_SQUASH_INFO" "squash_info"
+	gitflow_override_flag_boolean "FEATURE_FINISH_NO_FF" "no_ff"
 
 	expand_nameprefix_arg_or_current
 
@@ -386,15 +401,21 @@ S,squash       Squash feature during merge
 
 	# Merge into BASE
 	git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
-	if [ "$(git rev-list -n2 "$BASE_BRANCH..$BRANCH" | wc -l)" -eq 1 ]; then
-		git_do merge --ff "$BRANCH"
-	else
-		if noflag squash; then
+
+	if noflag squash; then
+		if flag no_ff; then
 			git_do merge --no-ff "$BRANCH"
 		else
-			git_do merge --squash "$BRANCH"
-			git_do commit
+			if [ "$(git rev-list -n2 "$BASE_BRANCH..$BRANCH" | wc -l)" -eq 1 ]; then
+				git_do merge --ff "$BRANCH"
+			else
+				git_do merge --no-ff "$BRANCH"
+			fi
 		fi
+	else
+		git_do merge --squash "$BRANCH"
+		flag squash_info && gitflow_create_squash_message "Merged feature branch '$BRANCH'" "$BASE_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
+		git_do commit
 	fi
 
 	if [ $? -ne 0 ]; then
@@ -632,6 +653,8 @@ i,interactive     Do an interactive rebase
 	# Parse arguments
 	parse_args "$@"
 
+	gitflow_override_flag_boolean "FEATURE_REBASE_INTERACTIVE" "interactive"
+
 	expand_nameprefix_arg_or_current
 	warn "Will try to rebase '$NAME'..."
 	require_clean_working_tree
@@ -738,6 +761,10 @@ r,remote          Delete remote branch
 
 	# Parse arguments
 	parse_args "$@"
+
+	# Check if we need to override the flags
+	gitflow_override_flag_boolean "FEATURE_DELETE_FORCE" "force"
+	gitflow_override_flag_boolean "FEATURE_DELETE_REMOTE" "remote"
 
 	expand_nameprefix_arg
 

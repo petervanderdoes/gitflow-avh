@@ -176,6 +176,8 @@ F,fetch           Fetch from origin before performing local operation
 	eval set -- "${FLAGS_ARGV}"
 	base=${2:-$MASTER_BRANCH}
 
+	gitflow_override_flag_boolean "HOTFIX_START_FETCH" "fetch"
+
 	# No need to continue if not clean
 	require_base_is_local_branch "$base"
 	require_clean_working_tree
@@ -333,6 +335,19 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 
 	# Parse arguments
 	parse_args "$@"
+
+	gitflow_override_flag_boolean "HOTFIX_FINISH_FETCH" "fetch"
+	gitflow_override_flag_boolean "HOTFIX_FINISH_SIGN" "sign"
+	gitflow_override_flag_boolean "HOTFIX_FINISH_PUSH" "push"
+	gitflow_override_flag_boolean "HOTFIX_FINISH_KEEP" "keep"
+	gitflow_override_flag_boolean "HOTFIX_FINISH_KEEPREMOTE" "keepremote"
+	gitflow_override_flag_boolean "HOTFIX_FINISH_KEEPLOCAL" "keeplocal"
+	gitflow_override_flag_boolean "HOTFIX_FINISH_FORCE_DELETE" "force_delete"
+	gitflow_override_flag_boolean "HOTFIX_FINISH_NOTAG" "notag"
+	gitflow_override_flag_boolean "HOTFIX_FINISH_NOBACKMERGE" "nobackmerge"
+	gitflow_override_flag_string "HOTFIX_FINISH_SIGNINGKEY" "signingkey"
+	gitflow_override_flag_string "HOTFIX_FINISH_MESSAGE" "message"
+	gitflow_override_flag_string "HOTFIX_FINISH_MESSAGEFILE" "messagefile"
 
 	remotebranchdeleted=$FLAGS_FALSE
 	localbranchdeleted=$FLAGS_FALSE
@@ -578,6 +593,9 @@ r,remote          Delete remote branch
 
 	# Parse arguments
 	parse_args "$@"
+
+	gitflow_override_flag_boolean "HOTFIX_DELETE_FORCE" "force"
+	gitflow_override_flag_boolean "HOTFIX_FINISH_REMOTE" "remote"
 
 	gitflow_require_version_arg
 

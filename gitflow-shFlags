@@ -536,15 +536,18 @@ _flags_getFlagInfo()
 _flags_itemInList() {
   _flags_str_=$1
   shift
+  _flags_list_=" ${*:-} "
 
-  echo " ${*:-} " |grep " ${_flags_str_} " >/dev/null
-  if [ $? -eq 0 ]; then
-    flags_return=${FLAGS_TRUE}
-  else
-    flags_return=${FLAGS_FALSE}
-  fi
+  case ${_flags_list_} in
+      *\ ${_flags_str_}\ *)
+      flags_return=$FLAGS_TRUE
+      ;;
+    *)
+      flags_return=$FLAGS_FALSE
+      ;;
+  esac
 
-  unset _flags_str_
+  unset _flags_str_ _flags_list_
   return ${flags_return}
 }
 
