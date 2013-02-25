@@ -14,6 +14,9 @@
 
 # Changelog
 
+#### 1.6.0-dev.1
+* Preparation for new development cycle.
+
 #### 1.5.0
 [Peter van der Does][petervanderdoes]
 * Add flag no-ff to feature finish.  
