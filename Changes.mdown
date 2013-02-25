@@ -14,7 +14,7 @@
 
 # Changelog
 
-#### 1.5.0-dev.23
+#### 1.5.0
 [Peter van der Does][petervanderdoes]
 * Add flag no-ff to feature finish.  
   This gives the ability to never fast-forward a merge, even when it's only 
