@@ -16,6 +16,8 @@
 
 #### 1.5.0
 [Peter van der Does][petervanderdoes]
+* Add the ability to set defaults for flag.
+  You can now set defaults for flags by setting environment variables.
 * Add flag no-ff to feature finish.  
   This gives the ability to never fast-forward a merge, even when it's only 
   one commit. 
