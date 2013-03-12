@@ -11,14 +11,18 @@
 [mykehsd]: https://github.com/mykehsd
 [jeromebaum]: https://github.com/jeromebaum 
 [adutra]: https://github.com/adutra
-[FloGa]: https://github.com/FloGa
+[floga]: https://github.com/FloGa
+[merelyapseudonym]: https://github.com/MerelyAPseudonym
 
 # Changelog
 
 #### 1.5.1-rc.1
 * Fix some of the flag override environment variable names.
 
- [Florian Gamböck][FloGa]
+[MerelyAPseudonym][merelyapseudonym]
+* Add default flag for flag showcommands.
+
+ [Florian Gamböck][floga]
  * Bugfix: Fix variable non-zero test  
    Due to missing quotation marks, the -n test won't work properly, leading to 
    always returning true and overriding variables with nothing.
