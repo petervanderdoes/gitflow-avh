@@ -105,7 +105,7 @@ main() {
 	. "$GITFLOW_DIR/gitflow-shFlags"
 	FLAGS_PARENT="git flow"
 
-		# Load common functionality
+	# Load common functionality
 	. "$GITFLOW_DIR/gitflow-common"
 
 	# allow user to request git action logging
