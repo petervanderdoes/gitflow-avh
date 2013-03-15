@@ -17,7 +17,7 @@
 # Changelog
 
 <<<<<<< HEAD
-#### 1.6.0-dev.1
+#### 1.6.0
 * Preparation for new development cycle.
 =======
 #### 1.5.1
