@@ -385,7 +385,7 @@ git flow release publish
 git flow release track
 git flow release delete
 
-Manage your feature branches.
+Manage your release branches.
 
 For more specific help type the command followed by --help
 --
@@ -608,7 +608,7 @@ S,squash        Squash release during merge
 	gitflow_override_flag_boolean "RELEASE_FINISH_NOTAG" "notag"
 	gitflow_override_flag_boolean "RELEASE_FINISH_NOBACKMERGE" "nobackmerge"
 	gitflow_override_flag_boolean "RELEASE_FINISH_SQUASH" "squash"
-	gitflow_override_flag_boolean "FEATURE_FINISH_SQUASH_INFO" "squash_info"
+	gitflow_override_flag_boolean "RELEASE_FINISH_SQUASH_INFO" "squash_info"
 	gitflow_override_flag_string "RELEASE_FINISH_SIGNINGKEY" "signingkey"
 	gitflow_override_flag_string "RELEASE_FINISH_MESSAGE" "message"
 	gitflow_override_flag_string "RELEASE_FINISH_MESSAGEFILE" "messagefile"
@@ -692,7 +692,7 @@ S,squash 		Squash release during merge
 	gitflow_override_flag_boolean "RELEASE_BRANCH_PUSH" "push"
 	gitflow_override_flag_boolean "RELEASE_BRANCH_NOTAG" "notag"
 	gitflow_override_flag_boolean "RELEASE_BRANCH_SQUASH" "squash"
-	gitflow_override_flag_boolean "FEATURE_FINISH_SQUASH_INFO" "squash_info"
+	gitflow_override_flag_boolean "RELEASE_BRANCH_SQUASH_INFO" "squash_info"
 	gitflow_override_flag_string "RELEASE_BRANCH_SIGNINGKEY" "signingkey"
 	gitflow_override_flag_string "RELEASE_BRANCH_MESSAGE" "message"
 	gitflow_override_flag_string "RELEASE_BRANCH_MESSAGEFILE" "messagefile"

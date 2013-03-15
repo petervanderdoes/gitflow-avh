@@ -11,8 +11,22 @@
 [mykehsd]: https://github.com/mykehsd
 [jeromebaum]: https://github.com/jeromebaum 
 [adutra]: https://github.com/adutra
+[floga]: https://github.com/FloGa
+[merelyapseudonym]: https://github.com/MerelyAPseudonym
 
 # Changelog
+
+#### 1.5.1
+[Peter van der Does][petervanderdoes]
+* Fix some of the flag override environment variable names.
+
+[Joshua P. Tilles][merelyapseudonym]
+* Add default flag for flag showcommands.
+
+ [Florian Gamböck][floga]
+ * Bugfix: Fix variable non-zero test  
+   Due to missing quotation marks, the -n test won't work properly, leading to 
+   always returning true and overriding variables with nothing.
 
 #### 1.5.0
 [Peter van der Does][petervanderdoes]
@@ -25,7 +39,7 @@
 * Function in gitflow-shFlags refactored to make it faster.
 * Add flag --squash-info to release/feature finish.  
   When you use the flag --squash while finishing a release or feature branch, 
-  the logs don;t make it clear which branch you merged. The new flag will add 
+  the logs don't make it clear which branch you merged. The new flag will add 
   an extra comment to the commit message, stating which branch was used for the 
   merge.
 * Bugfix: The contrib gitflow-installer.sh shows wrong installation instructions.
