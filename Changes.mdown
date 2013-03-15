@@ -17,9 +17,10 @@
 # Changelog
 
 #### 1.5.1-rc.1
+[Peter van der Does][petervanderdoes]
 * Fix some of the flag override environment variable names.
 
-[MerelyAPseudonym][merelyapseudonym]
+[Joshua P. Tilles][merelyapseudonym]
 * Add default flag for flag showcommands.
 
  [Florian Gamböck][floga]
@@ -38,7 +39,7 @@
 * Function in gitflow-shFlags refactored to make it faster.
 * Add flag --squash-info to release/feature finish.  
   When you use the flag --squash while finishing a release or feature branch, 
-  the logs don;t make it clear which branch you merged. The new flag will add 
+  the logs don't make it clear which branch you merged. The new flag will add 
   an extra comment to the commit message, stating which branch was used for the 
   merge.
 * Bugfix: The contrib gitflow-installer.sh shows wrong installation instructions.
