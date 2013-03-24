@@ -17,7 +17,8 @@
 # Changelog
 
 #### 1.5.2-rc.1
-* Preparation hotfix.
+ [Florian Gamböck][floga]
+ * Bugfix: Fix variable name in hotfix
 
 #### 1.5.1
 [Peter van der Does][petervanderdoes]
