@@ -449,6 +449,9 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
 			else 
 				tagmessage=$(git config --get gitflow.config.tagmessage)
+				if [ "$(git config --get gitflow.config.autotagmessage)" = "true" ]; then
+					[ "$tagmessage" = "" ] && tagmessage="$VERSION_PREFIX$VERSION" || die "Both configs autotagmessage and tagmessage are enabled. Please disable either of them."
+				fi
 			fi
 		opts="-a"
 		flag sign && opts="$opts -s"

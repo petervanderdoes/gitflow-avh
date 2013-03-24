@@ -96,6 +96,9 @@ _finish_from_develop() {
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
 			else 
 				tagmessage=$(git config --get gitflow.config.tagmessage)
+				if [ "$(git config --get gitflow.config.autotagmessage)" = "true" ]; then
+					[ "$tagmessage" = "" ] && tagmessage="$VERSION_PREFIX$VERSION" || die "Both configs autotagmessage and tagmessage are enabled. Please disable either of them."
+				fi
 			fi
 			opts="-a"
 			flag sign && opts="$opts -s"
@@ -266,6 +269,9 @@ _finish_base() {
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
 			else 
 				tagmessage=$(git config --get gitflow.config.tagmessage)
+				if [ "$(git config --get gitflow.config.autotagmessage)" = "true" ]; then
+					[ "$tagmessage" = "" ] && tagmessage="$VERSION_PREFIX$VERSION" || die "Both configs autotagmessage and tagmessage are enabled. Please disable either of them."
+				fi
 			fi
 			opts="-a"
 			flag sign && opts="$opts -s"
@@ -774,6 +780,9 @@ S,squash 		Squash release during merge
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
 			else 
 				tagmessage=$(git config --get gitflow.config.tagmessage)
+				if [ "$(git config --get gitflow.config.autotagmessage)" = "true" ]; then
+					[ "$tagmessage" = "" ] && tagmessage="$VERSION_PREFIX$VERSION" || die "Both configs autotagmessage and tagmessage are enabled. Please disable either of them."
+				fi
 			fi
 			opts="-a"
 			flag sign && opts="$opts -s"
