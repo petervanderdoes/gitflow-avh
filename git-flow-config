@@ -125,6 +125,9 @@ file= use given config file
 
 	output=$(git config $gitflow_config_option --get gitflow.prefix.versiontag)
 	echo "Version tag prefix: $output "
+
+	output=$(git config $gitflow_config_option --get gitflow.config.tagmessage)
+	echo "Custom tag message: $output "
 }
 
 cmd_set() {
@@ -182,6 +185,10 @@ file= use given config file
 	versiontagprefix)
 		cfg_option="gitflow.prefix.versiontag"
 		txt="Version tag prefix"
+		;;
+	tagmessage)
+		cfg_option="gitflow.config.tagmessage"
+		txt="Custom tag message"
 		;;
 	*)
 		die_help "Invalid option given."
