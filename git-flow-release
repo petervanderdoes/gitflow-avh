@@ -40,7 +40,7 @@
 # Called when the base of the release is the $DEVELOP_BRANCH
 #
 _finish_from_develop() {
-	local opts merge_branch commit keepmsg remotebranchdeleted localbranchdeleted
+	local opts merge_branch commit keepmsg remotebranchdeleted localbranchdeleted tagmessage
 
 	remotebranchdeleted=$FLAGS_FALSE
 	localbranchdeleted=$FLAGS_FALSE
@@ -94,12 +94,18 @@ _finish_from_develop() {
 		if ! git_tag_exists "$VERSION_PREFIX$VERSION"; then
 			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
+			else 
+				tagmessage=$(git config --get gitflow.config.tagmessage)
+				if [ "$(git config --get gitflow.config.autotagmessage)" = "true" ]; then
+					[ "$tagmessage" = "" ] && tagmessage="$VERSION_PREFIX$VERSION" || die "Both configs autotagmessage and tagmessage are enabled. Please disable either of them."
+				fi
 			fi
 			opts="-a"
 			flag sign && opts="$opts -s"
 			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
 			[ "$FLAGS_message" != "" ] && opts="$opts -m '$FLAGS_message'"
 			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
+			[ "$tagmessage" != "" ] && opts="$opts -m '$tagmessage'"
 			eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
 		fi
 	fi
@@ -223,7 +229,7 @@ _finish_from_develop() {
 #
 
 _finish_base() {
-	local opts merge_branch commit keepmsg localbranchdeleted remotebranchdeleted
+	local opts merge_branch commit keepmsg localbranchdeleted remotebranchdeleted tagmessage
 
 	remotebranchdeleted=$FLAGS_FALSE
 	localbranchdeleted=$FLAGS_FALSE
@@ -261,12 +267,18 @@ _finish_base() {
 		if ! git_tag_exists "$VERSION_PREFIX$VERSION"; then
 			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
+			else 
+				tagmessage=$(git config --get gitflow.config.tagmessage)
+				if [ "$(git config --get gitflow.config.autotagmessage)" = "true" ]; then
+					[ "$tagmessage" = "" ] && tagmessage="$VERSION_PREFIX$VERSION" || die "Both configs autotagmessage and tagmessage are enabled. Please disable either of them."
+				fi
 			fi
 			opts="-a"
 			flag sign && opts="$opts -s"
 			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
 			[ "$FLAGS_message" != "" ] && opts="$opts -m '$FLAGS_message'"
 			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
+			[ "$tagmessage" != "" ] && opts="$opts -m '$tagmessage'"
 			eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
 		fi
 	fi
@@ -670,7 +682,7 @@ p,push 			Push to origin after performing finish
 n,tag 			Don't tag this release
 S,squash 		Squash release during merge
 "
-	local opts
+	local opts tagmessage
 
 	# Define flags
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
@@ -766,12 +778,18 @@ S,squash 		Squash release during merge
 		if ! git_tag_exists "$VERSION_PREFIX$VERSION"; then
 			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
+			else 
+				tagmessage=$(git config --get gitflow.config.tagmessage)
+				if [ "$(git config --get gitflow.config.autotagmessage)" = "true" ]; then
+					[ "$tagmessage" = "" ] && tagmessage="$VERSION_PREFIX$VERSION" || die "Both configs autotagmessage and tagmessage are enabled. Please disable either of them."
+				fi
 			fi
 			opts="-a"
 			flag sign && opts="$opts -s"
 			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
 			[ "$FLAGS_message" != "" ] && opts="$opts -m '$FLAGS_message'"
 			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
+			[ "$tagmessage" != "" ] && opts="$opts -m '$tagmessage'"
 			eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
 		fi
 	fi

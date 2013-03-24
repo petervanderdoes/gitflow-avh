@@ -125,6 +125,12 @@ file= use given config file
 
 	output=$(git config $gitflow_config_option --get gitflow.prefix.versiontag)
 	echo "Version tag prefix: $output "
+
+	output=$(git config $gitflow_config_option --get gitflow.config.autotagmessage)
+	echo "Automatic tag message: $output "
+
+	output=$(git config $gitflow_config_option --get gitflow.config.tagmessage)
+	echo "Custom tag message: $output "
 }
 
 cmd_set() {
@@ -183,6 +189,14 @@ file= use given config file
 		cfg_option="gitflow.prefix.versiontag"
 		txt="Version tag prefix"
 		;;
+	autotagmessage)
+		cfg_option="gitflow.config.autotagmessage"
+		txt="Automatic tag message"
+		;;
+	tagmessage)
+		cfg_option="gitflow.config.tagmessage"
+		txt="Custom tag message"
+		;;
 	*)
 		die_help "Invalid option given."
 		;;
@@ -214,6 +228,20 @@ file= use given config file
 		elif ! git_local_branch_exists "$value"; then
 			die "Local branch '$value' does not exist."
 		fi
+	fi
+
+	if [ $OPTION = "autotagmessage" ]; then
+		case $value in
+		true | on | 1)
+			value=true
+			;;
+		false | off | 0)
+			value=false
+			;;
+		*)
+			die "autotagmessage is a boolean option. Set it to true or false."
+			;;
+		esac
 	fi
 
 	git_do config $gitflow_config_option $cfg_option "$value"
