@@ -497,7 +497,7 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 		# Always delete remote first
 		if noflag keepremote;then
 			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-				git_remote_branch_delete "$BRANCH" && remotebranchdeleted=$FLAGSS_TRUE
+				git_remote_branch_delete "$BRANCH" && remotebranchdeleted=$FLAGS_TRUE
 			fi
 		fi
 
@@ -507,9 +507,9 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 				git_do checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
 			fi
 			if flag force_delete; then
-				git_do branch -D "$BRANCH" && localbranchdeleted=$FLAGSS_TRUE
+				git_do branch -D "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
 			else
-				git_do branch -d "$BRANCH" && localbranchdeleted=$FLAGSS_TRUE
+				git_do branch -d "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
 			fi
 		fi
 
