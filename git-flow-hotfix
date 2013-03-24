@@ -317,7 +317,7 @@ D,force_delete    Force delete hotfix branch after finish
 n,notag           Don't tag this release
 b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 "
-	local opts commit keepmsg remotebranchdeleted localbranchdeleted
+	local opts commit keepmsg remotebranchdeleted localbranchdeleted tagmessage
 
 	# Define flags
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
@@ -447,12 +447,15 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 		if ! git_tag_exists "$VERSION_PREFIX$VERSION"; then
 			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
+			elif [ "$(git config --get gitflow.config.autotagmessage)" = "true" ]; then
+				tagmessage="$VERSION_PREFIX$VERSION"
 			fi
 		opts="-a"
 		flag sign && opts="$opts -s"
 		[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
 		[ "$FLAGS_message" != "" ] && opts="$opts -m '$FLAGS_message'"
 		[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
+		[ "$tagmessage" != "" ] && opts="$opts -m '$tagmessage'"
 		eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
 		fi
 	fi
