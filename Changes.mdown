@@ -16,6 +16,9 @@
 
 # Changelog
 
+#### 1.5.2-rc.1
+* Preparation hotfix.
+
 #### 1.5.1
 [Peter van der Does][petervanderdoes]
 * Fix some of the flag override environment variable names.
