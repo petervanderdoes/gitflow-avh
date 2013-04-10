@@ -349,6 +349,7 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 	gitflow_override_flag_string "HOTFIX_FINISH_MESSAGE" "message"
 	gitflow_override_flag_string "HOTFIX_FINISH_MESSAGEFILE" "messagefile"
 
+
 	remotebranchdeleted=$FLAGS_FALSE
 	localbranchdeleted=$FLAGS_FALSE
 	gitflow_require_version_arg
@@ -448,12 +449,16 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
 			fi
-		opts="-a"
-		flag sign && opts="$opts -s"
-		[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
-		[ "$FLAGS_message" != "" ] && opts="$opts -m '$FLAGS_message'"
-		[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
-		eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
+			opts="-a"
+			flag sign && opts="$opts -s"
+			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
+			if [ "$FLAGS_message" != "" ]; then
+				# Run filter on the tag message
+				FLAGS_message=$(run_filter_hook hotfix-finish-tag-message "${FLAGS_message}" "$VERSION_PREFIX$VERSION")
+				opts="$opts -m '$FLAGS_message'"
+			fi
+			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
+			eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
 		fi
 	fi
 
