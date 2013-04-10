@@ -94,7 +94,8 @@ _finish_from_develop() {
 		if ! git_tag_exists "$VERSION_PREFIX$VERSION"; then
 			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
-			elif [ "$(git config --get gitflow.config.autotagmessage)" = "true" ]; then
+			fi
+			if [ "$FLAGS_message" = "" ] && [ "$FLAGS_messagefile" = "" ] && [ "$(git config --get gitflow.config.autotagmessage)" = "true" ]; then
 				tagmessage="$VERSION_PREFIX$VERSION"
 			fi
 			opts="-a"
@@ -264,7 +265,8 @@ _finish_base() {
 		if ! git_tag_exists "$VERSION_PREFIX$VERSION"; then
 			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
-			elif [ "$(git config --get gitflow.config.autotagmessage)" = "true" ]; then
+			fi
+			if [ "$FLAGS_message" = "" ] && [ "$FLAGS_messagefile" = "" ] && [ "$(git config --get gitflow.config.autotagmessage)" = "true" ]; then
 				tagmessage="$VERSION_PREFIX$VERSION"
 			fi
 			opts="-a"
@@ -772,7 +774,8 @@ S,squash 		Squash release during merge
 		if ! git_tag_exists "$VERSION_PREFIX$VERSION"; then
 			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
-			elif [ "$(git config --get gitflow.config.autotagmessage)" = "true" ]; then
+			fi
+			if [ "$FLAGS_message" = "" ] && [ "$FLAGS_messagefile" = "" ] && [ "$(git config --get gitflow.config.autotagmessage)" = "true" ]; then
 				tagmessage="$VERSION_PREFIX$VERSION"
 			fi
 			opts="-a"
