@@ -637,18 +637,20 @@ cmd_co() {
 
 cmd_rebase() {
 	OPTIONS_SPEC="\
-git flow feature rebase [-h] [-i] [<name|nameprefix>]
+git flow feature rebase [-h] [-i] [-p] [<name|nameprefix>]
 
-Rebase <name> on <develop>
+Rebase <name> on <base_branch>
 --
 h,help!           Show this help
-showcommands!    Show git commands while executing them
+showcommands!     Show git commands while executing them
 i,interactive     Do an interactive rebase
+p,preserve-merges Preserve merges
 "
 	local opts
 
 	# Define flags
 	DEFINE_boolean 'interactive' false 'do an interactive rebase' i
+	DEFINE_boolean 'preserve-merges' false 'try to recreate merges' p
 
 	# Parse arguments
 	parse_args "$@"
@@ -669,6 +671,9 @@ i,interactive     Do an interactive rebase
 	git_do checkout -q "$BRANCH"  || die "Could not check out branch '$BRANCH'."
 	if flag interactive; then
 		opts="$opts -i"
+	fi
+	if flag preserve_merges; then
+		opts="$opts -p"
 	fi
 	git_do rebase $opts "$BASE_BRANCH"
 }
