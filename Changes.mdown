@@ -23,6 +23,7 @@
   - filter-flow-hotfix-finish-tag-message
   - filter-flow-release-finish-tag-message
   - filter-flow-release-branch-tag-message
+* Bugfix: Typo in documentation.
 
 [Florian Gamböck][floga]
 * Bugfix: Fix variable name in hotfix
