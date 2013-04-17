@@ -267,26 +267,28 @@ F,fetch Fetch from origin before performing local operation
 
 cmd_finish() {
 	OPTIONS_SPEC="\
-git flow feature finish [-h] [-F] [-r] [-k] [-D] [-S] <name|nameprefix>
+git flow feature finish [-h] [-F] [-r] [-p] [-k] [-D] [-S] [--no-ff] <name|nameprefix>
 
 Finish feature <name>
 --
-h,help!        Show this help
-showcommands!    Show git commands while executing them
-F,fetch        Fetch from origin before performing finish
-r,rebase       Rebase before merging
-k,keep         Keep branch after performing finish
-keepremote!    Keep the remote branch
-keeplocal!     Keep the local branch
-D,force_delete Force delete feature branch after finish
-S,squash       Squash feature during merge
-no-ff!          Never fast-forward during the merge
+h,help!            Show this help
+showcommands!      Show git commands while executing them
+F,fetch            Fetch from origin before performing finish
+r,rebase           Rebase before merging
+p,preserve-merges  Preserve merges while rebasing
+k,keep             Keep branch after performing finish
+keepremote!        Keep the remote branch
+keeplocal!         Keep the local branch
+D,force_delete     Force delete feature branch after finish
+S,squash           Squash feature during merge
+no-ff!             Never fast-forward during the merge
 "
 	local finish_base
 
 	# Define flags
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
 	DEFINE_boolean 'rebase' false "rebase before merging" r
+	DEFINE_boolean 'preserve-merges' false 'try to recreate merges while rebasing' p
 	DEFINE_boolean 'keep' false "keep branch after performing finish" k
 	DEFINE_boolean 'keepremote' false "keep the remote branch"
 	DEFINE_boolean 'keeplocal' false "keep the local branch"
@@ -300,6 +302,7 @@ no-ff!          Never fast-forward during the merge
 
 	gitflow_override_flag_boolean "FEATURE_FINISH_FETCH" "fetch"
 	gitflow_override_flag_boolean "FEATURE_FINISH_REBASE" "rebase"
+	gitflow_override_flag_boolean "FEATURE_FINISH_PRESERVE_MERGES" "preserve_merges"
 	gitflow_override_flag_boolean "FEATURE_FINISH_KEEP" "keep"
 	gitflow_override_flag_boolean "FEATURE_FINISH_KEEPREMOTE" "keepremote"
 	gitflow_override_flag_boolean "FEATURE_FINISH_KEEPLOCAL" "keeplocal"
@@ -390,7 +393,14 @@ no-ff!          Never fast-forward during the merge
 
 	# If the user wants to rebase, do that first
 	if flag rebase; then
-		if ! git flow feature rebase "$NAME"; then
+        local _rebase_opts=""
+        if flag preserve_merges; then
+            _rebase_opts="$_rebase_opts -p"
+        fi
+        if flag showcommands; then
+            _rebase_opts="$_rebase_opts --showcommands"
+        fi
+		if ! git flow feature rebase $_rebase_opts "$NAME"; then
 			warn "Finish was aborted due to conflicts during rebase."
 			warn "Please finish the rebase manually now."
 			warn "When finished, re-run:"
@@ -656,6 +666,7 @@ p,preserve-merges Preserve merges
 	parse_args "$@"
 
 	gitflow_override_flag_boolean "FEATURE_REBASE_INTERACTIVE" "interactive"
+	gitflow_override_flag_boolean "FEATURE_REBASE_PRESERVE_MERGES" "preserve_merges"
 
 	expand_nameprefix_arg_or_current
 
