@@ -13,6 +13,7 @@
 [adutra]: https://github.com/adutra
 [floga]: https://github.com/FloGa
 [merelyapseudonym]: https://github.com/MerelyAPseudonym
+[shpoont]: https://github.com/shpoont
 
 # Changelog
 
@@ -27,6 +28,10 @@
 
 [Florian Gamböck][floga]
 * Bugfix: Fix variable name in hotfix
+
+[Leonid Komarovsky][shpoont]
+* git flow rebase will rebase against its base branch instead of develop.
+* Add flag --preserve-merges for feature rebase or feature finish.
 
 #### 1.5.1
 [Peter van der Does][petervanderdoes]
