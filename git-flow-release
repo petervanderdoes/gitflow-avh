@@ -98,7 +98,11 @@ _finish_from_develop() {
 			opts="-a"
 			flag sign && opts="$opts -s"
 			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
-			[ "$FLAGS_message" != "" ] && opts="$opts -m '$FLAGS_message'"
+			if [ "$FLAGS_message" != "" ]; then
+				# Run filter on the tag message
+				FLAGS_message=$(run_filter_hook release-finish-tag-message "${FLAGS_message}" "$VERSION_PREFIX$VERSION")
+				opts="$opts -m '$FLAGS_message'"
+			fi
 			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
 			eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
 		fi
@@ -265,7 +269,11 @@ _finish_base() {
 			opts="-a"
 			flag sign && opts="$opts -s"
 			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
-			[ "$FLAGS_message" != "" ] && opts="$opts -m '$FLAGS_message'"
+			if [ "$FLAGS_message" != "" ]; then
+				# Run filter on the tag message
+				FLAGS_message=$(run_filter_hook release-finish-tag-message "${FLAGS_message}" "$VERSION_PREFIX$VERSION")
+				opts="$opts -m '$FLAGS_message'"
+			fi
 			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
 			eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
 		fi
@@ -770,7 +778,11 @@ S,squash 		Squash release during merge
 			opts="-a"
 			flag sign && opts="$opts -s"
 			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
-			[ "$FLAGS_message" != "" ] && opts="$opts -m '$FLAGS_message'"
+			if [ "$FLAGS_message" != "" ]; then
+				# Run filter on the tag message
+				FLAGS_message=$(run_filter_hook release-branch-tag-message "${FLAGS_message}" "$VERSION_PREFIX$VERSION")
+				opts="$opts -m '$FLAGS_message'"
+			fi
 			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
 			eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
 		fi

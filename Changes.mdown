@@ -13,8 +13,25 @@
 [adutra]: https://github.com/adutra
 [floga]: https://github.com/FloGa
 [merelyapseudonym]: https://github.com/MerelyAPseudonym
+[shpoont]: https://github.com/shpoont
 
 # Changelog
+
+#### 1.5.2-rc.1
+[Peter van der Does][petervanderdoes]
+* Add filter for tag message.
+  If a tag message is given, the message can be modified using the filters:
+  - filter-flow-hotfix-finish-tag-message
+  - filter-flow-release-finish-tag-message
+  - filter-flow-release-branch-tag-message
+* Bugfix: Typo in documentation.
+
+[Florian Gamböck][floga]
+* Bugfix: Fix variable name in hotfix
+
+[Leonid Komarovsky][shpoont]
+* git flow rebase will rebase against its base branch instead of develop.
+* Add flag --preserve-merges for feature rebase or feature finish.
 
 #### 1.5.1
 [Peter van der Does][petervanderdoes]
@@ -23,10 +40,10 @@
 [Joshua P. Tilles][merelyapseudonym]
 * Add default flag for flag showcommands.
 
- [Florian Gamböck][floga]
- * Bugfix: Fix variable non-zero test  
-   Due to missing quotation marks, the -n test won't work properly, leading to 
-   always returning true and overriding variables with nothing.
+[Florian Gamböck][floga]
+* Bugfix: Fix variable non-zero test  
+  Due to missing quotation marks, the -n test won't work properly, leading to 
+  always returning true and overriding variables with nothing.
 
 #### 1.5.0
 [Peter van der Does][petervanderdoes]
