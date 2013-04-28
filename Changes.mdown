@@ -20,7 +20,7 @@
 #### 1.6.0
 * Preparation for new development cycle.
 
-#### 1.5.2-rc.1
+#### 1.5.2
 [Peter van der Does][petervanderdoes]
 * Add filter for tag message.
   If a tag message is given, the message can be modified using the filters:
