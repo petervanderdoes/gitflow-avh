@@ -314,7 +314,7 @@ k,keep            Keep branch after performing finish
 keepremote        Keep the remote branch
 keeplocal         Keep the local branch
 D,force_delete    Force delete hotfix branch after finish
-n,notag           Don't tag this release
+n,notag           Don't tag this hotfix
 b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 "
 	local opts commit keepmsg remotebranchdeleted localbranchdeleted
@@ -330,7 +330,7 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 	DEFINE_boolean 'keepremote' false "keep the remote branch"
 	DEFINE_boolean 'keeplocal' false "keep the local branch"
 	DEFINE_boolean 'force_delete' false "force delete hotfix branch after finish" D
-	DEFINE_boolean 'notag' false "don't tag this release" n
+	DEFINE_boolean 'notag' false "don't tag this hotfix" n
 	DEFINE_boolean 'nobackmerge' false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
 
 	# Parse arguments
@@ -348,6 +348,7 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 	gitflow_override_flag_string "HOTFIX_FINISH_SIGNINGKEY" "signingkey"
 	gitflow_override_flag_string "HOTFIX_FINISH_MESSAGE" "message"
 	gitflow_override_flag_string "HOTFIX_FINISH_MESSAGEFILE" "messagefile"
+
 
 	remotebranchdeleted=$FLAGS_FALSE
 	localbranchdeleted=$FLAGS_FALSE
@@ -448,12 +449,16 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
 			fi
-		opts="-a"
-		flag sign && opts="$opts -s"
-		[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
-		[ "$FLAGS_message" != "" ] && opts="$opts -m '$FLAGS_message'"
-		[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
-		eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
+			opts="-a"
+			flag sign && opts="$opts -s"
+			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
+			if [ "$FLAGS_message" != "" ]; then
+				# Run filter on the tag message
+				FLAGS_message=$(run_filter_hook hotfix-finish-tag-message "${FLAGS_message}" "$VERSION_PREFIX$VERSION")
+				opts="$opts -m '$FLAGS_message'"
+			fi
+			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
+			eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
 		fi
 	fi
 
@@ -497,7 +502,7 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 		# Always delete remote first
 		if noflag keepremote;then
 			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-				git_remote_branch_delete "$BRANCH" && remotebranchdeleted=$FLAGSS_TRUE
+				git_remote_branch_delete "$BRANCH" && remotebranchdeleted=$FLAGS_TRUE
 			fi
 		fi
 
@@ -507,9 +512,9 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 				git_do checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
 			fi
 			if flag force_delete; then
-				git_do branch -D "$BRANCH" && localbranchdeleted=$FLAGSS_TRUE
+				git_do branch -D "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
 			else
-				git_do branch -d "$BRANCH" && localbranchdeleted=$FLAGSS_TRUE
+				git_do branch -d "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
 			fi
 		fi
 

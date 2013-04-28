@@ -267,26 +267,28 @@ F,fetch Fetch from origin before performing local operation
 
 cmd_finish() {
 	OPTIONS_SPEC="\
-git flow feature finish [-h] [-F] [-r] [-k] [-D] [-S] <name|nameprefix>
+git flow feature finish [-h] [-F] [-r] [-p] [-k] [-D] [-S] [--no-ff] <name|nameprefix>
 
 Finish feature <name>
 --
-h,help!        Show this help
-showcommands!    Show git commands while executing them
-F,fetch        Fetch from origin before performing finish
-r,rebase       Rebase instead of merge
-k,keep         Keep branch after performing finish
-keepremote!    Keep the remote branch
-keeplocal!     Keep the local branch
-D,force_delete Force delete feature branch after finish
-S,squash       Squash feature during merge
-no-ff!          Never fast-forward during the merge
+h,help!            Show this help
+showcommands!      Show git commands while executing them
+F,fetch            Fetch from origin before performing finish
+r,rebase           Rebase before merging
+p,preserve-merges  Preserve merges while rebasing
+k,keep             Keep branch after performing finish
+keepremote!        Keep the remote branch
+keeplocal!         Keep the local branch
+D,force_delete     Force delete feature branch after finish
+S,squash           Squash feature during merge
+no-ff!             Never fast-forward during the merge
 "
 	local finish_base
 
 	# Define flags
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
-	DEFINE_boolean 'rebase' false "rebase instead of merge" r
+	DEFINE_boolean 'rebase' false "rebase before merging" r
+	DEFINE_boolean 'preserve-merges' false 'try to recreate merges while rebasing' p
 	DEFINE_boolean 'keep' false "keep branch after performing finish" k
 	DEFINE_boolean 'keepremote' false "keep the remote branch"
 	DEFINE_boolean 'keeplocal' false "keep the local branch"
@@ -300,6 +302,7 @@ no-ff!          Never fast-forward during the merge
 
 	gitflow_override_flag_boolean "FEATURE_FINISH_FETCH" "fetch"
 	gitflow_override_flag_boolean "FEATURE_FINISH_REBASE" "rebase"
+	gitflow_override_flag_boolean "FEATURE_FINISH_PRESERVE_MERGES" "preserve_merges"
 	gitflow_override_flag_boolean "FEATURE_FINISH_KEEP" "keep"
 	gitflow_override_flag_boolean "FEATURE_FINISH_KEEPREMOTE" "keepremote"
 	gitflow_override_flag_boolean "FEATURE_FINISH_KEEPLOCAL" "keeplocal"
@@ -390,7 +393,14 @@ no-ff!          Never fast-forward during the merge
 
 	# If the user wants to rebase, do that first
 	if flag rebase; then
-		if ! git flow feature rebase "$NAME" "$BASE_BRANCH"; then
+        local _rebase_opts=""
+        if flag preserve_merges; then
+            _rebase_opts="$_rebase_opts -p"
+        fi
+        if flag showcommands; then
+            _rebase_opts="$_rebase_opts --showcommands"
+        fi
+		if ! git flow feature rebase $_rebase_opts "$NAME"; then
 			warn "Finish was aborted due to conflicts during rebase."
 			warn "Please finish the rebase manually now."
 			warn "When finished, re-run:"
@@ -637,34 +647,46 @@ cmd_co() {
 
 cmd_rebase() {
 	OPTIONS_SPEC="\
-git flow feature rebase [-h] [-i] [<name|nameprefix>]
+git flow feature rebase [-h] [-i] [-p] [<name|nameprefix>]
 
-Rebase <name> on <develop>
+Rebase <name> on <base_branch>
 --
 h,help!           Show this help
-showcommands!    Show git commands while executing them
+showcommands!     Show git commands while executing them
 i,interactive     Do an interactive rebase
+p,preserve-merges Preserve merges
 "
 	local opts
 
 	# Define flags
 	DEFINE_boolean 'interactive' false 'do an interactive rebase' i
+	DEFINE_boolean 'preserve-merges' false 'try to recreate merges' p
 
 	# Parse arguments
 	parse_args "$@"
 
 	gitflow_override_flag_boolean "FEATURE_REBASE_INTERACTIVE" "interactive"
+	gitflow_override_flag_boolean "FEATURE_REBASE_PRESERVE_MERGES" "preserve_merges"
 
 	expand_nameprefix_arg_or_current
-	warn "Will try to rebase '$NAME'..."
+
+	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
+	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
+
+	warn "Will try to rebase '$NAME' which is based on '$BASE_BRANCH'..."
 	require_clean_working_tree
 	require_branch "$BRANCH"
+	
+    git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't finish the feature branch '$BRANCH'."
 
 	git_do checkout -q "$BRANCH"  || die "Could not check out branch '$BRANCH'."
 	if flag interactive; then
 		opts="$opts -i"
 	fi
-	git_do rebase $opts "$DEVELOP_BRANCH"
+	if flag preserve_merges; then
+		opts="$opts -p"
+	fi
+	git_do rebase $opts "$BASE_BRANCH"
 }
 
 avoid_accidental_cross_branch_action() {

@@ -1,0 +1,22 @@
+#!/bin/sh
+#
+# Runs during git flow release branch and a tag message is given
+#
+# Positional arguments:
+# $1    Message
+# $2    Full version
+#
+# Return MESSAGE
+#
+# The following variables are available as they are exported by git-flow:
+#
+# MASTER_BRANCH - The branch defined as Master
+# DEVELOP_BRANCH - The branch defined as Develop
+#
+MESSAGE="$1"
+
+# Implement your script here.
+
+# Return the MESSAGE
+echo "${MESSAGE}"
+exit 0
