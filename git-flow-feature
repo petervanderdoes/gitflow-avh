@@ -221,12 +221,13 @@ F,fetch Fetch from origin before performing local operation
 	# Define flags
 	DEFINE_boolean 'fetch' false 'fetch from origin before performing local operation' F
 
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "feature.start.fetch"   "fetch"
+
 	# Parse arguments
 	parse_args "$@"
 	eval set -- "${FLAGS_ARGV}"
 	base=${2:-$DEVELOP_BRANCH}
-
-	gitflow_override_flag_boolean "FEATURE_START_FETCH" "fetch"
 
 	require_base_is_local_branch "$base"
 	gitflow_require_name_arg
@@ -297,19 +298,20 @@ no-ff!             Never fast-forward during the merge
 	DEFINE_boolean 'squash-info' false "add branch info during squash"
 	DEFINE_boolean 'no-ff!' false "Don't fast-forward ever during merge "
 
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "feature.finish.fetch"             "fetch"
+	gitflow_override_flag_boolean   "feature.finish.rebase"            "rebase"
+	gitflow_override_flag_boolean   "feature.finish.preserve-merges"   "preserve_merges"
+	gitflow_override_flag_boolean   "feature.finish.keep"              "keep"
+	gitflow_override_flag_boolean   "feature.finish.keepremote"        "keepremote"
+	gitflow_override_flag_boolean   "feature.finish.keeplocal"         "keeplocal"
+	gitflow_override_flag_boolean   "feature.finish.force-delete"      "force_delete"
+	gitflow_override_flag_boolean   "feature.finish.squash"            "squash"
+	gitflow_override_flag_boolean   "feature.finish.squash-info"       "squash_info"
+	gitflow_override_flag_boolean   "feature.finish.no-ff"             "no_ff"
+
 	# Parse arguments
 	parse_args "$@"
-
-	gitflow_override_flag_boolean "FEATURE_FINISH_FETCH" "fetch"
-	gitflow_override_flag_boolean "FEATURE_FINISH_REBASE" "rebase"
-	gitflow_override_flag_boolean "FEATURE_FINISH_PRESERVE_MERGES" "preserve_merges"
-	gitflow_override_flag_boolean "FEATURE_FINISH_KEEP" "keep"
-	gitflow_override_flag_boolean "FEATURE_FINISH_KEEPREMOTE" "keepremote"
-	gitflow_override_flag_boolean "FEATURE_FINISH_KEEPLOCAL" "keeplocal"
-	gitflow_override_flag_boolean "FEATURE_FINISH_FORCE_DELETE" "force_delete"
-	gitflow_override_flag_boolean "FEATURE_FINISH_SQUASH" "squash"
-	gitflow_override_flag_boolean "FEATURE_FINISH_SQUASH_INFO" "squash_info"
-	gitflow_override_flag_boolean "FEATURE_FINISH_NO_FF" "no_ff"
 
 	expand_nameprefix_arg_or_current
 
@@ -666,11 +668,12 @@ p,preserve-merges Preserve merges
 	DEFINE_boolean 'interactive' false 'do an interactive rebase' i
 	DEFINE_boolean 'preserve-merges' false 'try to recreate merges' p
 
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "feature.rebase.interactive"       "interactive"
+	gitflow_override_flag_boolean   "feature.rebase.preserve-merges"   "preserve_merges"
+
 	# Parse arguments
 	parse_args "$@"
-
-	gitflow_override_flag_boolean "FEATURE_REBASE_INTERACTIVE" "interactive"
-	gitflow_override_flag_boolean "FEATURE_REBASE_PRESERVE_MERGES" "preserve_merges"
 
 	expand_nameprefix_arg_or_current
 
@@ -785,12 +788,12 @@ r,remote          Delete remote branch
 	DEFINE_boolean 'force' false "force deletion" f
 	DEFINE_boolean 'remote' false "delete remote branch" r
 
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "feature.delete.force"    "force"
+	gitflow_override_flag_boolean   "feature.delete.remote"   "remote"
+
 	# Parse arguments
 	parse_args "$@"
-
-	# Check if we need to override the flags
-	gitflow_override_flag_boolean "FEATURE_DELETE_FORCE" "force"
-	gitflow_override_flag_boolean "FEATURE_DELETE_REMOTE" "remote"
 
 	expand_nameprefix_arg
 

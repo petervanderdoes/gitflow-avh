@@ -443,14 +443,21 @@ gitflow_config_remove_base_branch() {
 #
 # Override a boolean flag
 #
-# Param $1: string The name of the environment variable
+# Param $1: string The name of the config variable e.g. "feature.start.fetch"
 # Param $2: string The flag name
 #
 gitflow_override_flag_boolean() {
-	local _variable _env_var
+	local _variable _config_file
 
-	_env_var="GITFLOW_FLAG_"$1
-	eval "_variable=\$${_env_var}"
+    _config_file="$GITFLOW_CONFIG"
+    # In some cases (e.g. git flow init) there is no GITFLOW_CONFIG yet, will need to refactor usage of gitflow_load_settings. 
+    if [ -z "$_config_file" ]; then 
+        local _dot_git_dir=$(git rev-parse --git-dir 2>/dev/null)
+        _config_file=$_dot_git_dir/gitflow_config
+        unset _dot_git_dir
+    fi
+
+    _variable=$(git config --file=$_config_file --get $1 2>/dev/null)
 	if [ -n "${_variable}" ]; then
 		gf_determine_boolean ${_variable}
 		case "$?" in
@@ -465,7 +472,7 @@ gitflow_override_flag_boolean() {
 			;;
 		esac
 	fi
-	unset _variable _env_var
+	unset _variable
 	return ${FLAGS_TRUE}
 }
 
@@ -473,18 +480,25 @@ gitflow_override_flag_boolean() {
 #
 # Override a string flag
 #
-# Param $1: string The name of the environment variable
+# Param $1: string The name of the config variable e.g. "feature.start.fetch"
 # Param $2: string The flag name
 #
 gitflow_override_flag_string() {
-	local _variable _env_var
+	local _variable
 
-	_env_var="GITFLOW_FLAG_"$1
-	eval "_variable=\$${_env_var}"
+    _config_file="$GITFLOW_CONFIG"
+    # In some cases (e.g. git flow init) there is no GITFLOW_CONFIG yet, will need to refactor usage of gitflow_load_settings. 
+    if [ -z "$_config_file" ]; then 
+        local _dot_git_dir=$(git rev-parse --git-dir 2>/dev/null)
+        _config_file=$_dot_git_dir/gitflow_config
+        unset _dot_git_dir
+    fi
+
+    _variable=$(git config --file=$_config_file --get $1 2>/dev/null)
 	if [ -n "${_variable}" ]; then
 		eval "FLAGS_${2}=${_variable}"
 	fi
-	unset _variable _env_var
+	unset _variable
 	return ${FLAGS_TRUE}
 }
 
