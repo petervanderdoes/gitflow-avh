@@ -171,12 +171,13 @@ F,fetch           Fetch from origin before performing local operation
 	# Define flags
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
 
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "hotfix.start.fetch"   "fetch"
+
 	# Parse arguments
 	parse_args "$@"
 	eval set -- "${FLAGS_ARGV}"
 	base=${2:-$MASTER_BRANCH}
-
-	gitflow_override_flag_boolean "HOTFIX_START_FETCH" "fetch"
 
 	# No need to continue if not clean
 	require_base_is_local_branch "$base"
@@ -333,22 +334,22 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 	DEFINE_boolean 'notag' false "don't tag this hotfix" n
 	DEFINE_boolean 'nobackmerge' false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
 
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "hotfix.finish.fetch"          "fetch"
+	gitflow_override_flag_boolean   "hotfix.finish.sign"           "sign"
+	gitflow_override_flag_boolean   "hotfix.finish.push"           "push"
+	gitflow_override_flag_boolean   "hotfix.finish.keep"           "keep"
+	gitflow_override_flag_boolean   "hotfix.finish.keepremote"     "keepremote"
+	gitflow_override_flag_boolean   "hotfix.finish.keeplocal"      "keeplocal"
+	gitflow_override_flag_boolean   "hotfix.finish.force-delete"   "force_delete"
+	gitflow_override_flag_boolean   "hotfix.finish.notag"          "notag"
+	gitflow_override_flag_boolean   "hotfix.finish.nobackmerge"    "nobackmerge"
+	gitflow_override_flag_string    "hotfix.finish.signingkey"     "signingkey"
+	gitflow_override_flag_string    "hotfix.finish.message"        "message"
+	gitflow_override_flag_string    "hotfix.finish.messagefile"    "messagefile"
+
 	# Parse arguments
 	parse_args "$@"
-
-	gitflow_override_flag_boolean "HOTFIX_FINISH_FETCH" "fetch"
-	gitflow_override_flag_boolean "HOTFIX_FINISH_SIGN" "sign"
-	gitflow_override_flag_boolean "HOTFIX_FINISH_PUSH" "push"
-	gitflow_override_flag_boolean "HOTFIX_FINISH_KEEP" "keep"
-	gitflow_override_flag_boolean "HOTFIX_FINISH_KEEPREMOTE" "keepremote"
-	gitflow_override_flag_boolean "HOTFIX_FINISH_KEEPLOCAL" "keeplocal"
-	gitflow_override_flag_boolean "HOTFIX_FINISH_FORCE_DELETE" "force_delete"
-	gitflow_override_flag_boolean "HOTFIX_FINISH_NOTAG" "notag"
-	gitflow_override_flag_boolean "HOTFIX_FINISH_NOBACKMERGE" "nobackmerge"
-	gitflow_override_flag_string "HOTFIX_FINISH_SIGNINGKEY" "signingkey"
-	gitflow_override_flag_string "HOTFIX_FINISH_MESSAGE" "message"
-	gitflow_override_flag_string "HOTFIX_FINISH_MESSAGEFILE" "messagefile"
-
 
 	remotebranchdeleted=$FLAGS_FALSE
 	localbranchdeleted=$FLAGS_FALSE
@@ -596,11 +597,12 @@ r,remote          Delete remote branch
 	DEFINE_boolean 'force' false "force deletion" f
 	DEFINE_boolean 'remote' false "delete remote branch" r
 
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "hotfix.delete.force"    "force"
+	gitflow_override_flag_boolean   "hotfix.finish.remote"   "remote"
+
 	# Parse arguments
 	parse_args "$@"
-
-	gitflow_override_flag_boolean "HOTFIX_DELETE_FORCE" "force"
-	gitflow_override_flag_boolean "HOTFIX_FINISH_REMOTE" "remote"
 
 	gitflow_require_version_arg
 

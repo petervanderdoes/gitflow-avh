@@ -517,12 +517,13 @@ v,verbose! verbose (more) output
 	# Define flags
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
 
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "release.start.fetch"   "fetch"
+
 	# Parse arguments
 	parse_args "$@"
 	eval set -- "${FLAGS_ARGV}"
 	base=${2:-$DEVELOP_BRANCH}
-
-	gitflow_override_flag_boolean "RELEASE_START_FETCH" "fetch"
 
 	# Run filter on the version
 	VERSION=$(run_filter_hook release-start-version $VERSION)
@@ -607,23 +608,24 @@ S,squash        Squash release during merge
 	DEFINE_boolean 'squash' false "squash release during merge" S
 	DEFINE_boolean 'squash-info' false "add branch info during squash"
 
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "release.finish.fetch"          "fetch"
+	gitflow_override_flag_boolean   "release.finish.sign"           "sign"
+	gitflow_override_flag_boolean   "release.finish.push"           "push"
+	gitflow_override_flag_boolean   "release.finish.keep"           "keep"
+	gitflow_override_flag_boolean   "release.finish.keepremote"     "keepremote"
+	gitflow_override_flag_boolean   "release.finish.keeplocal"      "keeplocal"
+	gitflow_override_flag_boolean   "release.finish.force-delete"   "force_delete"
+	gitflow_override_flag_boolean   "release.finish.notag"          "notag"
+	gitflow_override_flag_boolean   "release.finish.nobackmerge"    "nobackmerge"
+	gitflow_override_flag_boolean   "release.finish.squash"         "squash"
+	gitflow_override_flag_boolean   "release.finish.squash-info"    "squash_info"
+	gitflow_override_flag_string    "release.finish.signingkey"     "signingkey"
+	gitflow_override_flag_string    "release.finish.message"        "message"
+	gitflow_override_flag_string    "release.finish.messagefile"    "messagefile"
+
 	# Parse arguments
 	parse_args "$@"
-
-	gitflow_override_flag_boolean "RELEASE_FINISH_FETCH" "fetch"
-	gitflow_override_flag_boolean "RELEASE_FINISH_SIGN" "sign"
-	gitflow_override_flag_boolean "RELEASE_FINISH_PUSH" "push"
-	gitflow_override_flag_boolean "RELEASE_FINISH_KEEP" "keep"
-	gitflow_override_flag_boolean "RELEASE_FINISH_KEEPREMOTE" "keepremote"
-	gitflow_override_flag_boolean "RELEASE_FINISH_KEEPLOCAL" "keeplocal"
-	gitflow_override_flag_boolean "RELEASE_FINISH_FORCE_DELETE" "force_delete"
-	gitflow_override_flag_boolean "RELEASE_FINISH_NOTAG" "notag"
-	gitflow_override_flag_boolean "RELEASE_FINISH_NOBACKMERGE" "nobackmerge"
-	gitflow_override_flag_boolean "RELEASE_FINISH_SQUASH" "squash"
-	gitflow_override_flag_boolean "RELEASE_FINISH_SQUASH_INFO" "squash_info"
-	gitflow_override_flag_string "RELEASE_FINISH_SIGNINGKEY" "signingkey"
-	gitflow_override_flag_string "RELEASE_FINISH_MESSAGE" "message"
-	gitflow_override_flag_string "RELEASE_FINISH_MESSAGEFILE" "messagefile"
 
 	# Run filter on the version
 	VERSION=$(run_filter_hook release-finish-version $VERSION)
@@ -695,19 +697,20 @@ S,squash 		Squash release during merge
 	DEFINE_boolean 'squash' false "squash release during merge" S
 	DEFINE_boolean 'squash-info' false "add branch info during squash"
 
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "release.branch.fetch"         "fetch"
+	gitflow_override_flag_boolean   "release.branch.sign"          "sign"
+	gitflow_override_flag_boolean   "release.branch.push"          "push"
+	gitflow_override_flag_boolean   "release.branch.notag"         "notag"
+	gitflow_override_flag_boolean   "release.branch.squash"        "squash"
+	gitflow_override_flag_boolean   "release.branch.squash-info"   "squash_info"
+	gitflow_override_flag_string    "release.branch.signingkey"    "signingkey"
+	gitflow_override_flag_string    "release.branch.message"       "message"
+	gitflow_override_flag_string    "release.branch.messagefile"   "messagefile"
+
 	# Parse arguments
 	FLAGS "$@" || exit $?
 	eval set -- "${FLAGS_ARGV}"
-
-	gitflow_override_flag_boolean "RELEASE_BRANCH_FETCH" "fetch"
-	gitflow_override_flag_boolean "RELEASE_BRANCH_SIGN" "sign"
-	gitflow_override_flag_boolean "RELEASE_BRANCH_PUSH" "push"
-	gitflow_override_flag_boolean "RELEASE_BRANCH_NOTAG" "notag"
-	gitflow_override_flag_boolean "RELEASE_BRANCH_SQUASH" "squash"
-	gitflow_override_flag_boolean "RELEASE_BRANCH_SQUASH_INFO" "squash_info"
-	gitflow_override_flag_string "RELEASE_BRANCH_SIGNINGKEY" "signingkey"
-	gitflow_override_flag_string "RELEASE_BRANCH_MESSAGE" "message"
-	gitflow_override_flag_string "RELEASE_BRANCH_MESSAGEFILE" "messagefile"
 
 	# Read arguments into global variables
 	VERSION=$1
@@ -910,11 +913,12 @@ r,remote Delete remote branch
 	DEFINE_boolean 'force' false "force deletion" f
 	DEFINE_boolean 'remote' false "delete remote branch" r
 
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "release.delete.fetch"    "fetch"
+	gitflow_override_flag_boolean   "release.delete.remote"   "remote"
+
 	# Parse arguments
 	parse_args "$@"
-
-	gitflow_override_flag_boolean "RELEASE_DELETE_FETCH" "fetch"
-	gitflow_override_flag_boolean "RELEASE_DELETE_REMOTE" "remote"
 
 	gitflow_require_version_arg
 
