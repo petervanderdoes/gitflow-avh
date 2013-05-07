@@ -482,7 +482,7 @@ gitflow_override_flag_string() {
 	_env_var="GITFLOW_FLAG_"$1
 	eval "_variable=\$${_env_var}"
 	if [ -n "${_variable}" ]; then
-		eval "FLAGS_${2}=${_variable}"
+		eval "FLAGS_${2}=\"${_variable}\""
 	fi
 	unset _variable _env_var
 	return ${FLAGS_TRUE}
