@@ -2,7 +2,7 @@ git-flow AVH Authors
 
 This software consists of voluntary contributions made by many
 individuals. For exact contribution history, see the revision history
-(Changes.mdown) and logs, available at 
+(Changes.mdown) and logs, available at
 http://github.com/petervanderdoes/gitflow.
 
 
@@ -14,8 +14,10 @@ Felipe Talavera
 Randy Merrill
 Daniel Truemper
 Eric J. Holmes
+Leonid Komarovsky
 Alexandre Dutra
 Ben Loveridge
+Florian Gamböck
 JP Toto
 Kiall Mac Innes
 Lorin Hochstein
@@ -35,6 +37,7 @@ Jannis Leidel
 Jason L. Shiffer
 Jon Bernard
 Joseph A. Levin
+Joshua P. Tilles
 Konstantin Tjuterev
 Mark Borcherding
 Mark Derricutt
