@@ -17,7 +17,7 @@
 
 # Changelog
 
-#### 1.5.3-rc.1
+#### 1.5.3
 [Peter van der Does][petervanderdoes]
 * Bugfix: Error about deleting branch when using squash option.
   When using the squash option for release/feature finish, the release/feature 
