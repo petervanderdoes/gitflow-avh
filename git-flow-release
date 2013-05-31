@@ -164,7 +164,11 @@ _finish_from_develop() {
 			if flag force_delete; then
 				git_do branch -D "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
 			else
-				git_do branch -d "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
+				if noflag squash; then
+					git_do branch -d "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
+				else
+					git_do branch -D "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
+				fi
 			fi
 		fi
 

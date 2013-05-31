@@ -479,7 +479,11 @@ helper_finish_cleanup() {
 			if flag force_delete; then
 				git_do branch -D "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
 			else
-				git_do branch -d "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
+				if noflag squash; then
+					git_do branch -d "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
+				else
+					git_do branch -D "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
+				fi
 			fi
 		fi
 
@@ -676,7 +680,7 @@ p,preserve-merges Preserve merges
 	warn "Will try to rebase '$NAME' which is based on '$BASE_BRANCH'..."
 	require_clean_working_tree
 	require_branch "$BRANCH"
-	
+
     git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't finish the feature branch '$BRANCH'."
 
 	git_do checkout -q "$BRANCH"  || die "Could not check out branch '$BRANCH'."
