@@ -17,6 +17,9 @@
 
 # Changelog
 
+#### 1.5.3-rc.1
+* Preparation hotfix.
+
 #### 1.5.2
 [Peter van der Does][petervanderdoes]
 * Add filter for tag message.
