@@ -160,10 +160,11 @@ F,fetch           Fetch from origin before performing finish
 	# Define flags
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
 
+	# Override defaults with values from config
+	gitflow_override_flag_boolean "SUPPORT_START_FETCH" "fetch"
+
 	# Parse arguments
 	parse_args "$@"
-
-	gitflow_override_flag_boolean "SUPPORT_START_FETCH" "fetch"
 
 	gitflow_require_version_arg
 	gitflow_require_base_arg

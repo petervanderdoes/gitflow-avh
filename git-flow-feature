@@ -221,12 +221,13 @@ F,fetch Fetch from origin before performing local operation
 	# Define flags
 	DEFINE_boolean 'fetch' false 'fetch from origin before performing local operation' F
 
+	# Override defaults with values from config
+	gitflow_override_flag_boolean "FEATURE_START_FETCH" "fetch"
+
 	# Parse arguments
 	parse_args "$@"
 	eval set -- "${FLAGS_ARGV}"
 	base=${2:-$DEVELOP_BRANCH}
-
-	gitflow_override_flag_boolean "FEATURE_START_FETCH" "fetch"
 
 	require_base_is_local_branch "$base"
 	gitflow_require_name_arg
@@ -297,9 +298,7 @@ no-ff!             Never fast-forward during the merge
 	DEFINE_boolean 'squash-info' false "add branch info during squash"
 	DEFINE_boolean 'no-ff!' false "Don't fast-forward ever during merge "
 
-	# Parse arguments
-	parse_args "$@"
-
+	# Override defaults with values from config
 	gitflow_override_flag_boolean "FEATURE_FINISH_FETCH" "fetch"
 	gitflow_override_flag_boolean "FEATURE_FINISH_REBASE" "rebase"
 	gitflow_override_flag_boolean "FEATURE_FINISH_PRESERVE_MERGES" "preserve_merges"
@@ -310,6 +309,9 @@ no-ff!             Never fast-forward during the merge
 	gitflow_override_flag_boolean "FEATURE_FINISH_SQUASH" "squash"
 	gitflow_override_flag_boolean "FEATURE_FINISH_SQUASH_INFO" "squash_info"
 	gitflow_override_flag_boolean "FEATURE_FINISH_NO_FF" "no_ff"
+
+	# Parse arguments
+	parse_args "$@"
 
 	expand_nameprefix_arg_or_current
 
@@ -666,11 +668,12 @@ p,preserve-merges Preserve merges
 	DEFINE_boolean 'interactive' false 'do an interactive rebase' i
 	DEFINE_boolean 'preserve-merges' false 'try to recreate merges' p
 
-	# Parse arguments
-	parse_args "$@"
-
+	# Override defaults with values from config
 	gitflow_override_flag_boolean "FEATURE_REBASE_INTERACTIVE" "interactive"
 	gitflow_override_flag_boolean "FEATURE_REBASE_PRESERVE_MERGES" "preserve_merges"
+
+	# Parse arguments
+	parse_args "$@"
 
 	expand_nameprefix_arg_or_current
 
@@ -785,12 +788,12 @@ r,remote          Delete remote branch
 	DEFINE_boolean 'force' false "force deletion" f
 	DEFINE_boolean 'remote' false "delete remote branch" r
 
-	# Parse arguments
-	parse_args "$@"
-
-	# Check if we need to override the flags
+	# Override defaults with values from config
 	gitflow_override_flag_boolean "FEATURE_DELETE_FORCE" "force"
 	gitflow_override_flag_boolean "FEATURE_DELETE_REMOTE" "remote"
+
+	# Parse arguments
+	parse_args "$@"
 
 	expand_nameprefix_arg
 
