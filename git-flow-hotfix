@@ -163,8 +163,8 @@ git flow hotfix start [-h] [-F] <version> [<base>]
 Start new hotfix branch named <version>, optionally base it on <base> instead of the <master> branch
 --
 h,help!           Show this help
-showcommands!    Show git commands while executing them
-F,fetch           Fetch from origin before performing local operation
+showcommands!     Show git commands while executing them
+F,[no]fetch       Fetch from origin before performing local operation
 "
 	local base
 
@@ -232,7 +232,7 @@ git flow hotfix publish [-h] <version>
 Start sharing hotfix <name> on $ORIGIN
 --
 h,help!           Show this help
-showcommands!    Show git commands while executing them
+showcommands!     Show git commands while executing them
 "
 	# Parse arguments
 	parse_args "$@"
@@ -273,7 +273,7 @@ git flow hotfix track [-h] <version>
 Create a tracking hotfix branch from $ORIGIN
 --
 h,help!           Show this help
-showcommands!    Show git commands while executing them
+showcommands!     Show git commands while executing them
 "
 	# Parse arguments
 	parse_args "$@"
@@ -302,29 +302,29 @@ git flow hotfix finish [-h] [-F] [-s] [-u] [-m | -f ] [-p] [-k] [-n] [-b] <versi
 
 Finish hotfix branch <version>
 --
-h,help!           Show this help
-showcommands!     Show git commands while executing them
-F,fetch           Fetch from origin before performing finish
-s,sign            Sign the release tag cryptographically
-u,signingkey      Use the given GPG-key for the digital signature (implies -s)
-m,message         Use the given tag message
-f,messagefile=    Use the contents of the given file as tag message
-p,push            Push to origin after performing finish
-k,keep            Keep branch after performing finish
-keepremote        Keep the remote branch
-keeplocal         Keep the local branch
-D,force_delete    Force delete hotfix branch after finish
-n,notag           Don't tag this hotfix
-b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
+h,help!               Show this help
+showcommands!         Show git commands while executing them
+F,[no]fetch           Fetch from origin before performing finish
+s,[no]sign            Sign the release tag cryptographically
+u,[no]signingkey      Use the given GPG-key for the digital signature (implies -s)
+m,[no]message         Use the given tag message
+f,[no]messagefile=    Use the contents of the given file as tag message
+p,[no]push            Push to origin after performing finish
+k,[no]keep            Keep branch after performing finish
+[no]keepremote        Keep the remote branch
+[no]keeplocal         Keep the local branch
+D,[no]force_delete    Force delete hotfix branch after finish
+n,[no]notag           Don't tag this hotfix
+b,[no]nobackmerge     Don't back-merge master, or tag if applicable, in develop
 "
 	local opts commit keepmsg remotebranchdeleted localbranchdeleted
 
 	# Define flags
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
 	DEFINE_boolean 'sign' false "sign the release tag cryptographically" s
-	DEFINE_string 'signingkey' "" "use the given GPG-key for the digital signature (implies -s)" u
-	DEFINE_string 'message' "" "use the given tag message" m
-	DEFINE_string 'messagefile' "" "use the contents of the given file as tag message" f
+	DEFINE_string  'signingkey' "" "use the given GPG-key for the digital signature (implies -s)" u
+	DEFINE_string  'message' "" "use the given tag message" m
+	DEFINE_string  'messagefile' "" "use the contents of the given file as tag message" f
 	DEFINE_boolean 'push' false "push to $ORIGIN after performing finish" p
 	DEFINE_boolean 'keep' false "keep branch after performing finish" k
 	DEFINE_boolean 'keepremote' false "keep the remote branch"
@@ -585,10 +585,10 @@ git flow hotfix delete [-h] [-f] [-r] <name>
 
 List existing release branches
 --
-h,help!           Show this help
-showcommands!    Show git commands while executing them
-f,force           Force deletion
-r,remote          Delete remote branch
+h,help!               Show this help
+showcommands!         Show git commands while executing them
+f,[no]force           Force deletion
+r,[no]remote          Delete remote branch
 "
 	local current_branch
 

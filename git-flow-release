@@ -503,10 +503,10 @@ git flow release start [options] <version> [<base>]
 
 Start a new release branch
 --
-h,help!           Show this help
-showcommands!    Show git commands while executing them
-F,fetch    fetch from $ORIGIN before performing finish
-v,verbose! verbose (more) output
+h,help!              Show this help
+showcommands!        Show git commands while executing them
+F,[no]fetch          Fetch from $ORIGIN before performing finish
+v,verbose!           Verbose (more) output
 "
 	local base
 
@@ -571,28 +571,28 @@ git flow release finish [-h] [-F] [-s] [-u] [-m | -f] [-p] [-k] [-n] [-b] [-S] <
 
 Finish a release branch
 --
-h,help          Show this help
-showcommands!   Show git commands while executing them
-F,fetch         Fetch from origin before performing finish
-s,sign!         Sign the release tag cryptographically
-u,signingkey!   Use the given GPG-key for the digital signature (implies -s)
-m,message!      Use the given tag message
-f,messagefile=  Use the contents of the given file as a tag message
-p,push          Push to origin after performing finish
-k,keep          Keep branch after performing finish
-keepremote      Keep the remote branchk
-keeplocal       Keep the local branch
-D,force_delete  Force delete release branch after finish
-n,tag           Don't tag this release
-b,nobackmerge   Don't back-merge master, or tag if applicable, in develop
-S,squash        Squash release during merge
+h,help              Show this help
+showcommands!       Show git commands while executing them
+F,[no]fetch         Fetch from origin before performing finish
+s,sign!             Sign the release tag cryptographically
+u,signingkey!       Use the given GPG-key for the digital signature (implies -s)
+m,message!          Use the given tag message
+f,[no]messagefile=  Use the contents of the given file as a tag message
+p,[no]push          Push to origin after performing finish
+k,[no]keep          Keep branch after performing finish
+[no]keepremote      Keep the remote branch
+[no]keeplocal       Keep the local branch
+D,[no]force_delete  Force delete release branch after finish
+n,[no]tag           Don't tag this release
+b,[no]nobackmerge   Don't back-merge master, or tag if applicable, in develop
+S,[no]squash        Squash release during merge
 "
 	# Define flags
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
 	DEFINE_boolean 'sign' false "sign the release tag cryptographically" s
-	DEFINE_string 'signingkey' "" "use the given GPG-key for the digital signature (implies -s)" u
-	DEFINE_string 'message' "" "use the given tag message" m
-	DEFINE_string 'messagefile' "" "use the contents of the given file as a tag message" f
+	DEFINE_string  'signingkey' "" "use the given GPG-key for the digital signature (implies -s)" u
+	DEFINE_string  'message' "" "use the given tag message" m
+	DEFINE_string  'messagefile' "" "use the contents of the given file as a tag message" f
 	DEFINE_boolean 'push' false "push to $ORIGIN after performing finish" p
 	DEFINE_boolean 'keep' false "keep branch after performing finish" k
 	DEFINE_boolean 'keepremote' false "keep the remote branch"
@@ -667,16 +667,16 @@ git flow release branch [-h] [-F] [-s] [-u] [-m] [-f] [-p] [-n] [-S] <version> [
 
 Release a branch [<name>], if a name is not given it defaults to the develop branch, and use the given version <version>
 --
-h,help          Show this help
-showcommands!    Show git commands while executing them
-F,fetch 		Fetch from origin before performing finish
-s,sign!         Sign the release tag cryptographically
-u,signingkey! 	Use the given GPG-key for the digital signature (implies -s)
-m,message! 		Use the given tag message
-f,messagefile= 	Use the contents of the given file as a tag message
-p,push 			Push to origin after performing finish
-n,tag 			Don't tag this release
-S,squash 		Squash release during merge
+h,help              Show this help
+showcommands!       Show git commands while executing them
+F,[no]fetch 		Fetch from origin before performing finish
+s,sign!             Sign the release tag cryptographically
+u,signingkey!    	Use the given GPG-key for the digital signature (implies -s)
+m,message! 	    	Use the given tag message
+f,[no]messagefile= 	Use the contents of the given file as a tag message
+p,[no]push 			Push to origin after performing finish
+n,[no]tag 			Don't tag this release
+S,[no]squash 		Squash release during merge
 "
 	local opts
 
@@ -820,7 +820,7 @@ git flow release publish [-h] <name>
 
 Publish the release branch <name> on $ORIGIN
 --
-h,help Show this help
+h,help           Show this help
 showcommands!    Show git commands while executing them
 "
 	# Parse arguments
@@ -861,7 +861,7 @@ git flow release track [-h] <name>
 
 Start tracking release <name> that is shared on $ORIGIN
 --
-h,help Show this help
+h,help           Show this help
 showcommands!    Show git commands while executing them
 "
 	# Parse arguments
@@ -895,10 +895,10 @@ git flow release delete [-h] [-f] [-r] <name>
 
 Delete the given release branch
 --
-h,help Show this help
+h,help           Show this help
 showcommands!    Show git commands while executing them
-f,force Force deletion
-r,remote Delete remote branch
+f,[no]force      Force deletion
+r,[no]remote     Delete remote branch
 "
 	local current_branch
 
