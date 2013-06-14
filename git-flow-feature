@@ -212,9 +212,9 @@ git flow feature start [-h] [-F] <name> [<base>]
 
 Start new feature <name>, optionally basing it on <base> instead of <develop>
 --
-h,help! Show this help
+h,help!          Show this help
 showcommands!    Show git commands while executing them
-F,fetch Fetch from origin before performing local operation
+F,[no]fetch      Fetch from origin before performing local operation
 "
 	local base
 
@@ -272,17 +272,17 @@ git flow feature finish [-h] [-F] [-r] [-p] [-k] [-D] [-S] [--no-ff] <name|namep
 
 Finish feature <name>
 --
-h,help!            Show this help
-showcommands!      Show git commands while executing them
-F,fetch            Fetch from origin before performing finish
-r,rebase           Rebase before merging
-p,preserve-merges  Preserve merges while rebasing
-k,keep             Keep branch after performing finish
-keepremote!        Keep the remote branch
-keeplocal!         Keep the local branch
-D,force_delete     Force delete feature branch after finish
-S,squash           Squash feature during merge
-no-ff!             Never fast-forward during the merge
+h,help!                Show this help
+showcommands!          Show git commands while executing them
+F,[no]fetch            Fetch from origin before performing finish
+r,[no]rebase           Rebase before merging
+p,[no]preserve-merges  Preserve merges while rebasing
+k,[no]keep             Keep branch after performing finish
+keepremote!        	   Keep the remote branch
+keeplocal!             Keep the local branch
+D,[no]force_delete     Force delete feature branch after finish
+S,[no]squash           Squash feature during merge
+no-ff!                 Never fast-forward during the merge
 "
 	local finish_base
 
@@ -528,7 +528,7 @@ git flow feature publish [-h] [<name>]
 Publish feature branch <name> on $ORIGIN.
 When <name> is omitted the current branch is used, but only if it's a feature branch.
 --
-h,help!           Show this help
+h,help!          Show this help
 showcommands!    Show git commands while executing them
 "
 	# Parse arguments
@@ -569,7 +569,7 @@ git flow feature track [-h] <name>
 
 Start tracking feature <name> that is shared on $ORIGIN
 --
-h,help!           Show this help
+h,help!          Show this help
 showcommands!    Show git commands while executing them
 "
 	# Parse arguments
@@ -604,7 +604,7 @@ git flow feature diff [-h] [<name|nameprefix>]
 
 Show all changes in <name> that are not in <develop>
 --
-h,help!           Show this help
+h,help!          Show this help
 showcommands!    Show git commands while executing them
 "
 	local base
@@ -632,7 +632,7 @@ git flow feature checkout [-h] [<name|nameprefix>]
 
 Switch to feature branch <name>
 --
-h,help!           Show this help
+h,help!          Show this help
 showcommands!    Show git commands while executing them
 "
 	# Parse arguments
@@ -657,10 +657,10 @@ git flow feature rebase [-h] [-i] [-p] [<name|nameprefix>]
 
 Rebase <name> on <base_branch>
 --
-h,help!           Show this help
-showcommands!     Show git commands while executing them
-i,interactive     Do an interactive rebase
-p,preserve-merges Preserve merges
+h,help!                Show this help
+showcommands!          Show git commands while executing them
+i,[no]interactive      Do an interactive rebase
+p,[no]preserve-merges  Preserve merges
 "
 	local opts
 
@@ -714,7 +714,7 @@ git flow feature pull [-h] <remote> [<name>]
 
 Pull feature <name> from <remote>
 --
-h,help!           Show this help
+h,help!          Show this help
 showcommands!    Show git commands while executing them
 "
 	local current_branch
@@ -777,10 +777,10 @@ git flow feature delete [-h] [-f] [-r] <name>
 
 Delete a given feature branch
 --
-h,help!           Show this help
+h,help!          Show this help
 showcommands!    Show git commands while executing them
-f,force           Force deletion
-r,remote          Delete remote branch
+f,[no]force      Force deletion
+r,[no]remote     Delete remote branch
 "
 	local current_branch
 
