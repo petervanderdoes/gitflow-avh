@@ -549,6 +549,10 @@ require_branch_absent() {
 	git_branch_exists "$1" && die "Branch '$1' already exists. Pick another name."
 }
 
+require_local_branch_absent(){
+  	git_local_branch_exists "$1" && die "Local Branch '$1' already exists. Pick another name."
+}
+
 require_tag_absent() {
 	git_tag_exists "$1" && die "Tag '$1' already exists. Pick another name."
 }
