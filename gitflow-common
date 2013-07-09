@@ -596,13 +596,18 @@ git_do() {
 # positional arguments.
 #
 run_filter_hook() {
-	local command scriptfile
+	local command scriptfile return
 
 	command=$1
 	shift
 	scriptfile="${HOOKS_DIR}/filter-flow-${command}"
 	if [ -x $scriptfile ]; then
-		echo `$scriptfile "$@"`
+		return=`$scriptfile "$@"`
+		if [ $? -eq 127 ]; then
+			echo "$return"
+			exit 127
+		fi
+			echo $return
 	else
 		echo "$@"
 	fi

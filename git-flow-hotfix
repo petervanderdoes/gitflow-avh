@@ -190,6 +190,9 @@ F,fetch           Fetch from origin before performing local operation
 
 	# Run filter on the version
 	VERSION=$(run_filter_hook hotfix-start-version $VERSION)
+	if [ $? -eq 127 ]; then
+		die $VERSION
+	fi
 
 	# As VERSION might have changed reset BRANCH with new VERSION
 	BRANCH=$PREFIX$VERSION

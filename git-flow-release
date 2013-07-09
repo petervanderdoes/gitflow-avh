@@ -526,6 +526,9 @@ v,verbose! verbose (more) output
 
 	# Run filter on the version
 	VERSION=$(run_filter_hook release-start-version $VERSION)
+	if [ $? -eq 127 ]; then
+		die $VERSION
+	fi
 
 	# As VERSION might have changed reset BRANCH with new VERSION
 	BRANCH=$PREFIX$VERSION
@@ -627,6 +630,9 @@ S,squash        Squash release during merge
 
 	# Run filter on the version
 	VERSION=$(run_filter_hook release-finish-version $VERSION)
+	if [ $? -eq 127 ]; then
+		die $VERSION
+	fi
 
 	# As VERSION might have changed reset BRANCH with new VERSION
 	BRANCH=$PREFIX$VERSION
@@ -715,6 +721,9 @@ S,squash 		Squash release during merge
 
 	# Run filter on the version
 	VERSION=$(run_filter_hook branch-finish-version $VERSION)
+	if [ $? -eq 127 ]; then
+		die $VERSION
+	fi
 
 	gitflow_require_version_arg
 
