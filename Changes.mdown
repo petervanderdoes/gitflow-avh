@@ -18,8 +18,10 @@
 # Changelog
 
 #### 1.6.0
+[Peter van der Does][petervanderdoes]
 * Add ability to short-circuit the version filters.
   An exit of 127 will short-circuit the process.
+* Output when finishing a branch is wrong.
 
 #### 1.5.3
 [Peter van der Does][petervanderdoes]

@@ -200,12 +200,12 @@ _finish_from_develop() {
 	[ "$commit" = "$BRANCH" ] && echo "- Release branch '$BRANCH' has been merged into '$DEVELOP_BRANCH'"
 
 	if noflag keep; then
-		if [ $localbranchdeleted ]; then
+		if [ $localbranchdeleted -eq $FLAGS_TRUE ]; then
 			keepmsg="has been locally deleted"
 		else
 			keepmsg="is still locally available"
 		fi
-		if [ $remotebranchdeleted ]; then
+		if [ $remotebranchdeleted -eq $FLAGS_TRUE ]; then
 			keepmsg=$keepmsg"; it has been remotely deleted from '$ORIGIN'"
 		elif git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 			keepmsg=$keepmsg"; it is still remotely available on '$ORIGIN'"
@@ -356,12 +356,12 @@ _finish_base() {
 	[ "$commit" = "$VERSION_PREFIX$VERSION" ] && echo "- Release tag '$VERSION_PREFIX$VERSION' has been merged into '$BASE_BRANCH'"
 	[ "$commit" = "$BRANCH" ] && echo "- Release branch '$BRANCH' has been merged into '$BASE_BRANCH'"
 	if noflag keep; then
-		if [ $localbranchdeleted ]; then
+		if [ $localbranchdeleted -eq $FLAGS_TRUE ]; then
 			keepmsg="has been locally deleted"
 		else
 			keepmsg="is still locally available"
 		fi
-		if [ $remotebranchdeleted ]; then
+		if [ $remotebranchdeleted -eq $FLAGS_TRUE ]; then
 			keepmsg=$keepmsg"; it has been remotely deleted from '$ORIGIN'"
 		elif git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 			keepmsg=$keepmsg"; it is still remotely available on '$ORIGIN'"

@@ -553,12 +553,12 @@ b,nobackmerge     Don't back-merge master, or tag if applicable, in develop
 		[ "$commit" = "$BRANCH" ] && echo "- Hotfix branch '$BRANCH' has been merged into '$DEVELOP_BRANCH'"
 	fi
 	if noflag keep; then
-		if [ $localbranchdeleted ]; then
+		if [ $localbranchdeleted -eq $FLAGS_TRUE ]; then
 			keepmsg="has been locally deleted"
 		else
 			keepmsg="is still locally available"
 		fi
-		if [ $remotebranchdeleted ]; then
+		if [ $remotebranchdeleted -eq $FLAGS_TRUE ]; then
 			keepmsg=$keepmsg"; it has been remotely deleted from '$ORIGIN'"
 		elif git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 			keepmsg=$keepmsg"; it is still remotely available on '$ORIGIN'"
