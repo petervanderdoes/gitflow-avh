@@ -19,7 +19,7 @@
 
 # Changelog
 
-#### 1.6.0-dev.21
+#### 1.6.0-dev.25
 [Peter van der Does][petervanderdoes]
 * Add ability to short-circuit the version filters.  
   An exit of 127 will short-circuit the process.
@@ -31,6 +31,7 @@
 [Leonid Komarovsky][shpoont]
 * Move configuration from ~/.gitflow_export to default git config.
 * Move base configuration from it's own configuration file to the default local git config file.
+* Improve formatting of the help.
 
 #### 1.5.3
 [Peter van der Does][petervanderdoes]
