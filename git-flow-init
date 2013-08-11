@@ -82,11 +82,11 @@ file= use given config file
 	DEFINE_boolean 'system' false 'use system config file'
 	DEFINE_string 'file' "" 'use given config file'
 
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "init.defaults"   "defaults"
+
 	# Parse arguments
 	parse_args "$@"
-
-	# Check if we need to override the flags
-	gitflow_override_flag_boolean "INIT_DEFAULTS" "defaults"
 
 	if [ "$FLAGS_file" != "" ]; then
 		gitflow_config_option="--file '$FLAGS_file''"
