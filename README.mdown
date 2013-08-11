@@ -117,7 +117,7 @@ The ``-d`` flag will accept all defaults.
   		git flow feature finish <name>
   		git flow feature delete <name>
 
-  For feature branches, the `<base>` arg must be a commit on `develop`.
+  For feature branches, the `<base>` arg must be a branch, when omitted it defaults to the develop branch.
 
 * To push/pull a feature branch to the remote repository, use:
 
@@ -131,7 +131,7 @@ The ``-d`` flag will accept all defaults.
   		git flow release finish <release>
   		git flow release delete <release>
 
-  For release branches, the `<base>` arg must be a commit on `develop`.
+  For release branches, the `<base>` arg must be a branch, when omitted it defaults to the develop branch.
 
 * To list/start/finish/delete hotfix branches, use:
 
@@ -140,14 +140,14 @@ The ``-d`` flag will accept all defaults.
   		git flow hotfix finish <release>
   		git flow hotfix delete <release>
 
-  For hotfix branches, the `<base>` arg must be a commit on `master`.
+  For hotfix branches, the `<base>` arg must be a branch, when omitted it defaults to the production branch.
 
 * To list/start support branches, use:
 
   		git flow support
   		git flow support start <release> <base>
 
-  For support branches, the `<base>` arg must be a commit on `master`.
+  For support branches, the `<base>` arg must be a branch, when omitted it defaults to the production branch.
 
 ### Using Hooks and Filters
 
