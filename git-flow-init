@@ -60,16 +60,16 @@ git flow init [-h] [-d] [-f]
 
 Setup a git repository for git flow usage. Can also be used to start a git repository.
 --
-h,help!           Show this help
-showcommands!    Show git commands while executing them
-d,defaults        Use default branch naming conventions
-f,force     Force setting of gitflow branches, even if already configured
+h,help!             Show this help
+showcommands!       Show git commands while executing them
+d,[no]defaults      Use default branch naming conventions
+f,[no]force         Force setting of gitflow branches, even if already configured
 
  Use config file location
-local!  use repository config file
+local!   use repository config file
 global!  use global config file
 system!  use system config file
-file= use given config file
+file=    use given config file
 "
 	local gitflow_config_option should_check_existence branchcount guess
   	local master_branch develop_branch default_suggestion answer prefix
@@ -82,11 +82,11 @@ file= use given config file
 	DEFINE_boolean 'system' false 'use system config file'
 	DEFINE_string 'file' "" 'use given config file'
 
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "init.defaults"   "defaults"
+
 	# Parse arguments
 	parse_args "$@"
-
-	# Check if we need to override the flags
-	gitflow_override_flag_boolean "INIT_DEFAULTS" "defaults"
 
 	if [ "$FLAGS_file" != "" ]; then
 		gitflow_config_option="--file '$FLAGS_file''"

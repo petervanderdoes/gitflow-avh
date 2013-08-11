@@ -212,21 +212,22 @@ git flow feature start [-h] [-F] <name> [<base>]
 
 Start new feature <name>, optionally basing it on <base> instead of <develop>
 --
-h,help! Show this help
+h,help!          Show this help
 showcommands!    Show git commands while executing them
-F,fetch Fetch from origin before performing local operation
+F,[no]fetch      Fetch from origin before performing local operation
 "
 	local base
 
 	# Define flags
 	DEFINE_boolean 'fetch' false 'fetch from origin before performing local operation' F
 
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "feature.start.fetch"   "fetch"
+
 	# Parse arguments
 	parse_args "$@"
 	eval set -- "${FLAGS_ARGV}"
 	base=${2:-$DEVELOP_BRANCH}
-
-	gitflow_override_flag_boolean "FEATURE_START_FETCH" "fetch"
 
 	require_base_is_local_branch "$base"
 	gitflow_require_name_arg
@@ -271,17 +272,17 @@ git flow feature finish [-h] [-F] [-r] [-p] [-k] [-D] [-S] [--no-ff] <name|namep
 
 Finish feature <name>
 --
-h,help!            Show this help
-showcommands!      Show git commands while executing them
-F,fetch            Fetch from origin before performing finish
-r,rebase           Rebase before merging
-p,preserve-merges  Preserve merges while rebasing
-k,keep             Keep branch after performing finish
-keepremote!        Keep the remote branch
-keeplocal!         Keep the local branch
-D,force_delete     Force delete feature branch after finish
-S,squash           Squash feature during merge
-no-ff!             Never fast-forward during the merge
+h,help!                Show this help
+showcommands!          Show git commands while executing them
+F,[no]fetch            Fetch from origin before performing finish
+r,[no]rebase           Rebase before merging
+p,[no]preserve-merges  Preserve merges while rebasing
+k,[no]keep             Keep branch after performing finish
+keepremote!        	   Keep the remote branch
+keeplocal!             Keep the local branch
+D,[no]force_delete     Force delete feature branch after finish
+S,[no]squash           Squash feature during merge
+no-ff!                 Never fast-forward during the merge
 "
 	local finish_base
 
@@ -297,19 +298,20 @@ no-ff!             Never fast-forward during the merge
 	DEFINE_boolean 'squash-info' false "add branch info during squash"
 	DEFINE_boolean 'no-ff!' false "Don't fast-forward ever during merge "
 
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "feature.finish.fetch"             "fetch"
+	gitflow_override_flag_boolean   "feature.finish.rebase"            "rebase"
+	gitflow_override_flag_boolean   "feature.finish.preserve-merges"   "preserve_merges"
+	gitflow_override_flag_boolean   "feature.finish.keep"              "keep"
+	gitflow_override_flag_boolean   "feature.finish.keepremote"        "keepremote"
+	gitflow_override_flag_boolean   "feature.finish.keeplocal"         "keeplocal"
+	gitflow_override_flag_boolean   "feature.finish.force-delete"      "force_delete"
+	gitflow_override_flag_boolean   "feature.finish.squash"            "squash"
+	gitflow_override_flag_boolean   "feature.finish.squash-info"       "squash_info"
+	gitflow_override_flag_boolean   "feature.finish.no-ff"             "no_ff"
+
 	# Parse arguments
 	parse_args "$@"
-
-	gitflow_override_flag_boolean "FEATURE_FINISH_FETCH" "fetch"
-	gitflow_override_flag_boolean "FEATURE_FINISH_REBASE" "rebase"
-	gitflow_override_flag_boolean "FEATURE_FINISH_PRESERVE_MERGES" "preserve_merges"
-	gitflow_override_flag_boolean "FEATURE_FINISH_KEEP" "keep"
-	gitflow_override_flag_boolean "FEATURE_FINISH_KEEPREMOTE" "keepremote"
-	gitflow_override_flag_boolean "FEATURE_FINISH_KEEPLOCAL" "keeplocal"
-	gitflow_override_flag_boolean "FEATURE_FINISH_FORCE_DELETE" "force_delete"
-	gitflow_override_flag_boolean "FEATURE_FINISH_SQUASH" "squash"
-	gitflow_override_flag_boolean "FEATURE_FINISH_SQUASH_INFO" "squash_info"
-	gitflow_override_flag_boolean "FEATURE_FINISH_NO_FF" "no_ff"
 
 	expand_nameprefix_arg_or_current
 
@@ -498,12 +500,12 @@ helper_finish_cleanup() {
 	echo "- The feature branch '$BRANCH' was merged into '$BASE_BRANCH'"
 	#echo "- Merge conflicts were resolved"		# TODO: Add this line when it's supported
 	if noflag keep; then
-		if [ $localbranchdeleted ]; then
+		if [ $localbranchdeleted -eq $FLAGS_TRUE ]; then
 			keepmsg="has been locally deleted"
 		else
 			keepmsg="is still locally available"
 		fi
-		if [ $remotebranchdeleted ]; then
+		if [ $remotebranchdeleted -eq $FLAGS_TRUE ]; then
 			keepmsg=$keepmsg"; it has been remotely deleted from '$ORIGIN'"
 		elif git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 			keepmsg=$keepmsg"; it is still remotely available on '$ORIGIN'"
@@ -526,7 +528,7 @@ git flow feature publish [-h] [<name>]
 Publish feature branch <name> on $ORIGIN.
 When <name> is omitted the current branch is used, but only if it's a feature branch.
 --
-h,help!           Show this help
+h,help!          Show this help
 showcommands!    Show git commands while executing them
 "
 	# Parse arguments
@@ -567,7 +569,7 @@ git flow feature track [-h] <name>
 
 Start tracking feature <name> that is shared on $ORIGIN
 --
-h,help!           Show this help
+h,help!          Show this help
 showcommands!    Show git commands while executing them
 "
 	# Parse arguments
@@ -577,12 +579,12 @@ showcommands!    Show git commands while executing them
 
 	# Sanity checks
 	require_clean_working_tree
-	require_branch_absent "$BRANCH"
+	require_local_branch_absent "$BRANCH"
 
 	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
 
 	git_do fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
-	require_branch "$ORIGIN/$BRANCH"
+	git_remote_branch_exists "$ORIGIN/$BRANCH"
 
 	# Create tracking branch
 	git_do checkout -b "$BRANCH" "$ORIGIN/$BRANCH" || die "Could not create '$BRANCH'."
@@ -602,7 +604,7 @@ git flow feature diff [-h] [<name|nameprefix>]
 
 Show all changes in <name> that are not in <develop>
 --
-h,help!           Show this help
+h,help!          Show this help
 showcommands!    Show git commands while executing them
 "
 	local base
@@ -630,7 +632,7 @@ git flow feature checkout [-h] [<name|nameprefix>]
 
 Switch to feature branch <name>
 --
-h,help!           Show this help
+h,help!          Show this help
 showcommands!    Show git commands while executing them
 "
 	# Parse arguments
@@ -655,10 +657,10 @@ git flow feature rebase [-h] [-i] [-p] [<name|nameprefix>]
 
 Rebase <name> on <base_branch>
 --
-h,help!           Show this help
-showcommands!     Show git commands while executing them
-i,interactive     Do an interactive rebase
-p,preserve-merges Preserve merges
+h,help!                Show this help
+showcommands!          Show git commands while executing them
+i,[no]interactive      Do an interactive rebase
+p,[no]preserve-merges  Preserve merges
 "
 	local opts
 
@@ -666,11 +668,12 @@ p,preserve-merges Preserve merges
 	DEFINE_boolean 'interactive' false 'do an interactive rebase' i
 	DEFINE_boolean 'preserve-merges' false 'try to recreate merges' p
 
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "feature.rebase.interactive"       "interactive"
+	gitflow_override_flag_boolean   "feature.rebase.preserve-merges"   "preserve_merges"
+
 	# Parse arguments
 	parse_args "$@"
-
-	gitflow_override_flag_boolean "FEATURE_REBASE_INTERACTIVE" "interactive"
-	gitflow_override_flag_boolean "FEATURE_REBASE_PRESERVE_MERGES" "preserve_merges"
 
 	expand_nameprefix_arg_or_current
 
@@ -711,7 +714,7 @@ git flow feature pull [-h] <remote> [<name>]
 
 Pull feature <name> from <remote>
 --
-h,help!           Show this help
+h,help!          Show this help
 showcommands!    Show git commands while executing them
 "
 	local current_branch
@@ -774,10 +777,10 @@ git flow feature delete [-h] [-f] [-r] <name>
 
 Delete a given feature branch
 --
-h,help!           Show this help
+h,help!          Show this help
 showcommands!    Show git commands while executing them
-f,force           Force deletion
-r,remote          Delete remote branch
+f,[no]force      Force deletion
+r,[no]remote     Delete remote branch
 "
 	local current_branch
 
@@ -785,12 +788,12 @@ r,remote          Delete remote branch
 	DEFINE_boolean 'force' false "force deletion" f
 	DEFINE_boolean 'remote' false "delete remote branch" r
 
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "feature.delete.force"    "force"
+	gitflow_override_flag_boolean   "feature.delete.remote"   "remote"
+
 	# Parse arguments
 	parse_args "$@"
-
-	# Check if we need to override the flags
-	gitflow_override_flag_boolean "FEATURE_DELETE_FORCE" "force"
-	gitflow_override_flag_boolean "FEATURE_DELETE_REMOTE" "remote"
 
 	expand_nameprefix_arg
 

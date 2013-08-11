@@ -154,16 +154,17 @@ git flow support start [-h] [-F] <version> <base>
 Start a new support branch name <version> based on <base>
 --
 h,help!           Show this help
-showcommands!    Show git commands while executing them
-F,fetch           Fetch from origin before performing finish
+showcommands!     Show git commands while executing them
+F,[no]fetch       Fetch from origin before performing finish
 "
 	# Define flags
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
 
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "support.start.fetch"   "fetch"
+
 	# Parse arguments
 	parse_args "$@"
-
-	gitflow_override_flag_boolean "SUPPORT_START_FETCH" "fetch"
 
 	gitflow_require_version_arg
 	gitflow_require_base_arg

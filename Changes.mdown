@@ -14,18 +14,34 @@
 [floga]: https://github.com/FloGa
 [merelyapseudonym]: https://github.com/MerelyAPseudonym
 [shpoont]: https://github.com/shpoont
+[cyberbob]: https://github.com/cyberbob
+[shpoont]: https://github.com/shpoont
 
 # Changelog
 
+#### 1.6.0
+[Peter van der Does][petervanderdoes]
+* Add ability to short-circuit the version filters.  
+  An exit of 127 will short-circuit the process.
+* Output when finishing a branch is wrong.
+
+[Mateusz Kaczmarek][cyberbob]
+* Fix sanity check for feature track command.
+
+[Leonid Komarovsky][shpoont]
+* Move configuration from ~/.gitflow_export to default git config.
+* Move base configuration from it's own configuration file to the default local git config file.
+* Improve formatting of the help.
+
 #### 1.5.3
 [Peter van der Does][petervanderdoes]
-* Bugfix: Error about deleting branch when using squash option.
+* Bugfix: Error about deleting branch when using squash option.  
   When using the squash option for release/feature finish, the release/feature 
   branch is not deleted.
 
 #### 1.5.2
 [Peter van der Does][petervanderdoes]
-* Add filter for tag message.
+* Add filter for tag message  .
   If a tag message is given, the message can be modified using the filters:
   - filter-flow-hotfix-finish-tag-message
   - filter-flow-release-finish-tag-message
@@ -51,9 +67,10 @@
   Due to missing quotation marks, the -n test won't work properly, leading to 
   always returning true and overriding variables with nothing.
 
+
 #### 1.5.0
 [Peter van der Does][petervanderdoes]
-* Add the ability to set defaults for flag.
+* Add the ability to set defaults for flag.  
   You can now set defaults for flags by setting environment variables.
 * Add flag no-ff to feature finish.  
   This gives the ability to never fast-forward a merge, even when it's only 
