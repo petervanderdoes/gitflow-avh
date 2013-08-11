@@ -317,6 +317,13 @@ gitflow_load_settings() {
 	export ORIGIN=$(git config --get gitflow.origin || echo origin)
 
 	GITFLOW_CONFIG=$DOT_GIT_DIR/gitflow_config
+	if [ -f "$GITFLOW_CONFIG" ]; then # move all settings from old .git/gitflow_config to the local conf.
+		warn "Migrating old \"$GITFLOW_CONFIG\" to the \"--local\" repo config."
+		for _config_line in $(git config --list --file="$GITFLOW_CONFIG"); do
+			git_do config gitflow.${_config_line/=/ }
+		done;
+		mv "$GITFLOW_CONFIG" "$GITFLOW_CONFIG".backup 2>/dev/null
+	fi
 }
 
 #
@@ -390,7 +397,7 @@ gitflow_is_prefixed_branch() {
 	return $return
 }
 #
-# Update the gitflow_config with the base of a new git-flow branch
+# Update the config with the base of a new git-flow branch.
 #
 # @param $1 Base of the new branch
 # @param $2 Name of the branch
@@ -400,7 +407,7 @@ gitflow_config_set_base_branch() {
 
 	base=$1
 	branch=$2
-	$(git config --file=$GITFLOW_CONFIG "branch.$branch.base" $base)
+	$(git_do config --local "gitflow.branch.$branch.base" $base)
 }
 
 #
@@ -413,7 +420,7 @@ gitflow_config_get_base_branch() {
 	local branch
 
 	branch=$1
-	echo $(git config --file=$GITFLOW_CONFIG --get "branch.$branch.base")
+	echo $(git config --local --get "gitflow.branch.$branch.base")
 }
 
 #
@@ -425,34 +432,33 @@ gitflow_config_remove_base_section() {
 	local branch
 
 	branch=$1
-	$(git config --file=$GITFLOW_CONFIG --remove-section "branch.$branch" 2>/dev/null)
+	$(git_do config --local --remove-section "gitflow.branch.$branch" 2>/dev/null)
 }
 
 #
-# Remove the base of the git-flow branch from the gitflow_config
+# Remove the base of the git-flow branch from the.
 # @param $1 Name of the branch
 #
 gitflow_config_remove_base_branch() {
 	local base
 
 	base=$1
-	$(git config --file=$GITFLOW_CONFIG --unset "branch.$branch.base" 2>/dev/null)
+	$(git_do config --local --unset "gitflow.branch.$branch.base" 2>/dev/null)
 }
 
 # gitflow_override_flag_boolean()
 #
 # Override a boolean flag
 #
-# Param $1: string The name of the environment variable
+# Param $1: string The name of the config variable e.g. "feature.start.fetch"
 # Param $2: string The flag name
 #
 gitflow_override_flag_boolean() {
-	local _variable _env_var
+	local _variable
 
-	_env_var="GITFLOW_FLAG_"$1
-	eval "_variable=\$${_env_var}"
+	_variable=$(git config --get gitflow.$1 2>/dev/null)
 	if [ -n "${_variable}" ]; then
-		gf_determine_boolean ${_variable}
+		gf_determine_boolean "${_variable}"
 		case "$?" in
 		${FLAGS_TRUE})
 			eval "FLAGS_${2}=${FLAGS_TRUE}"
@@ -465,7 +471,7 @@ gitflow_override_flag_boolean() {
 			;;
 		esac
 	fi
-	unset _variable _env_var
+	unset _variable
 	return ${FLAGS_TRUE}
 }
 
@@ -473,18 +479,17 @@ gitflow_override_flag_boolean() {
 #
 # Override a string flag
 #
-# Param $1: string The name of the environment variable
+# Param $1: string The name of the config variable e.g. "feature.start.fetch"
 # Param $2: string The flag name
 #
 gitflow_override_flag_string() {
-	local _variable _env_var
+	local _variable
 
-	_env_var="GITFLOW_FLAG_"$1
-	eval "_variable=\$${_env_var}"
+	_variable=$(git config --get gitflow.$1 2>/dev/null)
 	if [ -n "${_variable}" ]; then
-		eval "FLAGS_${2}=${_variable}"
+		eval "FLAGS_${2}=\"${_variable}\""
 	fi
-	unset _variable _env_var
+	unset _variable
 	return ${FLAGS_TRUE}
 }
 

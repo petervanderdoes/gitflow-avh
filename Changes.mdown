@@ -15,10 +15,11 @@
 [merelyapseudonym]: https://github.com/MerelyAPseudonym
 [shpoont]: https://github.com/shpoont
 [cyberbob]: https://github.com/cyberbob
+[shpoont]: https://github.com/shpoont
 
 # Changelog
 
-#### 1.6.0-dev.15
+#### 1.6.0-dev.21
 [Peter van der Does][petervanderdoes]
 * Add ability to short-circuit the version filters.  
   An exit of 127 will short-circuit the process.
@@ -27,6 +28,9 @@
 [Mateusz Kaczmarek][cyberbob]
 * Fix sanity check for feature track command.
 
+[Leonid Komarovsky][shpoont]
+* Move configuration from ~/.gitflow_export to default git config.
+* Move base configuration from it's own configuration file to the default local git config file.
 
 #### 1.5.3
 [Peter van der Does][petervanderdoes]

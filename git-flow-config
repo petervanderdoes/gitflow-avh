@@ -88,11 +88,11 @@ Show the git-flow configurations
 --
 h,help!           Show this help
 
- Use config file location
-local!  use repository config file
-global!  use global config file
-system!  use system config file
-file= use given config file
+Use config file location
+local!    Use repository config file
+global!   Use global config file
+system!   Use system config file
+file=     Use given config file
 "
 	local output
 
@@ -131,15 +131,15 @@ cmd_set() {
 	OPTIONS_SPEC="\
 git flow config set <option> <value>
 
- Set the git-flow configuration option to the given value
+Set the git-flow configuration option to the given value
 --
 h,help!           Show this help
 
- Use config file location
-local!  use repository config file
-global!  use global config file
-system!  use system config file
-file= use given config file
+Use config file location
+local!    Use repository config file
+global!   Use global config file
+system!   Use system config file
+file=     Use given config file
 "
 	local value cfg_option txt
 
