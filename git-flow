@@ -108,10 +108,11 @@ main() {
 	# Load common functionality
 	. "$GITFLOW_DIR/gitflow-common"
 
-	if grep -E 'GITFLOW_FLAG_(SHOWCOMMANDS|INIT|FEATURE|HOTFIX|RELEASE|SUPPORT)' ~/.gitflow_export > /dev/null; then
-		die "Using environment variables for \"showcommands\", \"init\", \"feature\", \"hotfix\", \"release\" and \"support\" in ~/.gitflow_export has deprecated, use git config instead."
+	if [ -f ~/.gitflow_export ]; then
+		if grep -E 'GITFLOW_FLAG_(SHOWCOMMANDS|INIT|FEATURE|HOTFIX|RELEASE|SUPPORT)' ~/.gitflow_export > /dev/null; then
+				die "Using environment variables for \"showcommands\", \"init\", \"feature\", \"hotfix\", \"release\" and \"support\" in ~/.gitflow_export has deprecated, use git config instead."
+		fi
 	fi
-
 	# allow user to request git action logging
 	DEFINE_boolean 'showcommands' false 'Show actions taken (git commands)'
 	# but if the user prefers that the logging is always on,
