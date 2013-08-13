@@ -887,11 +887,12 @@ showcommands!    Show git commands while executing them
 
 	# Sanity checks
 	require_clean_working_tree
-	require_branch_absent "$BRANCH"
-	git_do fetch -q "$ORIGIN"  || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
-	require_branch "$ORIGIN/$BRANCH"
+	require_local_branch_absent "$BRANCH"
 
 	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
+
+	git_do fetch -q "$ORIGIN"  || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
+	git_remote_branch_exists "$ORIGIN/$BRANCH"
 
 	# Create tracking branch
 	git_do checkout -b "$BRANCH" "$ORIGIN/$BRANCH" || die "Could not create branch '$BRANCH'."
