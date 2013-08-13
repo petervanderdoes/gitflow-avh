@@ -19,6 +19,11 @@
 
 # Changelog
 
+#### 1.6.1
+[Peter van der Does][petervanderdoes]
+* Migration of gitflow_config fails for posix sh.
+* Error messages when .gitflow_export doesn't exists.
+
 #### 1.6.0
 [Peter van der Does][petervanderdoes]
 * Add ability to short-circuit the version filters.  
