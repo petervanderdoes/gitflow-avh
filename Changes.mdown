@@ -19,6 +19,9 @@
 
 # Changelog
 
+#### 1.7.0-dev.1
+* Preparation for new development cycle.
+
 #### 1.6.1
 [Peter van der Does][petervanderdoes]
 * Migration of gitflow_config fails for posix sh.
