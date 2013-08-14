@@ -79,7 +79,7 @@ endswith() { [ "$1" != "${1%$2}" ]; }
 flag() { local FLAG; eval FLAG='$FLAGS_'$1; [ $FLAG -eq $FLAGS_TRUE ]; }
 noflag() { local FLAG; eval FLAG='$FLAGS_'$1; [ $FLAG -ne $FLAGS_TRUE ]; }
 
-# gf_determine_boolean
+# check_boolean
 # Check if given value can be interpreted as a boolean
 #
 # This function determines if the passed parameter is a valid boolean value.
@@ -91,7 +91,7 @@ noflag() { local FLAG; eval FLAG='$FLAGS_'$1; [ $FLAG -ne $FLAGS_TRUE ]; }
 #	FLAGS_FALSE if the parameter is a boolean FALSE
 #	FLAGS_ERROR if the parameter is not a boolean
 #
-gf_determine_boolean() {
+check_boolean() {
 	local _return _value
 	_value="${1}"
 	case "${_value}" in
