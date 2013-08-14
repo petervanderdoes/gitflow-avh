@@ -461,7 +461,7 @@ gitflow_override_flag_boolean() {
 
 	_variable=$(git config --bool --get gitflow.$1 2>&1)
 	case $? in
-	0}
+	0)
 		[ "${_variable}" = "true" ] && "FLAGS_${2}=${FLAGS_TRUE}" || eval "FLAGS_${2}=${FLAGS_FALSE}"
 		;;
 	128)
