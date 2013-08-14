@@ -16,11 +16,13 @@
 [shpoont]: https://github.com/shpoont
 [cyberbob]: https://github.com/cyberbob
 [shpoont]: https://github.com/shpoont
-
+ [jsivak]: https://github.com/jsivak
+ 
 # Changelog
 
-#### 1.7.0-dev.1
-* Preparation for new development cycle.
+#### 1.7.0-dev.5
+[John Sivak][jsivak] 
+* Fix sanity check for release track command.
 
 #### 1.6.1
 [Peter van der Does][petervanderdoes]
