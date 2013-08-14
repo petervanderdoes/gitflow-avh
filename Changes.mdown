@@ -20,7 +20,7 @@
  
 # Changelog
 
-#### 1.7.0-dev.1
+#### 1.7.0-dev.5
 [John Sivak][jsivak] 
 * Fix sanity check for release track command.
 
