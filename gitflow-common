@@ -459,21 +459,15 @@ gitflow_config_remove_base_branch() {
 gitflow_override_flag_boolean() {
 	local _variable
 
-	_variable=$(git config --get gitflow.$1 2>/dev/null)
-	if [ -n "${_variable}" ]; then
-		gf_determine_boolean "${_variable}"
-		case "$?" in
-		${FLAGS_TRUE})
-			eval "FLAGS_${2}=${FLAGS_TRUE}"
-			;;
-		${FLAGS_FALSE})
-			eval "FLAGS_${2}=${FLAGS_FALSE}"
-			;;
-		${FLAGS_ERROR})
-			warn "Invalid value for ${2}"
-			;;
-		esac
-	fi
+	_variable=$(git config --bool --get gitflow.$1 2>&1)
+	case $? in
+	0}
+		[ "${_variable}" = "true" ] && "FLAGS_${2}=${FLAGS_TRUE}" || eval "FLAGS_${2}=${FLAGS_FALSE}"
+		;;
+	128)
+		die "${_variable}"
+		;;
+	esac
 	unset _variable
 	return ${FLAGS_TRUE}
 }
@@ -488,10 +482,12 @@ gitflow_override_flag_boolean() {
 gitflow_override_flag_string() {
 	local _variable
 
-	_variable=$(git config --get gitflow.$1 2>/dev/null)
-	if [ -n "${_variable}" ]; then
+	_variable=$(git config --bool --get gitflow.$1 2>&1)
+	case $? in
+	0}
 		eval "FLAGS_${2}=\"${_variable}\""
-	fi
+		;;
+	esac
 	unset _variable
 	return ${FLAGS_TRUE}
 }
