@@ -484,7 +484,7 @@ gitflow_override_flag_string() {
 
 	_variable=$(git config --bool --get gitflow.$1 2>&1)
 	case $? in
-	0}
+	0)
 		eval "FLAGS_${2}=\"${_variable}\""
 		;;
 	esac
