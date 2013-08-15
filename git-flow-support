@@ -43,9 +43,6 @@ initialize() {
 	PREFIX=$(git config --get gitflow.prefix.support)
 }
 
-warn "note: The support subcommand is still very EXPERIMENTAL!"
-warn "note: DO NOT use it in a production situation."
-
 usage() {
 		OPTIONS_SPEC="\
 git flow support [list]
