@@ -121,26 +121,26 @@ main() {
 
 	# Sanity checks
 	SUBCOMMAND="$1"; shift
-	if [ "${SUBCOMMAND}" = "finish" ]; then
+	if [ "${SUBCOMMAND}" = "finish" ] || [ "${SUBCOMMAND}" = "delete" ]; then
 		_current_branch=$(git_current_branch)
 		if gitflow_is_prefixed_branch "${_current_branch}"; then
 			if startswith "${_current_branch}" $(git config --get gitflow.prefix.feature); then
+				SUBACTION="${SUBCOMMAND}"
 				SUBCOMMAND="feature"
-				SUBACTION="finish"
 				_prefix=$(git config --get gitflow.prefix.feature)
-				CLI=$(echo ${_current_branch#*${_prefix}})
+				_short_branch_name=$(echo ${_current_branch#*${_prefix}})
 			else
 				if startswith "${_current_branch}" $(git config --get gitflow.prefix.hotfix); then
+					SUBACTION="${SUBCOMMAND}"
 					SUBCOMMAND="hotfix"
-					SUBACTION="finish"
 					_prefix=$(git config --get gitflow.prefix.hotfix)
-					CLI=$(echo ${_current_branch#*${_prefix}})
+					_short_branch_name=$(echo ${_current_branch#*${_prefix}})
 				else
 					if startswith "${_current_branch}" $(git config --get gitflow.prefix.release); then
+						SUBACTION="${SUBCOMMAND}"
 						SUBCOMMAND="release"
-						SUBACTION="finish"
 						_prefix=$(git config --get gitflow.prefix.release)
-						CLI=$(echo ${_current_branch#*${_prefix}})
+						_short_branch_name=$(echo ${_current_branch#*${_prefix}})
 					fi
 				fi
 			fi
@@ -160,9 +160,9 @@ main() {
 		# If the first argument is a flag, it starts with '-', we interpret this
 		# argument as a flag for the default command.
 		if startswith "$1" "-"; then
-					SUBACTION="default"
+			SUBACTION="default"
 		elif [ -z "$1" ]; then
-					SUBACTION="default"
+			SUBACTION="default"
 		else
 			SUBACTION="$1"
 			shift
@@ -192,6 +192,6 @@ main() {
 		FLAGS_PARENT="git flow $SUBCOMMAND $SUBACTION"
 	fi
 
-	cmd_$SUBACTION "${CLI}" "$@"
+	cmd_$SUBACTION "$@" "${_short_branch_name}"
 }
 main "$@"
