@@ -196,12 +196,17 @@ parse_args() {
 }
 
 parse_remote_name() {
+	local current_branch
 	# Parse arguments
 	FLAGS "$@" || exit $?
 	eval set -- "${FLAGS_ARGV}"
 
 	# read arguments into global variables
 	REMOTE=$1
+	current_branch=`git_current_branch`
+	if [[ $VERSION == "" ]] && [[ $current_branch == $PREFIX* ]]; then
+		VERSION=${current_branch//$PREFIX/}
+	fi
 	NAME=$2
 	BRANCH=$PREFIX$NAME
 }
