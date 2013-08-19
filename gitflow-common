@@ -260,24 +260,6 @@ git_fetch_branch() {
 # gitflow specific common functionality
 #
 
-gitflow_require_version_arg() {
-	if [ "$VERSION" = "" ]; then
-		die_help "Missing argument <version>"
-	fi
-}
-
-gitflow_require_name_arg() {
-	if [ "$NAME" = "" ]; then
-		die_help "Missing argument <name>"
-	fi
-}
-
-gitflow_require_base_arg() {
-	if [ "$BASE" = "" ]; then
-		die_help "Missing argument <base>"
-	fi
-}
-
 # Function used to check if the repository is git-flow enabled.
 gitflow_has_master_configured() {
 	local master
@@ -511,17 +493,65 @@ gitflow_create_squash_message() {
 #
 # Parameter functions
 #
-param_expand_nameprefix_arg_or_current() {
-	set -x
+gitflow_expand_nameprefix_arg_or_current() {
 	if [ "$NAME" != "" ]; then
-		expand_nameprefix_arg
+		gitflow_expand_nameprefix_arg
 		require_branch "$PREFIX$NAME"
 	else
-		use_current_feature_branch_name
+		gitflow_use_current_branch_name
 	fi
-	set +x
 }
 
+gitflow_expand_nameprefix_arg() {
+	local expanded_name exitcode
+
+	gitflow_require_name_arg
+
+	expanded_name=$(gitflow_resolve_nameprefix "$NAME" "$PREFIX")
+	exitcode=$?
+	case $exitcode in
+	0)
+		NAME=$expanded_name
+		BRANCH=$PREFIX$NAME
+		;;
+	*)
+		exit 1
+		;;
+	esac
+}
+
+gitflow_require_version_arg() {
+	if [ "$NAME" = "" ]; then
+		die_help "Missing argument <version>"
+	fi
+}
+
+gitflow_require_name_arg() {
+	if [ "$NAME" = "" ]; then
+		die_help "Missing argument <name>"
+	fi
+}
+
+gitflow_require_base_arg() {
+	if [ "$BASE" = "" ]; then
+		die_help "Missing argument <base>"
+	fi
+}
+
+gitflow_use_current_branch_name() {
+	local current_branch
+
+	current_branch=$(git_current_branch)
+
+	if startswith "$current_branch" "$PREFIX"; then
+		BRANCH=$current_branch
+		NAME=${BRANCH#$PREFIX}
+	else
+		warn "The current HEAD is no feature branch."
+		warn "Please specify a <name> argument."
+		exit 1
+	fi
+}
 #
 # Assertions for use in git-flow subcommands
 #
