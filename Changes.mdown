@@ -23,10 +23,14 @@
 #### 1.7.0-dev.18
 [Peter van der Does][petervanderdoes]
 * Refactor the gitflow override flag functions.
-* Shortcut for finish and delete commands.  
-  Introduce two new commands, git flow finish and git flow delete.  
-  These commands will finish/delete the current branch you are on.  
-
+* Shortcut for finish, delete, and publish commands.  
+  Introduce the following new commands:  
+  * git flow finish
+  * git flow delete
+  * git flow publish
+  
+  These commands will perform the action on the branch that's currently active.
+  
 [John Sivak][jsivak] 
 * Fix sanity check for release track command.
 
