@@ -170,15 +170,6 @@ use_current_feature_branch_name() {
 	fi
 }
 
-expand_nameprefix_arg_or_current() {
-	if [ "$NAME" != "" ]; then
-		expand_nameprefix_arg
-		require_branch "$PREFIX$NAME"
-	else
-		use_current_feature_branch_name
-	fi
-}
-
 name_or_current() {
 	if [ -z "$NAME" ]; then
 		use_current_feature_branch_name
@@ -313,7 +304,7 @@ no-ff!                 Never fast-forward during the merge
 	# Parse arguments
 	parse_args "$@"
 
-	expand_nameprefix_arg_or_current
+	param_expand_nameprefix_arg_or_current
 
 	# Keeping both branches implies the --keep flag to be true.
 	if flag keepremote && flag keeplocal; then
@@ -675,7 +666,7 @@ p,[no]preserve-merges  Preserve merges
 	# Parse arguments
 	parse_args "$@"
 
-	expand_nameprefix_arg_or_current
+	param_expand_nameprefix_arg_or_current
 
 	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
 	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}

@@ -509,6 +509,20 @@ gitflow_create_squash_message() {
 }
 
 #
+# Parameter functions
+#
+param_expand_nameprefix_arg_or_current() {
+	set -x
+	if [ "$NAME" != "" ]; then
+		expand_nameprefix_arg
+		require_branch "$PREFIX$NAME"
+	else
+		use_current_feature_branch_name
+	fi
+	set +x
+}
+
+#
 # Assertions for use in git-flow subcommands
 #
 
