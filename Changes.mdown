@@ -20,7 +20,7 @@
  
 # Changelog
 
-#### 1.7.0-dev.25
+#### 1.7.0-dev.29
 [Peter van der Does][petervanderdoes]
 * Refactor the gitflow override flag functions.
 * Shortcut for finish, delete, and publish commands.  
