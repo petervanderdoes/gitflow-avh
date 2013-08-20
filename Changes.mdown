@@ -30,6 +30,10 @@
   * git flow publish
   
   These commands will perform the action on the branch that's currently active.
+* No branch is needed for the following function:  
+  * git flow feature publish/finish/delete
+  * git flow release publish/finish/delete
+  * git flow hotfix publish/finish/delete
   
 [John Sivak][jsivak] 
 * Fix sanity check for release track command.
