@@ -703,7 +703,7 @@ showcommands!    Show git commands while executing them
 
 	run_pre_hook "$NAME" "$REMOTE" "$BRANCH"
 
-	if git_branch_exists "$BRANCH"; then
+	if git_local_branch_exists "$BRANCH"; then
 		# Again, avoid accidental merges
 		avoid_accidental_cross_branch_action || die
 
