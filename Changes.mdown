@@ -17,10 +17,11 @@
 [cyberbob]: https://github.com/cyberbob
 [shpoont]: https://github.com/shpoont
  [jsivak]: https://github.com/jsivak
+ [OpherV]: https://github.com/OpherV
  
 # Changelog
 
-#### 1.7.0-dev.29
+#### 1.7.0-dev.33
 [Peter van der Does][petervanderdoes]
 * Refactor the gitflow override flag functions.
 * Shortcut for finish, delete, and publish commands.  
@@ -37,6 +38,11 @@
   
 [John Sivak][jsivak] 
 * Fix sanity check for release track command.
+
+[Opher Vishnia][OpherV]
+* Fix feature pull.  
+  The pull request fails when there's no local branch with the same name as the
+  remote branch.
 
 #### 1.6.1
 [Peter van der Does][petervanderdoes]
