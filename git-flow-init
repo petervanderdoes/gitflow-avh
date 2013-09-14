@@ -340,6 +340,20 @@ file=    use given config file
 		git_do config $gitflow_config_option gitflow.prefix.versiontag "$prefix"
 	fi
 
+	# Paths 
+	if ! git config --get gitflow.path.hooks >/dev/null 2>&1 || flag force; then
+        DOT_GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
+		default_suggestion=$(git config --get gitflow.path.hooks || echo "$DOT_GIT_DIR"/hooks)
+		printf "Hooks and filters directory? [$default_suggestion] "
+		if noflag defaults; then
+			read answer
+		else
+			printf "\n"
+		fi
+		[ "$answer" = "-" ] && hooks_dir= || hooks_dir=${answer:-$default_suggestion}
+		git_do config $gitflow_config_option gitflow.path.hooks "$hooks_dir"
+	fi
+
 	# TODO: what to do with origin?
 }
 
