@@ -637,6 +637,7 @@ r,[no]remote          Delete remote branch
 		fi
 	fi
 
+	gitflow_config_remove_base_section "$BRANCH"
 	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
 
 	echo

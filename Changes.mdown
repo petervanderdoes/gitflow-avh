@@ -21,7 +21,7 @@
  
 # Changelog
 
-#### 1.7.0-dev.39
+#### 1.7.0-dev.42
 [Peter van der Does][petervanderdoes]
 * Refactor the gitflow override flag functions.
 * Shortcut for finish, delete, and publish commands.  
@@ -35,6 +35,8 @@
   * git flow feature publish/finish/delete
   * git flow release publish/finish/delete
   * git flow hotfix publish/finish/delete
+  
+* Remove base configuration when deleting a feature/hotfix/release branch.
   
 [John Sivak][jsivak] 
 * Fix sanity check for release track command.
