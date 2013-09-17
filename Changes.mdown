@@ -43,6 +43,11 @@
 * Fix feature pull.  
   The pull request fails when there's no local branch with the same name as the
   remote branch.
+  
+[Leonid Komarovsky][shpoont]
+* Option for global hooks and filters directory.  
+  This only is for hooks and filters related to git-flow, not the standard git 
+  hooks.
 
 #### 1.6.1
 [Peter van der Does][petervanderdoes]
