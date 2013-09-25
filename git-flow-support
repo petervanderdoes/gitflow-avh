@@ -48,7 +48,7 @@ usage() {
 git flow support [list]
 git flow support start
 
-Manage your hotfix branches.
+Manage your support branches.
 
 For more specific help type the command followed by --help
 --

@@ -587,7 +587,7 @@ cmd_delete() {
 	OPTIONS_SPEC="\
 git flow hotfix delete [-h] [-f] [-r] <name>
 
-List existing release branches
+Delete the given hotfix branch
 --
 h,help!               Show this help
 showcommands!         Show git commands while executing them
