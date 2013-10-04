@@ -7,106 +7,126 @@
 # Licensed under the same restrictions as git-flow:
 # http://github.com/petervanderdoes/gitflow/blob/develop/LICENSE
 
-# Updated for the fork at petervanderdoes
 
-usage() {
-	echo "Usage: [environment] gitflow-installer.sh [install|uninstall] [stable|develop]"
-	echo "Environment:"
-	echo "   PREFIX=$PREFIX"
-	echo "   REPO_HOME=$REPO_HOME"
-	echo "   REPO_NAME=$REPO_NAME"
-	exit 1
-}
 
 # Does this need to be smarter for each host OS?
 if [ -z "$PREFIX" ] ; then
-	PREFIX="/usr/local"
-fi
-
-if [ -z "$REPO_NAME" ] ; then
-	REPO_NAME="gitflow"
+    PREFIX="/usr/local"
 fi
 
 if [ -z "$REPO_HOME" ] ; then
-	REPO_HOME="http://github.com/petervanderdoes/gitflow.git"
+    REPO_HOME="http://github.com/petervanderdoes/gitflow.git"
 fi
 
-EXEC_PREFIX="$PREFIX"
-BINDIR="$EXEC_PREFIX/bin"
-DATAROOTDIR="$PREFIX/share"
-DOCDIR="$DATAROOTDIR/doc/gitflow"
+if [ -z "$REPO_BRANCH_NAME" ] ; then
+    REPO_BRANCH_NAME="master"
+fi
 
-EXEC_FILES="git-flow"
-SCRIPT_FILES="git-flow-init git-flow-feature git-flow-hotfix git-flow-release git-flow-support git-flow-version gitflow-common gitflow-shFlags git-flow-config"
-HOOK_FILES="$REPO_NAME/hooks/*"
+BINDIR="$PREFIX/bin"
+BAREBONEHOOKSDIR="$PREFIX/share/gitflow/barebone-hooks"
+
+INSTALL_EXEC_FILES="git-flow"
+INSTALL_SCRIPT_FILES="git-flow-init git-flow-feature git-flow-hotfix git-flow-release git-flow-support git-flow-version gitflow-common gitflow-shFlags git-flow-config"
+
+usage() {
+    echo "Usage: [environment] gitflow-installer.sh <install [stable|develop]|uninstall>"
+    echo "Environment:"
+    echo "   PREFIX=$PREFIX"
+    echo "   REPO_HOME=$REPO_HOME"
+    echo "   REPO_BRANCH_NAME=$REPO_BRANCH_NAME"
+    exit 1
+}
 
 
+echo ""
 echo "### git-flow no-make installer ###"
+echo ""
 
 case "$1" in
-uninstall)
-	echo "Uninstalling git-flow from $PREFIX"
-	if [ -d "$BINDIR" ] ; then
-		for script_file in $SCRIPT_FILES $EXEC_FILES ; do
-			echo "rm -vf $BINDIR/$script_file"
-			rm -vf "$BINDIR/$script_file"
-		done
-		rm -rf "$DOCDIR"
-	else
-		echo "The '$BINDIR' directory was not found."
-	fi
-	exit
-	;;
-help)
-	usage
-	exit
-	;;
-install)
-	if [ -z $2 ]; then
-		usage
-		exit
-	fi
-	echo "Installing git-flow to $BINDIR"
-	if [ -d "$REPO_NAME" -a -d "$REPO_NAME/.git" ] ; then
-		echo "Using existing repo: $REPO_NAME"
-	else
-		echo "Cloning repo from GitHub to $REPO_NAME"
-		git clone "$REPO_HOME" "$REPO_NAME"
-	fi
-	cd "$REPO_NAME"
-	git pull
-	cd "$OLDPWD"
-	case "$2" in
-	stable)
-		cd "$REPO_NAME"
-		git checkout master
-		cd "$OLDPWD"
-		;;
-	develop)
-		cd "$REPO_NAME"
-		git checkout develop
-		cd "$OLDPWD"
-		;;
-	*)
-		usage
-		exit
-		;;
-	esac
-	install -v -d -m 0755 "$PREFIX/bin"
-	install -v -d -m 0755 "$DOCDIR/hooks"
-	for exec_file in $EXEC_FILES ; do
-		install -v -m 0755 "$REPO_NAME/$exec_file" "$BINDIR"
-	done
-	for script_file in $SCRIPT_FILES ; do
-		install -v -m 0644 "$REPO_NAME/$script_file" "$BINDIR"
-	done
-	for hook_file in $HOOK_FILES ; do
-		install -v -m 0644 "$hook_file"  "$DOCDIR/hooks"
-	done
-	exit
-	;;
-*)
-	usage
-	exit
-	;;
+    help)
+        usage
+        exit
+        ;;
+    uninstall)
+        echo "Uninstalling git-flow from $PREFIX"
+        echo "Deleting files and folders.."
+        echo ""
+
+        if [ -d "$BINDIR" ] ; then
+            for script_file in $INSTALL_SCRIPT_FILES $INSTALL_EXEC_FILES; do
+                rm -vf "$BINDIR/$script_file"
+            done
+        else
+            echo "The '$BINDIR' directory was not found."
+        fi
+
+        if [ -d "$BAREBONEHOOKSDIR" ] ; then
+            rm -rvf "$BAREBONEHOOKSDIR"
+        else
+            echo "The '$BAREBONEHOOKSDIR' directory was not found."
+        fi
+
+        echo ""
+        echo "Uninstalled git-flow"
+        exit
+        ;;
+    install)
+        case "$2" in
+            stable)
+                REPO_BRANCH_NAME="master"
+                ;;
+            develop)
+                REPO_BRANCH_NAME="develop"
+                ;;
+            "")
+                # default is defined already
+                ;;
+            *)
+                usage
+                exit
+                ;;
+        esac
+
+        echo "Installing git-flow to $BINDIR"
+        
+        echo ""
+        echo "Cloning $REPO_HOME (branch '$REPO_BRANCH_NAME')"
+
+        CLONE_TMP_DIR=`mktemp -d -t gitflow-install`
+        git clone --quiet "$REPO_HOME" "$CLONE_TMP_DIR"
+        cd "$CLONE_TMP_DIR"
+        git checkout --quiet "$REPO_BRANCH_NAME"
+
+        echo ""
+        echo "Creating target directories"
+        install -v -d -m 0755 "$BINDIR"
+        install -v -d -m 0755 "$BAREBONEHOOKSDIR"
+      
+        echo ""
+        echo "Installing files"
+        for exec_file in $INSTALL_EXEC_FILES; do
+            install -v -m 0755 "$CLONE_TMP_DIR/$exec_file" "$BINDIR"
+        done
+        for script_file in $INSTALL_SCRIPT_FILES; do
+            install -v -m 0644 "$CLONE_TMP_DIR/$script_file" "$BINDIR"
+        done
+        for hook_file in $CLONE_TMP_DIR/hooks/*; do
+            install -v -m 0644 "$hook_file"  "$BAREBONEHOOKSDIR"
+        done
+
+        # Cleanup 
+        echo ""
+        echo "Cleaning up"
+        rm -rf "$CLONE_TMP_DIR"
+
+        # Done
+        echo ""
+        echo "Installed git-flow"
+
+        exit
+        ;;
+    *)
+        usage
+        exit
+        ;;
 esac

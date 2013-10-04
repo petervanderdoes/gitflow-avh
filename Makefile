@@ -28,8 +28,9 @@
 
 prefix=/usr/local
 
-datarootdir=$(prefix)/share
-docdir=$(datarootdir)/doc/gitflow
+bindir=$(prefix)/bin
+barebonehooksdir=$(prefix)/share/gitflow/barebone-hooks
+
 # files that need mode 755
 EXEC_FILES=git-flow
 
@@ -53,15 +54,15 @@ all:
 
 install:
 	@test -f gitflow-shFlags || (echo "Run 'git submodule init && git submodule update' first." ; exit 1 )
-	install -d -m 0755 $(prefix)/bin
-	install -d -m 0755 $(docdir)/hooks
-	install -m 0755 $(EXEC_FILES) $(prefix)/bin
-	install -m 0644 $(SCRIPT_FILES) $(prefix)/bin
-	install -m 0644 $(HOOK_FILES) $(docdir)/hooks
+	install -d -m 0755 $(bindir)
+	install -d -m 0755 $(barebonehooksdir)
+	install -m 0755 $(EXEC_FILES) $(bindir)
+	install -m 0644 $(SCRIPT_FILES) $(bindir)
+	install -m 0644 $(HOOK_FILES) $(barebonehooksdir)
 
 uninstall:
-	test -d $(prefix)/bin && \
-	cd $(prefix)/bin && \
+	test -d $(bindir) && \
+	cd $(bindir) && \
 	rm -f $(EXEC_FILES) $(SCRIPT_FILES)
-	test -d $(docdir) && \
-	rm -rf $(docdir)
+	test -d $(barebonehooksdir) && \
+	rm -rf $(barebonehooksdir)
