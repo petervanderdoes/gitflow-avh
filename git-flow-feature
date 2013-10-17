@@ -572,7 +572,7 @@ showcommands!    Show git commands while executing them
 	parse_args "$@"
 
 	if [ "$NAME" != "" ]; then
-		expand_nameprefix_arg
+		gitflow_expand_nameprefix_arg 
 		base=$(git merge-base "$DEVELOP_BRANCH" "$BRANCH")
 		git_do diff "$base..$BRANCH"
 	else
@@ -598,7 +598,7 @@ showcommands!    Show git commands while executing them
 	parse_args "$@"
 
 	if [ "$NAME" != "" ]; then
-		expand_nameprefix_arg
+		gitflow_expand_nameprefix_arg 
 		git_do checkout "$BRANCH"  || die "Could not check out branch '$BRANCH'."
 	else
 		die "Name a feature branch explicitly."
@@ -754,7 +754,7 @@ r,[no]remote     Delete remote branch
 	# Parse arguments
 	parse_args "$@"
 
-	expand_nameprefix_arg
+	gitflow_expand_nameprefix_arg 
 
 	# Sanity checks
 	require_branch "$BRANCH"
