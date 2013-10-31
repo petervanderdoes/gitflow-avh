@@ -28,7 +28,7 @@ if [ -z "$REPO_NAME" ] ; then
 fi
 
 if [ -z "$REPO_HOME" ] ; then
-	REPO_HOME="http://github.com/petervanderdoes/gitflow.git"
+	REPO_HOME="https://github.com/petervanderdoes/gitflow.git"
 fi
 
 EXEC_PREFIX="$PREFIX"
