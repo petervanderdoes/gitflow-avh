@@ -41,6 +41,7 @@
 * Help text for certain commands is wrong.
 
 * Bugfix: Invalid function call.
+* Bugfix: No make installer fails
   
 [John Sivak][jsivak] 
 * Fix sanity check for release track command.
