@@ -13,7 +13,7 @@
 # DEVELOP_BRANCH - The branch defined as Develop
 #
 
-NAME=$1
+VERSION=$1
 ORIGIN=$2
 BRANCH=$3
 

@@ -522,7 +522,7 @@ gitflow_expand_nameprefix_arg() {
 }
 
 gitflow_require_version_arg() {
-	if [ "$NAME" = "" ]; then
+	if [ "$VERSION" = "" ]; then
 		die_help "Missing argument <version>"
 	fi
 }
