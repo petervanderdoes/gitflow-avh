@@ -139,9 +139,9 @@ parse_args() {
 	eval set -- "${FLAGS_ARGV}"
 
 	# Read arguments into global variables
-	VERSION=$1
+	NAME=$1
 	BASE=$2
-	BRANCH=$PREFIX$VERSION
+	BRANCH=$PREFIX$NAME
 }
 
 cmd_start() {
