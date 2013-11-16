@@ -79,7 +79,7 @@ endswith() { [ "$1" != "${1%$2}" ]; }
 flag() { local FLAG; eval FLAG='$FLAGS_'$1; [ $FLAG -eq $FLAGS_TRUE ]; }
 noflag() { local FLAG; eval FLAG='$FLAGS_'$1; [ $FLAG -ne $FLAGS_TRUE ]; }
 
-# gf_determine_boolean
+# check_boolean
 # Check if given value can be interpreted as a boolean
 #
 # This function determines if the passed parameter is a valid boolean value.
@@ -91,7 +91,7 @@ noflag() { local FLAG; eval FLAG='$FLAGS_'$1; [ $FLAG -ne $FLAGS_TRUE ]; }
 #	FLAGS_FALSE if the parameter is a boolean FALSE
 #	FLAGS_ERROR if the parameter is not a boolean
 #
-gf_determine_boolean() {
+check_boolean() {
 	local _return _value
 	_value="${1}"
 	case "${_value}" in
@@ -260,24 +260,6 @@ git_fetch_branch() {
 # gitflow specific common functionality
 #
 
-gitflow_require_version_arg() {
-	if [ "$VERSION" = "" ]; then
-		die_help "Missing argument <version>"
-	fi
-}
-
-gitflow_require_name_arg() {
-	if [ "$NAME" = "" ]; then
-		die_help "Missing argument <name>"
-	fi
-}
-
-gitflow_require_base_arg() {
-	if [ "$BASE" = "" ]; then
-		die_help "Missing argument <base>"
-	fi
-}
-
 # Function used to check if the repository is git-flow enabled.
 gitflow_has_master_configured() {
 	local master
@@ -310,8 +292,9 @@ gitflow_is_initialized() {
 
 # Loading settings that can be overridden using git config
 gitflow_load_settings() {
+	export GIT_CURRENT_REPO_DIR=$(git rev-parse --show-toplevel 2>/dev/null)
 	export DOT_GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
-	export HOOKS_DIR="$DOT_GIT_DIR"/hooks
+	export HOOKS_DIR=$(git config --get gitflow.path.hooks || echo "$DOT_GIT_DIR"/hooks) # the second option is used to support previous versions of git-flow
 	export MASTER_BRANCH=$(git config --get gitflow.branch.master)
 	export DEVELOP_BRANCH=$(git config --get gitflow.branch.develop)
 	export ORIGIN=$(git config --get gitflow.origin || echo origin)
@@ -459,21 +442,15 @@ gitflow_config_remove_base_branch() {
 gitflow_override_flag_boolean() {
 	local _variable
 
-	_variable=$(git config --get gitflow.$1 2>/dev/null)
-	if [ -n "${_variable}" ]; then
-		gf_determine_boolean "${_variable}"
-		case "$?" in
-		${FLAGS_TRUE})
-			eval "FLAGS_${2}=${FLAGS_TRUE}"
-			;;
-		${FLAGS_FALSE})
-			eval "FLAGS_${2}=${FLAGS_FALSE}"
-			;;
-		${FLAGS_ERROR})
-			warn "Invalid value for ${2}"
-			;;
-		esac
-	fi
+	_variable=$(git config --bool --get gitflow.$1 2>&1)
+	case $? in
+	0)
+		[ "${_variable}" = "true" ] && eval "FLAGS_${2}=${FLAGS_TRUE}" || eval "FLAGS_${2}=${FLAGS_FALSE}"
+		;;
+	128)
+		die "${_variable}"
+		;;
+	esac
 	unset _variable
 	return ${FLAGS_TRUE}
 }
@@ -488,10 +465,12 @@ gitflow_override_flag_boolean() {
 gitflow_override_flag_string() {
 	local _variable
 
-	_variable=$(git config --get gitflow.$1 2>/dev/null)
-	if [ -n "${_variable}" ]; then
+	_variable=$(git config --get gitflow.$1 2>&1)
+	case $? in
+	0)
 		eval "FLAGS_${2}=\"${_variable}\""
-	fi
+		;;
+	esac
 	unset _variable
 	return ${FLAGS_TRUE}
 }
@@ -512,6 +491,68 @@ gitflow_create_squash_message() {
 	git log --no-merges --pretty=medium ^"$2" $3
 }
 
+#
+# Parameter functions
+#
+gitflow_expand_nameprefix_arg_or_current() {
+	if [ "$NAME" != "" ]; then
+		gitflow_expand_nameprefix_arg
+		require_branch "$PREFIX$NAME"
+	else
+		gitflow_use_current_branch_name
+	fi
+}
+
+gitflow_expand_nameprefix_arg() {
+	local expanded_name exitcode
+
+	gitflow_require_name_arg
+
+	expanded_name=$(gitflow_resolve_nameprefix "$NAME" "$PREFIX")
+	exitcode=$?
+	case $exitcode in
+	0)
+		NAME=$expanded_name
+		BRANCH=$PREFIX$NAME
+		;;
+	*)
+		exit 1
+		;;
+	esac
+}
+
+gitflow_require_version_arg() {
+	if [ "$VERSION" = "" ]; then
+		die_help "Missing argument <version>"
+	fi
+}
+
+gitflow_require_name_arg() {
+	if [ "$NAME" = "" ]; then
+		die_help "Missing argument <name>"
+	fi
+}
+
+gitflow_require_base_arg() {
+	if [ "$BASE" = "" ]; then
+		die_help "Missing argument <base>"
+	fi
+}
+
+gitflow_use_current_branch_name() {
+	local current_branch
+
+	current_branch=$(git_current_branch)
+
+	if startswith "$current_branch" "$PREFIX"; then
+		BRANCH=$current_branch
+		NAME=${BRANCH#$PREFIX}
+	else
+		warn "The current HEAD is no feature branch."
+		warn "Please specify a <name> argument."
+		exit 1
+	fi
+}
 #
 # Assertions for use in git-flow subcommands
 #

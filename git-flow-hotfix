@@ -241,7 +241,7 @@ showcommands!     Show git commands while executing them
 	# Parse arguments
 	parse_args "$@"
 
-	gitflow_require_version_arg
+	gitflow_expand_nameprefix_arg_or_current
 
 	# Sanity checks
 	require_clean_working_tree
@@ -356,7 +356,7 @@ b,[no]nobackmerge     Don't back-merge master, or tag if applicable, in develop
 
 	remotebranchdeleted=$FLAGS_FALSE
 	localbranchdeleted=$FLAGS_FALSE
-	gitflow_require_version_arg
+	gitflow_expand_nameprefix_arg_or_current
 
 	# Handle flags that imply other flags
 	if [ "$FLAGS_signingkey" != "" ]; then
@@ -587,7 +587,7 @@ cmd_delete() {
 	OPTIONS_SPEC="\
 git flow hotfix delete [-h] [-f] [-r] <name>
 
-List existing release branches
+Delete the given hotfix branch
 --
 h,help!               Show this help
 showcommands!         Show git commands while executing them
@@ -607,7 +607,7 @@ r,[no]remote          Delete remote branch
 	# Parse arguments
 	parse_args "$@"
 
-	gitflow_require_version_arg
+	gitflow_expand_nameprefix_arg_or_current
 
 	# Sanity checks
 	require_branch "$BRANCH"
@@ -637,6 +637,7 @@ r,[no]remote          Delete remote branch
 		fi
 	fi
 
+	gitflow_config_remove_base_section "$BRANCH"
 	run_post_hook "$VERSION" "$ORIGIN" "$BRANCH"
 
 	echo

@@ -639,7 +639,7 @@ S,[no]squash        Squash release during merge
 	# As VERSION might have changed reset BRANCH with new VERSION
 	BRANCH=$PREFIX$VERSION
 
-	gitflow_require_version_arg
+	gitflow_expand_nameprefix_arg_or_current
 	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
 	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
 	git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't finish the release branch '$BRANCH'."
@@ -842,7 +842,7 @@ showcommands!    Show git commands while executing them
 	# Parse arguments
 	parse_args "$@"
 
-	gitflow_require_version_arg
+	gitflow_expand_nameprefix_arg_or_current
 
 	# Sanity checks
 	require_clean_working_tree
@@ -850,7 +850,7 @@ showcommands!    Show git commands while executing them
 	git_do fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 	require_branch_absent "$ORIGIN/$BRANCH"
 
-	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
+	run_pre_hook "$VERSION" "$ORIGIN" "$BRANCH"
 
 	# Create remote branch
 	git_do push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH"
@@ -861,7 +861,7 @@ showcommands!    Show git commands while executing them
 	git_do config "branch.$BRANCH.merge" "refs/heads/$BRANCH"
 	git_do checkout "$BRANCH" || die "Could not check out branch '$BRANCH'."
 
-	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
+	run_post_hook "$VERSION" "$ORIGIN" "$BRANCH"
 
 	echo
 	echo "Summary of actions:"
@@ -887,16 +887,17 @@ showcommands!    Show git commands while executing them
 
 	# Sanity checks
 	require_clean_working_tree
-	require_branch_absent "$BRANCH"
-	git_do fetch -q "$ORIGIN"  || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
-	require_branch "$ORIGIN/$BRANCH"
+	require_local_branch_absent "$BRANCH"
 
-	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
+	run_pre_hook "$VERSION" "$ORIGIN" "$BRANCH"
+
+	git_do fetch -q "$ORIGIN"  || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
+	git_remote_branch_exists "$ORIGIN/$BRANCH"
 
 	# Create tracking branch
 	git_do checkout -b "$BRANCH" "$ORIGIN/$BRANCH" || die "Could not create branch '$BRANCH'."
 
-	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
+	run_post_hook "$VERSION" "$ORIGIN" "$BRANCH"
 
 	echo
 	echo "Summary of actions:"
@@ -929,7 +930,7 @@ r,[no]remote     Delete remote branch
 	# Parse arguments
 	parse_args "$@"
 
-	gitflow_require_version_arg
+	gitflow_expand_nameprefix_arg_or_current
 
 	# Sanity checks
 	require_branch "$BRANCH"
@@ -959,6 +960,7 @@ r,[no]remote     Delete remote branch
 		fi
 	fi
 
+	gitflow_config_remove_base_section "$BRANCH"
 	run_post_hook "$VERSION" "$ORIGIN" "$BRANCH"
 
 	echo

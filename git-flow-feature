@@ -40,6 +40,7 @@ initialize() {
 	require_gitflow_initialized
 	gitflow_load_settings
 	PREFIX=$(git config --get gitflow.prefix.feature)
+
 }
 
 usage() {
@@ -135,48 +136,6 @@ v,verbose   Verbose (more) output
 cmd_help() {
 	usage
 	exit 0
-}
-
-expand_nameprefix_arg() {
-	local expanded_name exitcode
-
-	gitflow_require_name_arg
-
-	expanded_name=$(gitflow_resolve_nameprefix "$NAME" "$PREFIX")
-	exitcode=$?
-	case $exitcode in
-	0)
-		NAME=$expanded_name
-		BRANCH=$PREFIX$NAME
-		;;
-	*)
-		exit 1
-		;;
-	esac
-}
-
-use_current_feature_branch_name() {
-	local current_branch
-
-	current_branch=$(git_current_branch)
-
-	if startswith "$current_branch" "$PREFIX"; then
-		BRANCH=$current_branch
-		NAME=${BRANCH#$PREFIX}
-	else
-		warn "The current HEAD is no feature branch."
-		warn "Please specify a <name> argument."
-		exit 1
-	fi
-}
-
-expand_nameprefix_arg_or_current() {
-	if [ "$NAME" != "" ]; then
-		expand_nameprefix_arg
-		require_branch "$PREFIX$NAME"
-	else
-		use_current_feature_branch_name
-	fi
 }
 
 name_or_current() {
@@ -313,7 +272,7 @@ no-ff!                 Never fast-forward during the merge
 	# Parse arguments
 	parse_args "$@"
 
-	expand_nameprefix_arg_or_current
+	gitflow_expand_nameprefix_arg_or_current
 
 	# Keeping both branches implies the --keep flag to be true.
 	if flag keepremote && flag keeplocal; then
@@ -534,7 +493,7 @@ showcommands!    Show git commands while executing them
 	# Parse arguments
 	parse_args "$@"
 
-	name_or_current
+	gitflow_expand_nameprefix_arg_or_current
 
 	# Sanity checks
 	require_clean_working_tree
@@ -613,7 +572,7 @@ showcommands!    Show git commands while executing them
 	parse_args "$@"
 
 	if [ "$NAME" != "" ]; then
-		expand_nameprefix_arg
+		gitflow_expand_nameprefix_arg 
 		base=$(git merge-base "$DEVELOP_BRANCH" "$BRANCH")
 		git_do diff "$base..$BRANCH"
 	else
@@ -639,7 +598,7 @@ showcommands!    Show git commands while executing them
 	parse_args "$@"
 
 	if [ "$NAME" != "" ]; then
-		expand_nameprefix_arg
+		gitflow_expand_nameprefix_arg 
 		git_do checkout "$BRANCH"  || die "Could not check out branch '$BRANCH'."
 	else
 		die "Name a feature branch explicitly."
@@ -675,7 +634,7 @@ p,[no]preserve-merges  Preserve merges
 	# Parse arguments
 	parse_args "$@"
 
-	expand_nameprefix_arg_or_current
+	gitflow_expand_nameprefix_arg_or_current 'feature'
 
 	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
 	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
@@ -744,7 +703,7 @@ showcommands!    Show git commands while executing them
 
 	run_pre_hook "$NAME" "$REMOTE" "$BRANCH"
 
-	if git_branch_exists "$BRANCH"; then
+	if git_local_branch_exists "$BRANCH"; then
 		# Again, avoid accidental merges
 		avoid_accidental_cross_branch_action || die
 
@@ -795,7 +754,7 @@ r,[no]remote     Delete remote branch
 	# Parse arguments
 	parse_args "$@"
 
-	expand_nameprefix_arg
+	gitflow_expand_nameprefix_arg 
 
 	# Sanity checks
 	require_branch "$BRANCH"
@@ -825,6 +784,7 @@ r,[no]remote     Delete remote branch
 		fi
 	fi
 
+	gitflow_config_remove_base_section "$BRANCH"
 	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
 
 	echo

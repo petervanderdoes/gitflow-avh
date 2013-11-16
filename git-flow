@@ -77,7 +77,13 @@ esac
 
 # Extra environment settings
 if [ -f ~/.gitflow_export ]; then
-	. ~/.gitflow_export
+    if grep -E 'GITFLOW_FLAG_(SHOWCOMMANDS|INIT|FEATURE|HOTFIX|RELEASE|SUPPORT)' ~/.gitflow_export > /dev/null; then
+        echo "Using environment variables for \"showcommands\", \"init\", \"feature\", \"hotfix\", \"release\" and \"support\" in ~/.gitflow_export has deprecated, use git config instead."
+        echo ""
+        exit 1;
+    else
+        . ~/.gitflow_export
+    fi
 fi
 
 usage() {
@@ -108,11 +114,6 @@ main() {
 	# Load common functionality
 	. "$GITFLOW_DIR/gitflow-common"
 
-	if [ -f ~/.gitflow_export ]; then
-		if grep -E 'GITFLOW_FLAG_(SHOWCOMMANDS|INIT|FEATURE|HOTFIX|RELEASE|SUPPORT)' ~/.gitflow_export > /dev/null; then
-				die "Using environment variables for \"showcommands\", \"init\", \"feature\", \"hotfix\", \"release\" and \"support\" in ~/.gitflow_export has deprecated, use git config instead."
-		fi
-	fi
 	# allow user to request git action logging
 	DEFINE_boolean 'showcommands' false 'Show actions taken (git commands)'
 	# but if the user prefers that the logging is always on,
@@ -121,8 +122,33 @@ main() {
 
 	# Sanity checks
 	SUBCOMMAND="$1"; shift
+	if [ "${SUBCOMMAND}" = "finish" ] || [ "${SUBCOMMAND}" = "delete" ] || [ "${SUBCOMMAND}" = "publish" ]; then
+		_current_branch=$(git_current_branch)
+		if gitflow_is_prefixed_branch "${_current_branch}"; then
+			if startswith "${_current_branch}" $(git config --get gitflow.prefix.feature); then
+				SUBACTION="${SUBCOMMAND}"
+				SUBCOMMAND="feature"
+				_prefix=$(git config --get gitflow.prefix.feature)
+				_short_branch_name=$(echo ${_current_branch#*${_prefix}})
+			else
+				if startswith "${_current_branch}" $(git config --get gitflow.prefix.hotfix); then
+					SUBACTION="${SUBCOMMAND}"
+					SUBCOMMAND="hotfix"
+					_prefix=$(git config --get gitflow.prefix.hotfix)
+					_short_branch_name=$(echo ${_current_branch#*${_prefix}})
+				else
+					if startswith "${_current_branch}" $(git config --get gitflow.prefix.release); then
+						SUBACTION="${SUBCOMMAND}"
+						SUBCOMMAND="release"
+						_prefix=$(git config --get gitflow.prefix.release)
+						_short_branch_name=$(echo ${_current_branch#*${_prefix}})
+					fi
+				fi
+			fi
+		fi
+	fi
 
-	if [ ! -e "$GITFLOW_DIR/git-flow-$SUBCOMMAND" ]; then
+		if [ ! -e "$GITFLOW_DIR/git-flow-$SUBCOMMAND" ]; then
 		usage
 		exit 1
 	fi
@@ -131,24 +157,26 @@ main() {
 	. "$GITFLOW_DIR/git-flow-$SUBCOMMAND"
 	FLAGS_PARENT="git flow $SUBCOMMAND"
 
-	# If the first argument is a flag, it starts with '-', we interpret this
-	# argument as a flag for the default command.
-	if startswith "$1" "-"; then
-		SUBACTION="default"
-	elif [ -z "$1" ]; then
-		SUBACTION="default"
-	else
-		SUBACTION="$1"
-		shift
-		# Do not allow direct calls to subactions with an underscore.
-		if $(contains "$SUBACTION" "_"); then
-			warn "Unknown subcommand: '$SUBACTION'"
-			usage
-			exit 1
+	if [ -z "${SUBACTION}" ]; then
+		# If the first argument is a flag, it starts with '-', we interpret this
+		# argument as a flag for the default command.
+		if startswith "$1" "-"; then
+			SUBACTION="default"
+		elif [ -z "$1" ]; then
+			SUBACTION="default"
+		else
+			SUBACTION="$1"
+			shift
+			# Do not allow direct calls to subactions with an underscore.
+			if $(contains "$SUBACTION" "_"); then
+				warn "Unknown subcommand: '$SUBACTION'"
+				usage
+				exit 1
+			fi
+			# Replace the dash with an underscore as bash doesn't allow a dash
+			# in the function name.
+			SUBACTION=$(echo "$SUBACTION" |tr '-' '_')
 		fi
-		# Replace the dash with an underscore as bash doesn't allow a dash
-		# in the function name.
-		SUBACTION=$(echo "$SUBACTION" |tr '-' '_')
 	fi
 
 	if ! type "cmd_$SUBACTION" >/dev/null 2>&1; then
@@ -164,6 +192,7 @@ main() {
 	if [ $SUBACTION != 'default' ]; then
 		FLAGS_PARENT="git flow $SUBCOMMAND $SUBACTION"
 	fi
-	cmd_$SUBACTION "$@"
+
+	cmd_$SUBACTION "$@" "${_short_branch_name}"
 }
 main "$@"

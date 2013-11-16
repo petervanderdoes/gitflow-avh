@@ -16,8 +16,44 @@
 [shpoont]: https://github.com/shpoont
 [cyberbob]: https://github.com/cyberbob
 [shpoont]: https://github.com/shpoont
-
+ [jsivak]: https://github.com/jsivak
+ [OpherV]: https://github.com/OpherV
+ 
 # Changelog
+
+#### 1.7.0
+[Peter van der Does][petervanderdoes]
+* Refactor the gitflow override flag functions.
+* Shortcut for finish, delete, and publish commands.  
+  Introduce the following new commands:  
+  * git flow finish
+  * git flow delete
+  * git flow publish
+  
+  These commands will perform the action on the branch that's currently active.
+* No branch is needed for the following function:  
+  * git flow feature publish/finish/delete
+  * git flow release publish/finish/delete
+  * git flow hotfix publish/finish/delete
+  
+* Remove base configuration when deleting a feature/hotfix/release branch.
+* Help text for certain commands is wrong.
+* Bugfix: Invalid function call.
+* Bugfix: No make installer fails
+* Support branches are no longer marked as experimental.
+  
+[John Sivak][jsivak] 
+* Fix sanity check for release track command.
+
+[Opher Vishnia][OpherV]
+* Fix feature pull.  
+  The pull request fails when there's no local branch with the same name as the
+  remote branch.
+  
+[Leonid Komarovsky][shpoont]
+* Option for global hooks and filters directory.  
+  This is only for hooks and filters related to git-flow, not the standard git 
+  hooks.
 
 #### 1.6.1
 [Peter van der Does][petervanderdoes]
