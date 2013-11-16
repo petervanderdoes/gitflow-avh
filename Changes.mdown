@@ -37,11 +37,10 @@
   * git flow hotfix publish/finish/delete
   
 * Remove base configuration when deleting a feature/hotfix/release branch.
-
 * Help text for certain commands is wrong.
-
 * Bugfix: Invalid function call.
 * Bugfix: No make installer fails
+* Support branches are no longer marked as experimental.
   
 [John Sivak][jsivak] 
 * Fix sanity check for release track command.
