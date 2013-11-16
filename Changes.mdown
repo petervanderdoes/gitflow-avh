@@ -21,6 +21,9 @@
  
 # Changelog
 
+#### 1.8.0-dev.1
+* Preparation for new development cycle.
+
 #### 1.7.0
 [Peter van der Does][petervanderdoes]
 * Refactor the gitflow override flag functions.
