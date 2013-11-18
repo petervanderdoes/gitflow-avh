@@ -122,7 +122,7 @@ main() {
 
 	# Sanity checks
 	SUBCOMMAND="$1"; shift
-	if [ "${SUBCOMMAND}" = "finish" ] || [ "${SUBCOMMAND}" = "delete" ] || [ "${SUBCOMMAND}" = "publish" ]; then
+	if [ "${SUBCOMMAND}" = "finish" ] || [ "${SUBCOMMAND}" = "delete" ] || [ "${SUBCOMMAND}" = "publish" || [ "${SUBCOMMAND}" = "rebase" ]; then
 		_current_branch=$(git_current_branch)
 		if gitflow_is_prefixed_branch "${_current_branch}"; then
 			if startswith "${_current_branch}" $(git config --get gitflow.prefix.feature); then
