@@ -600,12 +600,9 @@ showcommands!    Show git commands while executing them
 	# Parse arguments
 	parse_args "$@"
 
-	if [ "$NAME" != "" ]; then
-		gitflow_expand_nameprefix_arg
-		git_do checkout "$BRANCH"  || die "Could not check out branch '$BRANCH'."
-	else
-		die "Name a feature branch explicitly."
-	fi
+	gitflow_require_name_arg
+
+	git_do checkout "$BRANCH"  || die "Could not check out branch '$BRANCH'."
 }
 
 cmd_co() {
