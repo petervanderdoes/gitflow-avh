@@ -187,3 +187,48 @@ F,[no]fetch       Fetch from origin before performing finish
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo
 }
+
+cmd_rebase() {
+	OPTIONS_SPEC="\
+git flow support rebase [-h] [-i] [-p] [<name|nameprefix>]
+
+Rebase <name> on <base_branch>
+--
+h,help!                Show this help
+showcommands!          Show git commands while executing them
+i,[no]interactive      Do an interactive rebase
+p,[no]preserve-merges  Preserve merges
+"
+	local opts
+
+	# Define flags
+	DEFINE_boolean 'interactive' false 'do an interactive rebase' i
+	DEFINE_boolean 'preserve-merges' false 'try to recreate merges' p
+
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "support.rebase.interactive"       "interactive"
+	gitflow_override_flag_boolean   "support.rebase.preserve-merges"   "preserve_merges"
+
+	# Parse arguments
+	parse_args "$@"
+
+	gitflow_expand_versionprefix_arg_or_current
+
+	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
+	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
+
+	warn "Will try to rebase '$NAME' which is based on '$BASE_BRANCH'..."
+	require_clean_working_tree
+	require_branch "$BRANCH"
+
+    git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't rebase the support branch '$BRANCH'."
+
+	git_do checkout -q "$BRANCH"  || die "Could not check out branch '$BRANCH'."
+	if flag interactive; then
+		opts="$opts -i"
+	fi
+	if flag preserve_merges; then
+		opts="$opts -p"
+	fi
+	git_do rebase $opts "$BASE_BRANCH"
+}

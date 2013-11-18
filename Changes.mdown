@@ -21,8 +21,14 @@
  
 # Changelog
 
-#### 1.8.0-dev.1
-* Preparation for new development cycle.
+#### 1.8.0-dev.11
+[Peter van der Does][petervanderdoes]
+* Add rebase action to release, hotfix and support.
+* Shortcut for rebase commands.  
+  Introduce the following new command:  
+  * git flow rebase
+  
+  This command will perform the action on the branch that's currently active.
 
 #### 1.7.0
 [Peter van der Does][petervanderdoes]
