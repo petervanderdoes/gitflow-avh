@@ -29,6 +29,9 @@
   * git flow rebase
   
   This command will perform the action on the branch that's currently active.
+* Use the base branch when doing a git flow feature diff.  
+  When doing a diff on the feature branch use the base branch which this 
+  feature originated from. It will show the committed changes. 
 
 #### 1.7.0
 [Peter van der Does][petervanderdoes]
