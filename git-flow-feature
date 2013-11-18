@@ -577,6 +577,11 @@ showcommands!    Show git commands while executing them
 	# Parse arguments
 	parse_args "$@"
 
+	# Use current branch if no name is given
+	if [ "$NAME" = "" ]; then
+		gitflow_use_current_branch_name
+	fi
+
 	if [ "$NAME" != "" ]; then
 		gitflow_expand_nameprefix_arg
 		base=$(git merge-base "$DEVELOP_BRANCH" "$BRANCH")
