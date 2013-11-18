@@ -212,7 +212,10 @@ p,[no]preserve-merges  Preserve merges
 	# Parse arguments
 	parse_args "$@"
 
-	gitflow_expand_versionprefix_arg_or_current
+	# Use current branch if no version is given
+	if [ "$VERSION" = "" ]; then
+		gitflow_use_current_branch_version
+	fi
 
 	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
 	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
