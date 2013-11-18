@@ -567,7 +567,7 @@ cmd_diff() {
 	OPTIONS_SPEC="\
 git flow feature diff [-h] [<name|nameprefix>]
 
-Show all changes in <name> that are not in <develop>
+Show all changes in <name> that are not in the base
 --
 h,help!          Show this help
 showcommands!    Show git commands while executing them
@@ -582,18 +582,10 @@ showcommands!    Show git commands while executing them
 		gitflow_use_current_branch_name
 	fi
 
-	if [ "$NAME" != "" ]; then
-		gitflow_expand_nameprefix_arg
-		base=$(git merge-base "$DEVELOP_BRANCH" "$BRANCH")
-		git_do diff "$base..$BRANCH"
-	else
-		if ! git_current_branch | grep -q "^$PREFIX"; then
-			die "Not on a feature branch. Name one explicitly."
-		fi
+	base=$(gitflow_config_get_base_branch $BRANCH)
+	base=${base:-$DEVELOP_BRANCH}
 
-		base=$(git merge-base "$DEVELOP_BRANCH" HEAD)
-		git_do diff "$base"
-	fi
+	git_do diff "$base..$BRANCH"
 }
 
 cmd_checkout() {
