@@ -500,15 +500,6 @@ gitflow_require_name_arg() {
 	fi
 }
 
-gitflow_expand_nameprefix_arg_or_current() {
-	if [ "$NAME" != "" ]; then
-		gitflow_expand_nameprefix_arg
-		require_branch "$PREFIX$NAME"
-	else
-		gitflow_use_current_branch_name
-	fi
-}
-
 gitflow_expand_nameprefix_arg() {
 	local expanded_name exitcode
 
@@ -530,15 +521,6 @@ gitflow_expand_nameprefix_arg() {
 gitflow_require_version_arg() {
 	if [ "$VERSION" = "" ]; then
 		die_help "Missing argument <version>"
-	fi
-}
-
-gitflow_expand_versionprefix_arg_or_current() {
-	if [ "$VERSION" != "" ]; then
-		gitflow_expand_versionprefix_arg
-		require_branch "$PREFIX$VERSION"
-	else
-		gitflow_use_current_branch_name
 	fi
 }
 
@@ -576,8 +558,23 @@ gitflow_use_current_branch_name() {
 		BRANCH=$current_branch
 		NAME=${BRANCH#$PREFIX}
 	else
-		warn "The current HEAD is no feature branch."
+		warn "The current HEAD is no ${SUBCOMMAND} branch."
 		warn "Please specify a <name> argument."
+		exit 1
+	fi
+}
+
+gitflow_use_current_branch_version() {
+	local current_branch
+
+	current_branch=$(git_current_branch)
+
+	if startswith "$current_branch" "$PREFIX"; then
+		BRANCH=$current_branch
+		VERSION=${BRANCH#$PREFIX}
+	else
+		warn "The current HEAD is no ${SUBCOMMAND} branch."
+		warn "Please specify a <version> argument."
 		exit 1
 	fi
 }
