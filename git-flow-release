@@ -930,7 +930,7 @@ p,[no]preserve-merges  Preserve merges
 	# Parse arguments
 	parse_args "$@"
 
-	gitflow_expand_nameprefix_arg_or_current 'release'
+	gitflow_expand_versionprefix_arg_or_current
 
 	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
 	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
