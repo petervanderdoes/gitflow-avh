@@ -494,6 +494,12 @@ gitflow_create_squash_message() {
 #
 # Parameter functions
 #
+gitflow_require_name_arg() {
+	if [ "$NAME" = "" ]; then
+		die_help "Missing argument <name>"
+	fi
+}
+
 gitflow_expand_nameprefix_arg_or_current() {
 	if [ "$NAME" != "" ]; then
 		gitflow_expand_nameprefix_arg
@@ -527,11 +533,33 @@ gitflow_require_version_arg() {
 	fi
 }
 
-gitflow_require_name_arg() {
-	if [ "$NAME" = "" ]; then
-		die_help "Missing argument <name>"
+gitflow_expand_versionprefix_arg_or_current() {
+	if [ "$VERSION" != "" ]; then
+		gitflow_expand_versionprefix_arg
+		require_branch "$PREFIX$VERSION"
+	else
+		gitflow_use_current_branch_name
 	fi
 }
+
+gitflow_expand_versionprefix_arg() {
+	local expanded_version exitcode
+
+	gitflow_require_version_arg
+
+	version=$(gitflow_resolve_nameprefix "$VERSION" "$PREFIX")
+	exitcode=$?
+	case $exitcode in
+	0)
+		VERSION=$version
+		BRANCH=$PREFIX$VERSION
+		;;
+	*)
+		exit 1
+		;;
+	esac
+}
+
 
 gitflow_require_base_arg() {
 	if [ "$BASE" = "" ]; then
