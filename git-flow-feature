@@ -137,12 +137,6 @@ cmd_help() {
 	exit 0
 }
 
-name_or_current() {
-	if [ -z "$NAME" ]; then
-		use_current_feature_branch_name
-	fi
-}
-
 # Parse arguments and set common variables
 parse_args() {
 	FLAGS "$@" || exit $?
@@ -691,7 +685,11 @@ showcommands!    Show git commands while executing them
 	if [ -z "$REMOTE" ]; then
 		die "Name a remote explicitly."
 	fi
-	name_or_current
+
+	# Use current branch if no name is given
+	if [ "$NAME" = "" ]; then
+		gitflow_use_current_branch_name
+	fi
 
 	# To avoid accidentally merging different feature branches into each other,
 	# die if the current feature branch differs from the requested $NAME
