@@ -662,11 +662,7 @@ r,[no]remote          Delete remote branch
 	# Parse arguments
 	parse_args "$@"
 
-	# Use current branch if no version is given
-	if [ "$VERSION" = "" ]; then
-		gitflow_use_current_branch_version
-	fi
-
+	gitflow_require_version_arg
 
 	# Sanity checks
 	require_branch "$BRANCH"

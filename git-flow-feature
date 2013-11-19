@@ -756,7 +756,7 @@ r,[no]remote     Delete remote branch
 	# Parse arguments
 	parse_args "$@"
 
-	gitflow_expand_nameprefix_arg
+	gitflow_require_name_arg
 
 	# Sanity checks
 	require_branch "$BRANCH"
