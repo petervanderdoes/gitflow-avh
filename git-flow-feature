@@ -143,7 +143,11 @@ parse_args() {
 	eval set -- "${FLAGS_ARGV}"
 
 	# read arguments into global variables
-	NAME=$1
+	if [ -z $1 ]; then
+		NAME=''
+	else
+		NAME=$1
+	fi
 	BRANCH=$PREFIX$NAME
 }
 
@@ -153,8 +157,17 @@ parse_remote_name() {
 	eval set -- "${FLAGS_ARGV}"
 
 	# read arguments into global variables
-	REMOTE=$1
-	NAME=$2
+	if [ -z $1 ]; then
+		REMOTE=''
+	else
+		REMOTE=$1
+	fi
+
+	if [ -z $2 ]; then
+		NAME=''
+	else
+		NAME=$2
+	fi
 	BRANCH=$PREFIX$NAME
 }
 

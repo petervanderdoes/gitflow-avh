@@ -487,7 +487,11 @@ parse_args() {
 	eval set -- "${FLAGS_ARGV}"
 
 	# Read arguments into global variables
-	VERSION=$1
+	if [ -z $1 ]; then
+		VERSION=''
+	else
+		VERSION=$1
+	fi
 	BRANCH=$PREFIX$VERSION
 }
 
