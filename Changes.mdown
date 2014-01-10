@@ -21,7 +21,7 @@
  
 # Changelog
 
-#### 1.8.0-dev.22
+#### 1.8.0-dev.26
 [Peter van der Does][petervanderdoes]
 * Add rebase action to release, hotfix and support.
 * Shortcut for rebase commands.  
