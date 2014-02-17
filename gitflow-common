@@ -292,7 +292,7 @@ gitflow_is_initialized() {
 
 # Loading settings that can be overridden using git config
 gitflow_load_settings() {
-	export GIT_CURRENT_REPO_DIR=$(git rev-parse --show-toplevel 2>/dev/null)
+	export GIT_CURRENT_REPO_DIR="$(git rev-parse --show-toplevel 2>/dev/null)"
 	export DOT_GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
 	export HOOKS_DIR=$(git config --get gitflow.path.hooks || echo "$DOT_GIT_DIR"/hooks) # the second option is used to support previous versions of git-flow
 	export MASTER_BRANCH=$(git config --get gitflow.branch.master)
