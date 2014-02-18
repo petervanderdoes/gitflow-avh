@@ -16,8 +16,9 @@
 [shpoont]: https://github.com/shpoont
 [cyberbob]: https://github.com/cyberbob
 [shpoont]: https://github.com/shpoont
- [jsivak]: https://github.com/jsivak
- [OpherV]: https://github.com/OpherV
+[jsivak]: https://github.com/jsivak
+[OpherV]: https://github.com/OpherV
+[craigfowler]: https://github.com/craigfowler
  
 # Changelog
 
@@ -37,6 +38,9 @@
 * Warning for commands to be deprecated.
   The command "feature checkout/co" will be deprecated per version 2.0.0
   The command "feature pull" will be deprecated per version 2.0.0
+
+[Craig Fowler][craigfowler]
+* 'export' fails in 'gitflow_load_settings()'
 
 #### 1.7.0
 [Peter van der Does][petervanderdoes]
