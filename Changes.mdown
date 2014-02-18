@@ -35,7 +35,8 @@
 * Problem when certain variables are set before executing git-flow.
   When certain variables are set in the shell environment it causes problems.
 * Warning for commands to be deprecated.
-  The command feature checkout/co will be deprecated per version 2.0
+  The command "feature checkout/co" will be deprecated per version 2.0.0
+  The command "feature pull" will be deprecated per version 2.0.0
 
 #### 1.7.0
 [Peter van der Does][petervanderdoes]
