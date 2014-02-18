@@ -140,15 +140,15 @@ parse_args() {
 
 	# Read arguments into global variables
 	if [ -z $1 ]; then
-		REMOTE=''
+		VERSION=''
 	else
-		REMOTE=$1
+		VERSION=$1
 	fi
 
 	if [ -z $2 ]; then
-		NAME=''
+		BASE=''
 	else
-		NAME=$2
+		BASE=$2
 	fi
 	BRANCH=$PREFIX$VERSION
 }
