@@ -607,6 +607,7 @@ showcommands!    Show git commands while executing them
 	# Parse arguments
 	parse_args "$@"
 
+	warn "The command 'git flow feature checkout/co' will be deprecated per version 2.0.0"
 	gitflow_require_name_arg
 
 	git_do checkout "$BRANCH"  || die "Could not check out branch '$BRANCH'."
@@ -691,6 +692,8 @@ showcommands!    Show git commands while executing them
 
 	# Define flags
 	DEFINE_boolean 'rebase' false "pull with rebase" r
+
+	warn "The command 'git flow feature pull' will be deprecated per version 2.0.0"
 
 	# Parse arguments
 	parse_remote_name "$@"
