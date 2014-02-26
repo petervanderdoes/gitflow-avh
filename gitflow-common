@@ -253,7 +253,11 @@ git_fetch_branch() {
 	[ -n "$2" ] || die "Missing branch name"
 	origin="$1"
 	branch="$2"
-	git_do fetch -q "$origin" "$branch":refs/remotes/"$origin"/"$branch" || die "Could not fetch $branch from $origin."
+	if git_remote_branch_exists "$origin/$branch"; then
+		git_do fetch -q "$origin" "$branch":refs/remotes/"$origin"/"$branch" || die "Could not fetch $branch from $origin."
+	else
+		warn ("Trying to fetch branch $origin/$branch but it does not exist.")
+	fi
 }
 
 #

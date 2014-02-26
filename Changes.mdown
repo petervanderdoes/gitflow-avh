@@ -22,7 +22,7 @@
  
 # Changelog
 
-#### 1.8.0-dev.34
+#### 1.8.0-dev.37
 [Peter van der Does][petervanderdoes]
 * Add rebase action to release, hotfix and support.
 * Shortcut for rebase commands.  
@@ -38,6 +38,7 @@
 * Warning for commands to be deprecated.
   The command "feature checkout/co" will be deprecated per version 2.0.0
   The command "feature pull" will be deprecated per version 2.0.0
+* Using fetch flag fails sometimes.
 
 [Craig Fowler][craigfowler]
 * 'export' fails in 'gitflow_load_settings()'
