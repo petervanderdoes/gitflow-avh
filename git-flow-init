@@ -340,9 +340,10 @@ file=    use given config file
 		git_do config $gitflow_config_option gitflow.prefix.versiontag "$prefix"
 	fi
 
-	# Paths 
+	# Paths
 	if ! git config --get gitflow.path.hooks >/dev/null 2>&1 || flag force; then
-        DOT_GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
+		DOT_GIT_DIR=$(git rev-parse --git-dir)
+		DOT_GIT_DIR=$(cd "$DOT_GIT_DIR" && pwd)
 		default_suggestion=$(git config --get gitflow.path.hooks || echo "$DOT_GIT_DIR"/hooks)
 		printf "Hooks and filters directory? [$default_suggestion] "
 		if noflag defaults; then
