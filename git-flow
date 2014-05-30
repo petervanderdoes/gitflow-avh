@@ -97,6 +97,7 @@ usage() {
 	echo "   support   Manage your support branches."
 	echo "   version   Shows version information."
 	echo "   config    Manage your git-flow configuration."
+	echo "   log       Show log deviating from base branch."
 	echo
 	echo "Try 'git flow <subcommand> help' for details."
 }
