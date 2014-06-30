@@ -511,10 +511,10 @@ c,cherrypick          Cherry Pick to $DEVELOP_BRANCH instead of merge
 		for git_line in $(git log --format="%H %s" --reverse $MASTER_BRANCH..$BRANCH | grep -vE "^[a-z0-9]* Merge branch '[^'].*?'$"); do
 		        local commit_hash=$(echo $git_line | cut -d" " -f1)
 		        if [[ $(git log $DEVELOP_BRANCH --grep "$commit_hash" | wc -l) -eq 0  ]]; then
-		                echo -e "\n${LIGHTGREEN}Cherry picking: $git_line${NOCOLOR}"
+		                echo "\n${LIGHTGREEN}Cherry picking: $git_line${NOCOLOR}"
 		                git_do cherry-pick -x -s $commit_hash
 		                if [[ $? -ne 0  ]]; then
-		                        echo -e "
+		                        echo "
 ===============================================================
 = Cherry pick has conflicts, steps to continue:
 = 1. Fix the conflicts
@@ -529,7 +529,7 @@ c,cherrypick          Cherry Pick to $DEVELOP_BRANCH instead of merge
 		                        die "Cherry pick failed for commit: $commit_hash"
 		                fi
 		        else
-		                echo -e "\n${LIGHTGREEN}Commit has already been Cherry Picked: $git_line${NOCOLOR}"
+		                echo "\n${LIGHTGREEN}Commit has already been Cherry Picked: $git_line${NOCOLOR}"
 		        fi
 		done
 		IFS=$old_IFS  # restore default field separator
