@@ -503,36 +503,6 @@ c,cherrypick          Cherry Pick to $DEVELOP_BRANCH instead of merge
 
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
 
-	# Try to merge into BASE.
-	# In case a previous attempt to finish this release branch has failed,
-	# but the merge into BASE was successful, we skip it now
-	if ! git_is_branch_merged_into "$BRANCH" "$BASE_BRANCH"; then
-		git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
-		git_do merge --no-ff "$BRANCH" || die "There were merge conflicts."
-		# TODO: What do we do now?
-	fi
-
-	if noflag notag; then
-		# Try to tag the release.
-		# In case a previous attempt to finish this release branch has failed,
-		# but the tag was set successful, we skip it now
-		if ! git_tag_exists "$VERSION_PREFIX$VERSION"; then
-			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
-				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
-			fi
-			opts="-a"
-			flag sign && opts="$opts -s"
-			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
-			if [ "$FLAGS_message" != "" ]; then
-				# Run filter on the tag message
-				FLAGS_message=$(run_filter_hook hotfix-finish-tag-message "${FLAGS_message}" "$VERSION_PREFIX$VERSION")
-				opts="$opts -m '$FLAGS_message'"
-			fi
-			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
-			eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
-		fi
-	fi
-
 	if flag cherrypick; then
 		git_do checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
 
@@ -565,8 +535,40 @@ c,cherrypick          Cherry Pick to $DEVELOP_BRANCH instead of merge
 		IFS=$old_IFS  # restore default field separator
 
 		git_do checkout $BRANCH || die "Could not check out branch '$BRANCH'."
+	fi
 
-	elif [ "$BASE_BRANCH" = "$MASTER_BRANCH" ]; then
+	# Try to merge into BASE.
+	# In case a previous attempt to finish this release branch has failed,
+	# but the merge into BASE was successful, we skip it now
+	if ! git_is_branch_merged_into "$BRANCH" "$BASE_BRANCH"; then
+		git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
+		git_do merge --no-ff "$BRANCH" || die "There were merge conflicts."
+		# TODO: What do we do now?
+	fi
+
+	if noflag notag; then
+		# Try to tag the release.
+		# In case a previous attempt to finish this release branch has failed,
+		# but the tag was set successful, we skip it now
+		if ! git_tag_exists "$VERSION_PREFIX$VERSION"; then
+			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
+				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
+			fi
+			opts="-a"
+			flag sign && opts="$opts -s"
+			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
+			if [ "$FLAGS_message" != "" ]; then
+				# Run filter on the tag message
+				FLAGS_message=$(run_filter_hook hotfix-finish-tag-message "${FLAGS_message}" "$VERSION_PREFIX$VERSION")
+				opts="$opts -m '$FLAGS_message'"
+			fi
+			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
+			eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
+		fi
+	fi
+
+
+	if noflag cherrypick && [ "$BASE_BRANCH" = "$MASTER_BRANCH" ]; then
 		# By default we back-merge the $MASTER_BRANCH unless the user explicitly
 		# stated not to do a back-merge, in that case we use the $BRANCH.
 		if noflag nobackmerge; then
