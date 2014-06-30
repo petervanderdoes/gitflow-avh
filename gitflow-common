@@ -749,6 +749,19 @@ flags_help() {
 #
 # Color constants
 #
-BLUE="\e[34m"
-LIGHTGREEN="\e[92m"
-NOCOLOR="\e[0m"
+echo_color_support() {
+	local echo_path=$(which echo)
+	local echo_out=$($echo_path -e)
+  if [[ $echo_out == ""  ]]; then
+		alias echo="$echo_path -e "
+		BLUE="\e[34m"
+		LIGHTGREEN="\e[92m"
+		NOCOLOR="\e[0m"
+	else
+		BLUE=""
+		LIGHTGREEN=""
+		NOCOLOR=""
+	fi
+}
+echo_color_support
+
