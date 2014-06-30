@@ -744,3 +744,11 @@ run_post_hook() {
 flags_help() {
 	eval "$( echo "$OPTIONS_SPEC" | git rev-parse --parseopt -- "-h" || echo exit $? )"
 }
+
+
+#
+# Color constants
+#
+BLUE="\e[34m"
+LIGHTGREEN="\e[92m"
+NOCOLOR="\e[0m"
