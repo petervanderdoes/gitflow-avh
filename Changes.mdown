@@ -23,7 +23,7 @@
  
 # Changelog
 
-#### 1.8.0-dev.49
+#### 1.8.0-rc.1
 [Peter van der Does][petervanderdoes]
 * Add rebase action to release, hotfix and support.
 * Shortcut for rebase commands.  
