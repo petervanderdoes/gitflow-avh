@@ -9,7 +9,7 @@
 #    http://github.com/petervanderdoes/gitflow
 #
 # Authors:
-# Copyright 2012,2013 Peter van der Does. All rights reserved.
+# Copyright 2012-2014 Peter van der Does. All rights reserved.
 #
 # Original Author:
 # Copyright 2010 Vincent Driessen. All rights reserved.
@@ -40,7 +40,6 @@ initialize() {
 	require_gitflow_initialized
 	gitflow_load_settings
 	PREFIX=$(git config --get gitflow.prefix.feature)
-
 }
 
 usage() {
@@ -138,19 +137,17 @@ cmd_help() {
 	exit 0
 }
 
-name_or_current() {
-	if [ -z "$NAME" ]; then
-		use_current_feature_branch_name
-	fi
-}
-
 # Parse arguments and set common variables
 parse_args() {
 	FLAGS "$@" || exit $?
 	eval set -- "${FLAGS_ARGV}"
 
 	# read arguments into global variables
-	NAME=$1
+	if [ -z $1 ]; then
+		NAME=''
+	else
+		NAME=$1
+	fi
 	BRANCH=$PREFIX$NAME
 }
 
@@ -160,8 +157,17 @@ parse_remote_name() {
 	eval set -- "${FLAGS_ARGV}"
 
 	# read arguments into global variables
-	REMOTE=$1
-	NAME=$2
+	if [ -z $1 ]; then
+		REMOTE=''
+	else
+		REMOTE=$1
+	fi
+
+	if [ -z $2 ]; then
+		NAME=''
+	else
+		NAME=$2
+	fi
 	BRANCH=$PREFIX$NAME
 }
 
@@ -272,7 +278,10 @@ no-ff!                 Never fast-forward during the merge
 	# Parse arguments
 	parse_args "$@"
 
-	gitflow_expand_nameprefix_arg_or_current
+	# Use current branch if no name is given
+	if [ "$NAME" = "" ]; then
+		gitflow_use_current_branch_name
+	fi
 
 	# Keeping both branches implies the --keep flag to be true.
 	if flag keepremote && flag keeplocal; then
@@ -493,7 +502,11 @@ showcommands!    Show git commands while executing them
 	# Parse arguments
 	parse_args "$@"
 
-	gitflow_expand_nameprefix_arg_or_current
+	# Use current branch if no name is given
+	if [ "$NAME" = "" ]; then
+		gitflow_use_current_branch_name
+	fi
+
 
 	# Sanity checks
 	require_clean_working_tree
@@ -561,7 +574,7 @@ cmd_diff() {
 	OPTIONS_SPEC="\
 git flow feature diff [-h] [<name|nameprefix>]
 
-Show all changes in <name> that are not in <develop>
+Show all changes in <name> that are not in the base
 --
 h,help!          Show this help
 showcommands!    Show git commands while executing them
@@ -571,18 +584,15 @@ showcommands!    Show git commands while executing them
 	# Parse arguments
 	parse_args "$@"
 
-	if [ "$NAME" != "" ]; then
-		gitflow_expand_nameprefix_arg 
-		base=$(git merge-base "$DEVELOP_BRANCH" "$BRANCH")
-		git_do diff "$base..$BRANCH"
-	else
-		if ! git_current_branch | grep -q "^$PREFIX"; then
-			die "Not on a feature branch. Name one explicitly."
-		fi
-
-		base=$(git merge-base "$DEVELOP_BRANCH" HEAD)
-		git_do diff "$base"
+	# Use current branch if no name is given
+	if [ "$NAME" = "" ]; then
+		gitflow_use_current_branch_name
 	fi
+
+	base=$(gitflow_config_get_base_branch $BRANCH)
+	base=${base:-$DEVELOP_BRANCH}
+
+	git_do diff "$base..$BRANCH"
 }
 
 cmd_checkout() {
@@ -597,12 +607,10 @@ showcommands!    Show git commands while executing them
 	# Parse arguments
 	parse_args "$@"
 
-	if [ "$NAME" != "" ]; then
-		gitflow_expand_nameprefix_arg 
-		git_do checkout "$BRANCH"  || die "Could not check out branch '$BRANCH'."
-	else
-		die "Name a feature branch explicitly."
-	fi
+	warn "The command 'git flow feature checkout/co' will be deprecated per version 2.0.0"
+	gitflow_require_name_arg
+
+	git_do checkout "$BRANCH"  || die "Could not check out branch '$BRANCH'."
 }
 
 cmd_co() {
@@ -634,7 +642,11 @@ p,[no]preserve-merges  Preserve merges
 	# Parse arguments
 	parse_args "$@"
 
-	gitflow_expand_nameprefix_arg_or_current 'feature'
+	# Use current branch if no name is given
+	if [ "$NAME" = "" ]; then
+		gitflow_use_current_branch_name
+	fi
+
 
 	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
 	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
@@ -643,7 +655,7 @@ p,[no]preserve-merges  Preserve merges
 	require_clean_working_tree
 	require_branch "$BRANCH"
 
-    git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't finish the feature branch '$BRANCH'."
+    git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't rebase the feature branch '$BRANCH'."
 
 	git_do checkout -q "$BRANCH"  || die "Could not check out branch '$BRANCH'."
 	if flag interactive; then
@@ -681,13 +693,19 @@ showcommands!    Show git commands while executing them
 	# Define flags
 	DEFINE_boolean 'rebase' false "pull with rebase" r
 
+	warn "The command 'git flow feature pull' will be deprecated per version 2.0.0"
+
 	# Parse arguments
 	parse_remote_name "$@"
 
 	if [ -z "$REMOTE" ]; then
 		die "Name a remote explicitly."
 	fi
-	name_or_current
+
+	# Use current branch if no name is given
+	if [ "$NAME" = "" ]; then
+		gitflow_use_current_branch_name
+	fi
 
 	# To avoid accidentally merging different feature branches into each other,
 	# die if the current feature branch differs from the requested $NAME
@@ -754,7 +772,7 @@ r,[no]remote     Delete remote branch
 	# Parse arguments
 	parse_args "$@"
 
-	gitflow_expand_nameprefix_arg 
+	gitflow_require_name_arg
 
 	# Sanity checks
 	require_branch "$BRANCH"

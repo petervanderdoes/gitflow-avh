@@ -9,7 +9,7 @@
 #    http://github.com/petervanderdoes/gitflow
 #
 # Authors:
-# Copyright 2012,2013 Peter van der Does. All rights reserved.
+# Copyright 2012-2014 Peter van der Does. All rights reserved.
 #
 # Original Author:
 # Copyright 2010 Vincent Driessen. All rights reserved.
@@ -142,7 +142,11 @@ parse_args() {
 	eval set -- "${FLAGS_ARGV}"
 
 	# Read arguments into global variables
-	VERSION=$1
+	if [ -z $1 ]; then
+		VERSION=''
+	else
+		VERSION=$1
+	fi
 	BRANCH=$PREFIX$VERSION
 }
 
@@ -241,7 +245,10 @@ showcommands!     Show git commands while executing them
 	# Parse arguments
 	parse_args "$@"
 
-	gitflow_expand_nameprefix_arg_or_current
+	# Use current branch if no version is given
+	if [ "$VERSION" = "" ]; then
+		gitflow_use_current_branch_version
+	fi
 
 	# Sanity checks
 	require_clean_working_tree
@@ -268,6 +275,54 @@ showcommands!     Show git commands while executing them
 	echo "- The local branch '$BRANCH' was configured to track the remote branch"
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo
+}
+
+cmd_rebase() {
+	OPTIONS_SPEC="\
+git flow hotfix rebase [-h] [-i] [-p] [<name|nameprefix>]
+
+Rebase <name> on <base_branch>
+--
+h,help!                Show this help
+showcommands!          Show git commands while executing them
+i,[no]interactive      Do an interactive rebase
+p,[no]preserve-merges  Preserve merges
+"
+	local opts
+
+	# Define flags
+	DEFINE_boolean 'interactive' false 'do an interactive rebase' i
+	DEFINE_boolean 'preserve-merges' false 'try to recreate merges' p
+
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "hotfix.rebase.interactive"       "interactive"
+	gitflow_override_flag_boolean   "hotfix.rebase.preserve-merges"   "preserve_merges"
+
+	# Parse arguments
+	parse_args "$@"
+
+	# Use current branch if no version is given
+	if [ "$VERSION" = "" ]; then
+		gitflow_use_current_branch_version
+	fi
+
+	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
+	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
+
+	warn "Will try to rebase '$NAME' which is based on '$BASE_BRANCH'..."
+	require_clean_working_tree
+	require_branch "$BRANCH"
+
+    git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't rebase the hotfixe branch '$BRANCH'."
+
+	git_do checkout -q "$BRANCH"  || die "Could not check out branch '$BRANCH'."
+	if flag interactive; then
+		opts="$opts -i"
+	fi
+	if flag preserve_merges; then
+		opts="$opts -p"
+	fi
+	git_do rebase $opts "$BASE_BRANCH"
 }
 
 cmd_track() {
@@ -354,9 +409,13 @@ b,[no]nobackmerge     Don't back-merge master, or tag if applicable, in develop
 	# Parse arguments
 	parse_args "$@"
 
+	# Use current branch if no version is given
+	if [ "$VERSION" = "" ]; then
+		gitflow_use_current_branch_version
+	fi
+
 	remotebranchdeleted=$FLAGS_FALSE
 	localbranchdeleted=$FLAGS_FALSE
-	gitflow_expand_nameprefix_arg_or_current
 
 	# Handle flags that imply other flags
 	if [ "$FLAGS_signingkey" != "" ]; then
@@ -607,7 +666,7 @@ r,[no]remote          Delete remote branch
 	# Parse arguments
 	parse_args "$@"
 
-	gitflow_expand_nameprefix_arg_or_current
+	gitflow_require_version_arg
 
 	# Sanity checks
 	require_branch "$BRANCH"

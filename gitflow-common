@@ -9,7 +9,7 @@
 #    http://github.com/petervanderdoes/gitflow
 #
 # Authors:
-# Copyright 2012,2013 Peter van der Does. All rights reserved.
+# Copyright 2012-2014 Peter van der Does. All rights reserved.
 #
 # Original Author:
 # Copyright 2010 Vincent Driessen. All rights reserved.
@@ -253,7 +253,11 @@ git_fetch_branch() {
 	[ -n "$2" ] || die "Missing branch name"
 	origin="$1"
 	branch="$2"
-	git_do fetch -q "$origin" "$branch":refs/remotes/"$origin"/"$branch" || die "Could not fetch $branch from $origin."
+	if git_remote_branch_exists "$origin/$branch"; then
+		git_do fetch -q "$origin" "$branch":refs/remotes/"$origin"/"$branch" || die "Could not fetch $branch from $origin."
+	else
+		warn "Trying to fetch branch '$origin/$branch' but it does not exist."
+	fi
 }
 
 #
@@ -292,8 +296,9 @@ gitflow_is_initialized() {
 
 # Loading settings that can be overridden using git config
 gitflow_load_settings() {
-	export GIT_CURRENT_REPO_DIR=$(git rev-parse --show-toplevel 2>/dev/null)
-	export DOT_GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
+	export GIT_CURRENT_REPO_DIR="$(git rev-parse --show-toplevel 2>/dev/null)"
+	DOT_GIT_DIR=$(git rev-parse --git-dir)
+	export DOT_GIT_DIR=$(cd "$DOT_GIT_DIR" && pwd)
 	export HOOKS_DIR=$(git config --get gitflow.path.hooks || echo "$DOT_GIT_DIR"/hooks) # the second option is used to support previous versions of git-flow
 	export MASTER_BRANCH=$(git config --get gitflow.branch.master)
 	export DEVELOP_BRANCH=$(git config --get gitflow.branch.develop)
@@ -494,12 +499,9 @@ gitflow_create_squash_message() {
 #
 # Parameter functions
 #
-gitflow_expand_nameprefix_arg_or_current() {
-	if [ "$NAME" != "" ]; then
-		gitflow_expand_nameprefix_arg
-		require_branch "$PREFIX$NAME"
-	else
-		gitflow_use_current_branch_name
+gitflow_require_name_arg() {
+	if [ "$NAME" = "" ]; then
+		die_help "Missing argument <name>"
 	fi
 }
 
@@ -527,11 +529,24 @@ gitflow_require_version_arg() {
 	fi
 }
 
-gitflow_require_name_arg() {
-	if [ "$NAME" = "" ]; then
-		die_help "Missing argument <name>"
-	fi
+gitflow_expand_versionprefix_arg() {
+	local expanded_version exitcode
+
+	gitflow_require_version_arg
+
+	version=$(gitflow_resolve_nameprefix "$VERSION" "$PREFIX")
+	exitcode=$?
+	case $exitcode in
+	0)
+		VERSION=$version
+		BRANCH=$PREFIX$VERSION
+		;;
+	*)
+		exit 1
+		;;
+	esac
 }
+
 
 gitflow_require_base_arg() {
 	if [ "$BASE" = "" ]; then
@@ -548,8 +563,23 @@ gitflow_use_current_branch_name() {
 		BRANCH=$current_branch
 		NAME=${BRANCH#$PREFIX}
 	else
-		warn "The current HEAD is no feature branch."
+		warn "The current HEAD is no ${SUBCOMMAND} branch."
 		warn "Please specify a <name> argument."
+		exit 1
+	fi
+}
+
+gitflow_use_current_branch_version() {
+	local current_branch
+
+	current_branch=$(git_current_branch)
+
+	if startswith "$current_branch" "$PREFIX"; then
+		BRANCH=$current_branch
+		VERSION=${BRANCH#$PREFIX}
+	else
+		warn "The current HEAD is no ${SUBCOMMAND} branch."
+		warn "Please specify a <version> argument."
 		exit 1
 	fi
 }

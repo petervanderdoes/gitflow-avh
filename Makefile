@@ -1,6 +1,6 @@
 #
 # Authors:
-# Copyright 2012,2013 Peter van der Does. All rights reserved.
+# Copyright 2012-2014 Peter van der Does. All rights reserved.
 #
 # Original Author:
 # Copyright 2010 Vincent Driessen. All rights reserved.
@@ -40,6 +40,7 @@ SCRIPT_FILES+=git-flow-hotfix
 SCRIPT_FILES+=git-flow-release
 SCRIPT_FILES+=git-flow-support
 SCRIPT_FILES+=git-flow-version
+SCRIPT_FILES+=git-flow-log
 SCRIPT_FILES+=git-flow-config
 SCRIPT_FILES+=gitflow-common
 SCRIPT_FILES+=gitflow-shFlags
@@ -52,7 +53,6 @@ all:
 	@echo "       make uninstall"
 
 install:
-	@test -f gitflow-shFlags || (echo "Run 'git submodule init && git submodule update' first." ; exit 1 )
 	install -d -m 0755 $(prefix)/bin
 	install -d -m 0755 $(docdir)/hooks
 	install -m 0755 $(EXEC_FILES) $(prefix)/bin

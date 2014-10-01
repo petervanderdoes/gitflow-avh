@@ -16,10 +16,39 @@
 [shpoont]: https://github.com/shpoont
 [cyberbob]: https://github.com/cyberbob
 [shpoont]: https://github.com/shpoont
- [jsivak]: https://github.com/jsivak
- [OpherV]: https://github.com/OpherV
+[jsivak]: https://github.com/jsivak
+[OpherV]: https://github.com/OpherV
+[craigfowler]: https://github.com/craigfowler
+[havvg]: https://github.com/havvg
  
 # Changelog
+
+#### 1.8.0
+[Peter van der Does][petervanderdoes]
+* Add rebase action to release, hotfix and support.
+* Shortcut for rebase commands.  
+  Introduce the following new command:  
+  * git flow rebase
+  
+  This command will perform the action on the branch that's currently active.
+* Use the base branch when doing a git flow feature diff.  
+  When doing a diff on the feature branch use the base branch which this 
+  feature originated from. It will show the committed changes. 
+* Problem when certain variables are set before executing git-flow.
+  When certain variables are set in the shell environment it causes problems.
+* Warning for commands to be deprecated.
+  The command "feature checkout/co" will be deprecated per version 2.0.0
+  The command "feature pull" will be deprecated per version 2.0.0
+* Using fetch flag fails sometimes.
+* Hooks and filters are not executed when you are in a subdirectory of the 
+  repository and the hooks directory is set to the suggested value during 
+  initialization.
+
+[Craig Fowler][craigfowler]
+* 'export' fails in 'gitflow_load_settings()'
+
+[Toni Uebernickel][havvg]
+* Add log command
 
 #### 1.7.0
 [Peter van der Does][petervanderdoes]

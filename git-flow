@@ -10,7 +10,7 @@
 #    http://github.com/petervanderdoes/gitflow
 #
 # Authors:
-# Copyright 2012,2013 Peter van der Does. All rights reserved.
+# Copyright 2012-2014 Peter van der Does. All rights reserved.
 #
 # Original Author:
 # Copyright 2010 Vincent Driessen. All rights reserved.
@@ -66,8 +66,10 @@ Darwin)
 	;;
 *MINGW*)
 	export GITFLOW_DIR=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+	pwd () {
+		builtin pwd -W
+	}
 	;;
-
 *)
 	# The sed expression here replaces all backslashes by forward slashes.
 	# This helps our Windows users, while not bothering our Unix users.)
@@ -97,6 +99,7 @@ usage() {
 	echo "   support   Manage your support branches."
 	echo "   version   Shows version information."
 	echo "   config    Manage your git-flow configuration."
+	echo "   log       Show log deviating from base branch."
 	echo
 	echo "Try 'git flow <subcommand> help' for details."
 }
@@ -122,7 +125,7 @@ main() {
 
 	# Sanity checks
 	SUBCOMMAND="$1"; shift
-	if [ "${SUBCOMMAND}" = "finish" ] || [ "${SUBCOMMAND}" = "delete" ] || [ "${SUBCOMMAND}" = "publish" ]; then
+	if [ "${SUBCOMMAND}" = "finish" ] || [ "${SUBCOMMAND}" = "delete" ] || [ "${SUBCOMMAND}" = "publish" ] || [ "${SUBCOMMAND}" = "rebase" ]; then
 		_current_branch=$(git_current_branch)
 		if gitflow_is_prefixed_branch "${_current_branch}"; then
 			if startswith "${_current_branch}" $(git config --get gitflow.prefix.feature); then
