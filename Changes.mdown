@@ -19,6 +19,7 @@
 [jsivak]: https://github.com/jsivak
 [OpherV]: https://github.com/OpherV
 [craigfowler]: https://github.com/craigfowler
+[havvg]: https://github.com/havvg
  
 # Changelog
 
@@ -45,6 +46,9 @@
 
 [Craig Fowler][craigfowler]
 * 'export' fails in 'gitflow_load_settings()'
+
+[Toni Uebernickel][havvg]
+* Add log command
 
 #### 1.7.0
 [Peter van der Does][petervanderdoes]
