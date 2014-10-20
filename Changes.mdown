@@ -20,11 +20,13 @@
 [OpherV]: https://github.com/OpherV
 [craigfowler]: https://github.com/craigfowler
 [havvg]: https://github.com/havvg
+[algernon]: https://github.com/algernon
  
 # Changelog
 
 #### 1.9.0-dev.1
-* Preparation for new development cycle.
+[Gergely Nagy][algernon]
+* Remove bash code.
 
 #### 1.8.0
 [Peter van der Does][petervanderdoes]
