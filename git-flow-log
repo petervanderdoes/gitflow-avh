@@ -67,7 +67,7 @@ h,help!         Show this help
 showcommands!   Show git commands while executing them
 "
     # Display gitflow's help messages instead
-    if [[ $@ = "--help" || $@ = "-h" ]]; then
+    if [ $@ = "--help" ] || [ $@ = "-h" ]; then
         flags_help
     fi
 
@@ -75,7 +75,7 @@ showcommands!   Show git commands while executing them
     local base=$(gitflow_config_get_base_branch $(git_current_branch))
 
     # no base branch found, comparing against $master
-    if [[ -z $base ]]; then
+    if [ -z $base ]; then
         base=$MASTER_BRANCH
     fi
 
