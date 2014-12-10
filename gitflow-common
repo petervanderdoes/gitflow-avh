@@ -712,8 +712,8 @@ run_pre_hook() {
 
 	scriptfile="${HOOKS_DIR}/pre-flow-${SUBCOMMAND}-${SUBACTION}"
 	exitcode=0
-	if [ -x $scriptfile ]; then
-		$scriptfile "$@"
+	if [ -x "$scriptfile" ]; then
+		"$scriptfile" "$@"
 		exitcode=$?
 
 		if [ $exitcode -gt 0 ]; then
@@ -736,8 +736,8 @@ run_post_hook() {
 	local scriptfile
 
 	scriptfile="${HOOKS_DIR}/post-flow-${SUBCOMMAND}-${SUBACTION}"
-	if [ -x $scriptfile ]; then
-		$scriptfile "$@"
+	if [ -x "$scriptfile" ]; then
+		"$scriptfile" "$@"
 	fi
 }
 

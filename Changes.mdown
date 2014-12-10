@@ -24,7 +24,10 @@
  
 # Changelog
 
-#### 1.9.0-dev.5
+#### 1.9.0-dev.8
+[Peter van der Does][petervanderdoes]
+* Repositories with spaces in path cause the pre * post hook to fail
+
 [Gergely Nagy][algernon]
 * Remove bash code.
 
