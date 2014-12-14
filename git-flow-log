@@ -52,6 +52,12 @@ shows current branch log compared to develop
     flags_help
 }
 
+# Parse arguments and set common variables
+parse_args() {
+    FLAGS "$@" || exit $?
+    eval set -- "${FLAGS_ARGV}"
+}
+
 cmd_default() {
     cmd_list "$@"
 }
@@ -66,10 +72,9 @@ Options come from git log
 h,help!         Show this help
 showcommands!   Show git commands while executing them
 "
-    # Display gitflow's help messages instead
-    if [ $@ = "--help" ] || [ $@ = "-h" ]; then
-        flags_help
-    fi
+
+    # Parse arguments
+    parse_args "$@"
 
     # get base branch from current branch
     local base=$(gitflow_config_get_base_branch $(git_current_branch))
