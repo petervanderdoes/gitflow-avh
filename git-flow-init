@@ -343,7 +343,7 @@ file=    use given config file
 	# Paths
 	if ! git config --get gitflow.path.hooks >/dev/null 2>&1 || flag force; then
 		DOT_GIT_DIR=$(git rev-parse --git-dir)
-		DOT_GIT_DIR=$(cd "$DOT_GIT_DIR" && pwd)
+		DOT_GIT_DIR=$(cd "$DOT_GIT_DIR" 2>&1 >/dev/null && pwd)
 		default_suggestion=$(git config --get gitflow.path.hooks || echo "$DOT_GIT_DIR"/hooks)
 		printf "Hooks and filters directory? [$default_suggestion] "
 		if noflag defaults; then
