@@ -65,14 +65,14 @@ showcommands!       Show git commands while executing them
 d,[no]defaults      Use default branch naming conventions
 f,[no]force         Force setting of gitflow branches, even if already configured
 
- Use config file location
+Use config file location
 local!   use repository config file
 global!  use global config file
 system!  use system config file
 file=    use given config file
 "
 	local gitflow_config_option should_check_existence branchcount guess
-  	local master_branch develop_branch default_suggestion answer prefix
+	local master_branch develop_branch default_suggestion answer prefix
 
 	# Define flags
 	DEFINE_boolean 'force' false 'force setting of gitflow branches, even if already configured' f
@@ -343,7 +343,7 @@ file=    use given config file
 	# Paths
 	if ! git config --get gitflow.path.hooks >/dev/null 2>&1 || flag force; then
 		DOT_GIT_DIR=$(git rev-parse --git-dir)
-		DOT_GIT_DIR=$(cd "$DOT_GIT_DIR" 2>&1 >/dev/null && pwd)
+		DOT_GIT_DIR=$(cd "$DOT_GIT_DIR" >/dev/null 2>&1 && pwd)
 		default_suggestion=$(git config --get gitflow.path.hooks || echo "$DOT_GIT_DIR"/hooks)
 		printf "Hooks and filters directory? [$default_suggestion] "
 		if noflag defaults; then
