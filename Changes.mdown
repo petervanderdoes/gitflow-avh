@@ -21,16 +21,22 @@
 [craigfowler]: https://github.com/craigfowler
 [havvg]: https://github.com/havvg
 [algernon]: https://github.com/algernon
+[jebmeier]: https://github.com/jebmeier
  
 # Changelog
 
-#### 1.9.0-dev.9
+#### 1.9.0-dev.10
 [Peter van der Does][petervanderdoes]
 * Repositories with spaces in path cause the pre * post hook to fail
 * Error using git flow log.
 
 [Gergely Nagy][algernon]
 * Remove bash code.
+
+[Joe Ebmeier][jebmeier]
+* Fix issue in case CDPATH is being used.
+  In the case of CDPATH being used, it is possible DOT_GIT_DIR variable
+  is incorrect.
 
 #### 1.8.0
 [Peter van der Does][petervanderdoes]
