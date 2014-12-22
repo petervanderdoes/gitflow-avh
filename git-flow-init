@@ -147,6 +147,12 @@ file=    use given config file
 					break
 				fi
 			done
+
+		fi
+
+		if [ -z $default_suggestion ] && flag defaults; then
+				should_check_existence=YES
+				default_suggestion=$(git config --get gitflow.branch.master || echo master)
 		fi
 
 		printf "Branch name for production releases: [$default_suggestion] "
@@ -195,12 +201,11 @@ file=    use given config file
 					break
 				fi
 			done
+		fi
 
-			if [ -z $default_suggestion ]; then
-				should_check_existence=NO
-				default_suggestion=$(git config --get gitflow.branch.develop || echo develop)
-			fi
-
+		if [ -z $default_suggestion ] && flag defaults; then
+			should_check_existence=YES
+			default_suggestion=$(git config --get gitflow.branch.develop || echo develop)
 		fi
 
 		printf "Branch name for \"next release\" development: [$default_suggestion] "
