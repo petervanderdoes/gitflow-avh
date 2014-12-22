@@ -26,10 +26,11 @@
  
 # Changelog
 
-#### 1.9.0-dev.15
+#### 1.9.0-dev.17
 [Peter van der Does][petervanderdoes]
 * Repositories with spaces in path cause the pre * post hook to fail
 * Error using git flow log.
+* Using defaults with init fails with existing repository.
 
 [Gergely Nagy][algernon]
 * Remove bash code.
