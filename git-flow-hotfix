@@ -203,7 +203,9 @@ F,[no]fetch       Fetch from origin before performing local operation
 	BRANCH=$PREFIX$VERSION
 
 	gitflow_require_version_arg
-	require_no_existing_hotfix_branches
+	if ! $(git config --bool --get gitflow.multi-hotfix 2>&1); then
+		require_no_existing_hotfix_branches
+	fi
 
 	# Sanity checks
 	require_branch_absent "$BRANCH"
@@ -313,7 +315,7 @@ p,[no]preserve-merges  Preserve merges
 	require_clean_working_tree
 	require_branch "$BRANCH"
 
-    git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't rebase the hotfixe branch '$BRANCH'."
+	git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't rebase the hotfixe branch '$BRANCH'."
 
 	git_do checkout -q "$BRANCH"  || die "Could not check out branch '$BRANCH'."
 	if flag interactive; then

@@ -26,11 +26,14 @@
  
 # Changelog
 
-#### 1.9.0-dev.17
+#### 1.9.0-dev.18
 [Peter van der Does][petervanderdoes]
 * Repositories with spaces in path cause the pre * post hook to fail
 * Error using git flow log.
 * Using defaults with init fails with existing repository.
+* Allow multiple hotfix branches.
+  By setting the config gitflow.multi-hotfix to true, you can have multiple 
+  hotfix branches. Example: git config --set gitflow.multi-hotfix true
 
 [Gergely Nagy][algernon]
 * Remove bash code.
