@@ -363,13 +363,13 @@ no-ff!                 Never fast-forward during the merge
 
 	# If the user wants to rebase, do that first
 	if flag rebase; then
-        local _rebase_opts=""
-        if flag preserve_merges; then
-            _rebase_opts="$_rebase_opts -p"
-        fi
-        if flag showcommands; then
-            _rebase_opts="$_rebase_opts --showcommands"
-        fi
+		local _rebase_opts=""
+		if flag preserve_merges; then
+			_rebase_opts="$_rebase_opts -p"
+		fi
+		if flag showcommands; then
+			_rebase_opts="$_rebase_opts --showcommands"
+		fi
 		if ! git flow feature rebase $_rebase_opts "$NAME"; then
 			warn "Finish was aborted due to conflicts during rebase."
 			warn "Please finish the rebase manually now."
@@ -655,7 +655,7 @@ p,[no]preserve-merges  Preserve merges
 	require_clean_working_tree
 	require_branch "$BRANCH"
 
-    git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't rebase the feature branch '$BRANCH'."
+	git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't rebase the feature branch '$BRANCH'."
 
 	git_do checkout -q "$BRANCH"  || die "Could not check out branch '$BRANCH'."
 	if flag interactive; then
@@ -777,16 +777,23 @@ r,[no]remote     Delete remote branch
 	# Sanity checks
 	require_branch "$BRANCH"
 
+	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
+	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
+
 	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
 
 	current_branch=$(git_current_branch)
 	# We can't delete a branch we are on, switch to the develop branch.
 	if [ "$BRANCH" = "$current_branch" ]; then
 		require_clean_working_tree
-		git_do checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
+		if git_local_branch_exists "$BASE_BRANCH"; then
+			git_do checkout "$BASE_BRANCH"
+		else
+			git_do checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
+		fi
 	fi
 
-	if git_is_branch_merged_into "$BRANCH" "$DEVELOP_BRANCH"; then
+	if git_is_branch_merged_into "$BRANCH" "$BASE_BRANCH"; then
 		git_do branch -d "$BRANCH" || die "Could not delete the $BRANCH."
 		if flag remote; then
 			git_do push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
