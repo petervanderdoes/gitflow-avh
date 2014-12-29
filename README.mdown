@@ -166,5 +166,3 @@ in another way, however, consider donating through PayPal:
 
 [1]: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=S85FXJ9EBHAF2&lc=US&item_name=gitflow&item_number=gitflow&no_note=0&cn=Add%20special%20instructions%20to%20the%20seller&no_shipping=1&rm=1&return=https%3a%2f%2fgithub%2ecom%2fpetervanderdoes%2fgitflow&cancel_return=https%3a%2f%2fgithub%2ecom%2fpetervanderdoes%2fgitflow&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted
 [2]: https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/petervanderdoes/gitflow/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
