@@ -114,9 +114,9 @@ check_boolean() {
 # Git specific common functionality
 #
 
-git_local_branches() { git for-each-ref --format='%(refname:short)' refs/heads; }
-git_remote_branches() { git for-each-ref --format='%(refname:short)' refs/remotes; }
-git_all_branches() { git for-each-ref --format='%(refname:short)' refs/remotes refs/heads; }
+git_local_branches() { git for-each-ref --sort refname --format='%(refname:short)' refs/heads; }
+git_remote_branches() { git for-each-ref --sort refname --format='%(refname:short)' refs/remotes; }
+git_all_branches() { git for-each-ref --sort refname --format='%(refname:short)' refs/remotes refs/heads; }
 git_all_tags() { git for-each-ref --format='%(refname:short)' refs/tags; }
 
 git_local_branches_prefixed() {
