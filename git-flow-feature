@@ -516,20 +516,16 @@ showcommands!    Show git commands while executing them
 
 	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
 
-	# Create remote branch
-	git_do push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH"
-	git_do fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
-
-	# Configure remote tracking
-	git_do config "branch.$BRANCH.remote" "$ORIGIN"
-	git_do config "branch.$BRANCH.merge" "refs/heads/$BRANCH"
+	# Create remote branch with remote tracking
+	git_do push -u "$ORIGIN" "$BRANCH:$BRANCH"
+	git_do fetch -q "$ORIGIN" "$BRANCH" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 	git_do checkout "$BRANCH" || die "Could not check out branch '$BRANCH'."
 
 	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
 
 	echo
 	echo "Summary of actions:"
-	echo "- A new remote branch '$BRANCH' was created"
+	echo "- The remote branch '$BRANCH' was created or updated"
 	echo "- The local branch '$BRANCH' was configured to track the remote branch"
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo
