@@ -140,11 +140,11 @@ _finish_from_develop() {
 			git_do merge --squash "$commit" || die "There were merge conflicts." # TODO: What do we do now?
 			flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$DEVELOP_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
 
-      if [ "$FLAGS_commitmessage" != "" ]; then
+			if [ "$FLAGS_commitmessage" != "" ]; then
 			  git_do commit -m "$FLAGS_commitmessage"
-      else
+			else
 			  git_do commit
-      fi
+			fi
 
 		fi
 	fi
@@ -311,11 +311,11 @@ _finish_base() {
 			git_do merge --squash "$commit" || die "There were merge conflicts." # TODO: What do we do now?
 			flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$BASE_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
 
-      if [ "$FLAGS_commitmessage" != "" ]; then
+			if [ "$FLAGS_commitmessage" != "" ]; then
 			  git_do commit -m "$FLAGS_commitmessage"
-      else
+			else
 			  git_do commit
-      fi
+			fi
 
 		fi
 	fi
