@@ -139,7 +139,13 @@ _finish_from_develop() {
 		else
 			git_do merge --squash "$commit" || die "There were merge conflicts." # TODO: What do we do now?
 			flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$DEVELOP_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
-			git_do commit
+
+			if [ "$FLAGS_commitmessage" != "" ]; then
+			  git_do commit -m "$FLAGS_commitmessage"
+			else
+			  git_do commit
+			fi
+
 		fi
 	fi
 
@@ -304,7 +310,13 @@ _finish_base() {
 		else
 			git_do merge --squash "$commit" || die "There were merge conflicts." # TODO: What do we do now?
 			flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$BASE_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
-			git_do commit
+
+			if [ "$FLAGS_commitmessage" != "" ]; then
+			  git_do commit -m "$FLAGS_commitmessage"
+			else
+			  git_do commit
+			fi
+
 		fi
 	fi
 
@@ -598,6 +610,7 @@ D,[no]force_delete  Force delete release branch after finish
 n,[no]tag           Don't tag this release
 b,[no]nobackmerge   Don't back-merge master, or tag if applicable, in develop
 S,[no]squash        Squash release during merge
+c,commitmessage     Provide a custom commit message for merges
 "
 	# Define flags
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
@@ -605,6 +618,7 @@ S,[no]squash        Squash release during merge
 	DEFINE_string  'signingkey' "" "use the given GPG-key for the digital signature (implies -s)" u
 	DEFINE_string  'message' "" "use the given tag message" m
 	DEFINE_string  'messagefile' "" "use the contents of the given file as a tag message" f
+	DEFINE_string  'commitmessage' "" "use the specified custom commit message" c
 	DEFINE_boolean 'push' false "push to $ORIGIN after performing finish" p
 	DEFINE_boolean 'keep' false "keep branch after performing finish" k
 	DEFINE_boolean 'keepremote' false "keep the remote branch"
