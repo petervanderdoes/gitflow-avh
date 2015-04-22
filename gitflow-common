@@ -684,7 +684,7 @@ run_filter_hook() {
 	command=$1
 	shift
 	scriptfile="${HOOKS_DIR}/filter-flow-${command}"
-	if [ -x $scriptfile ]; then
+	if [ -x "$scriptfile" ]; then
 		return=`$scriptfile "$@"`
 		if [ $? -eq 127 ]; then
 			echo "$return"
