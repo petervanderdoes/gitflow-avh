@@ -185,6 +185,52 @@ When one developer (depending on your work flow) finishes working on the feature
 
 to get rid of the local feature that tracks a remote branch that no more exist.
 
+### GitHub integration
+
+The GitHub workflow is a bit different from the git-flow one. The `gh` command allows to integrate a local repository managed with gitflow with a remote GitHub repository. The biggest problem comes from the fact that git flow features are made to be merged into develop, while GitHub branches are made to be sent as Pull Request and then deleted.
+
+The basic idea of the `gh` command is that a "feature develop" branch is created and locally used as `develop`. This branch tracks a remote GitHub branch with a sensible name. Given this setup you can easily use git flow features on your `develop` with your standard workflow.
+
+As soon as you finished merging features into your local `develop` you can squash them and force a push on the remote branch, then submit a PR. Locally, you just need to create another branch and point `develop` to it to continue working on new features.
+
+At the moment the `gh` command provides the following commands:
+
+* `gh enable` creates the following setup:
+
+``` console
+  _develop b543fc0 Initial commit
+  develop  -> _develop
+* master   b543fc0 [origin/master] Initial commit
+```
+
+* `gh disable` deletes the `develop` reference and returns to the usual git flow setup:
+
+``` console
+  develop b543fc0 Initial commit
+* master   b543fc0 [origin/master] Initial commit
+```
+
+* `gh activate <branch>` creates a remote branch and a local one that tracks it and makes `develop` be a reference to it:
+
+``` console
+  _develop    b543fc0 Initial commit
+  develop     -> new_feature
+  master      b543fc0 [origin/master] Initial commit
+* new_feature b543fc0 [origin/new_feature] Initial commit
+```
+
+* `gh import <branch>` creates a local branch that tracks the given remote one and makes `develop` be a reference to it:
+
+``` console
+  _develop    b543fc0 Initial commit
+  develop     -> new_feature
+  master      b543fc0 [origin/master] Initial commit
+* new_feature b543fc0 [origin/new_feature] Initial commit
+```
+
+* `gh squash <branch>` performs a `rebase -i` against master to select, reorder and squash commits.
+* `gh publish <branch>` performs a forced push of the given branch.
+
 ### Using Hooks and Filters
 
 For a wide variety of commands hooks or filters can be called before and after

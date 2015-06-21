@@ -1,0 +1,261 @@
+#
+# git-flow -- A collection of Git extensions to provide high-level
+# repository operations for Vincent Driessen's branching model.
+#
+# A blog post presenting this model is found at:
+#    http://blog.avirtualhome.com/development-workflow-using-git/
+#
+# Feel free to contribute to this project at:
+#    http://github.com/petervanderdoes/gitflow
+#
+# Authors:
+# Copyright 2012-2014 Peter van der Does. All rights reserved.
+#
+# Original Author:
+# Copyright 2010 Vincent Driessen. All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+initialize() {
+	require_git_repo
+	require_gitflow_initialized
+	gitflow_load_settings
+	ORIGINAL_DEVELOP_BRANCH="_$DEVELOP_BRANCH"
+}
+
+usage() {
+	OPTIONS_SPEC="\
+git flow gh enable
+git flow gh disable
+git flow gh activate
+git flow gh import
+
+Connects your local git flow develop branch with a GitHub branch.
+
+For more specific help type the command followed by --help
+--
+"
+	flags_help
+}
+
+cmd_default() {
+	cmd_info
+}
+
+cmd_help() {
+	usage
+	exit 0
+}
+
+cmd_info() {
+	echo "You are on branch $(git_current_branch)."
+	if [ -n $(git_local_branch_exists $ORIGINAL_DEVELOP_BRANCH) ]; then
+		echo "GitHub support currently enabled"
+		echo "$DEVELOP_BRANCH points to $(get_symbolic_ref_target $DEVELOP_BRANCH)"
+	else
+		echo "GitHub support currently disabled"
+	fi
+}
+
+get_tracked_branch_of_current_branch() {
+	git_do for-each-ref --format='%(upstream:short)' $(git symbolic-ref -q HEAD)
+}
+
+get_tracked_branch() {
+	[ -n "$1" ] || die "Missing branch name"
+	git_do config --get branch.$1.merge | sed s,"refs/heads/","$ORIGIN/",
+}
+
+get_symbolic_ref_target() {
+	[ -n "$1" ] || die "Missing symbolic reference name"
+	git_do symbolic-ref "refs/heads/$1" | sed s,"refs/heads/",,
+}
+
+cmd_enable() {
+	OPTIONS_SPEC="\
+git flow gh enable [-h] <name>
+
+Enables GitHub connection.
+--
+h,help!          Show this help
+showcommands!    Show git commands while executing them
+"
+	parse_args "$@"
+
+	if [ ! -z $NAME ]; then
+		require_local_branch $NAME
+	fi
+
+	# Move to $MASTER_BRANCH
+	git_do checkout "$MASTER_BRANCH" || die "Could not checkout '$MASTER_BRANCH'."
+
+	# Rename $DEVELOP_BRANCH
+	git_do branch -m "$DEVELOP_BRANCH" "$ORIGINAL_DEVELOP_BRANCH"
+
+	# Add a symbolic ref to $BRANCH_DEVELOP
+	git_do symbolic-ref "refs/heads/$DEVELOP_BRANCH" "refs/heads/$ORIGINAL_DEVELOP_BRANCH"
+
+	if [ ! -z $NAME ]; then
+		cmd_activate $NAME
+	fi
+}
+
+cmd_disable() {
+	OPTIONS_SPEC="\
+git flow gh disable [-h]
+
+Disable GitHub connection.
+--
+h,help!          Show this help
+showcommands!    Show git commands while executing them
+"
+	parse_args "$@"
+
+	# Remove the symbolic ref to $BRANCH_DEVELOP
+	git_do symbolic-ref --delete "refs/heads/$DEVELOP_BRANCH"
+	
+	# Rename $DEVELOP_BRANCH
+	git_do branch -m "$ORIGINAL_DEVELOP_BRANCH" "$DEVELOP_BRANCH"
+
+	# Move to $DEVELOP_BRANCH
+	git_do checkout "$DEVELOP_BRANCH" || die "Could not checkout '$MASTER_BRANCH'."
+
+}
+
+cmd_activate() {
+	OPTIONS_SPEC="\
+git flow gh activate [-h] <name>
+
+Activate GitHub connection on the given <name> branch.
+--
+h,help!          Show this help
+showcommands!    Show git commands while executing them
+"
+	parse_args "$@"
+	gitflow_require_name_arg
+
+	# Move to $MASTER_BRANCH
+	git_do checkout "$MASTER_BRANCH" || die "Could not checkout '$MASTER_BRANCH'."
+
+	# If the local branch does not exists create it
+	if ! git_local_branch_exists "$NAME"; then
+		git_do checkout -b "$NAME"
+	else
+		git_do checkout "$NAME"
+	fi
+
+	# Check that the remote tracked branch is correct, otherwise push and track it
+	if [ -z $(get_tracked_branch_of_current_branch) ]; then
+		git_do push -u "$ORIGIN" "$NAME"
+	elif [ $(get_tracked_branch_of_current_branch) != "$ORIGIN/$NAME" ]; then
+		die "$NAME branch already tracks a remote branch with a different name"
+	fi
+
+	# Add a symbolic ref to $BRANCH_DEVELOP
+	git_do symbolic-ref "refs/heads/$DEVELOP_BRANCH" "refs/heads/$NAME"
+}
+
+cmd_import() {
+	OPTIONS_SPEC="\
+git flow gh import [-h] <name>
+
+Tracks the remote branch $ORIGIN/<name> and uses the local branch <name> as $DEVELOP_BRANCH.
+--
+h,help!          Show this help
+showcommands!    Show git commands while executing them
+"
+	parse_args "$@"
+	gitflow_require_name_arg
+	
+	# Move to $MASTER_BRANCH
+	git_do checkout "$MASTER_BRANCH" || die "Could not checkout '$MASTER_BRANCH'."
+
+	if ! git_remote_branch_exists "$ORIGIN/$NAME"; then
+		die "The given remote branch $ORIGIN/$NAME does not exist" 
+	fi
+
+	# If the local branch already exists check where it points
+	if git_local_branch_exists "$NAME"; then
+		if [ $(get_tracked_branch "$NAME") = "$ORIGIN/$NAME" ]; then
+			warn "Local branch $NAME already exists and tracks $ORIGIN/$NAME."
+			git_do checkout "$NAME"
+			exit 0
+		else
+			die "Local branch $NAME already exists but does not track $ORIGIN/$NAME. Please fix it."
+		fi
+	else
+		git_do branch --track "$NAME" "$ORIGIN/$NAME"
+		cmd_activate "$NAME"
+	fi
+}
+
+cmd_squash() {
+	OPTIONS_SPEC="\
+git flow gh squash [-h] <name>
+
+Helps the user squashing the commits in the <name> branch.
+--
+h,help!          Show this help
+showcommands!    Show git commands while executing them
+"
+	parse_args "$@"
+	gitflow_require_name_arg
+
+	# Move to $NAME
+	git_do checkout "$NAME" || die "Could not checkout '$NAME'."
+
+	# Squash commits
+	git_do rebase -i master
+}
+
+cmd_publish() {
+	OPTIONS_SPEC="\
+git flow gh publish [-h] <name>
+
+Performs a force push of the branch on the tracked remote.
+--
+h,help!          Show this help
+showcommands!    Show git commands while executing them
+"
+	parse_args "$@"
+	gitflow_require_name_arg
+
+	# Move to $NAME
+	git_do checkout "$NAME" || die "Could not checkout '$NAME'."
+
+	# Force push
+	git_do push "$ORIGIN" "+$NAME"
+}
+
+# Parse arguments and set common variables
+parse_args() {
+	FLAGS "$@" || exit $?
+	eval set -- "${FLAGS_ARGV}"
+
+	# read arguments into global variables
+	if [ -z $1 ]; then
+		NAME=''
+	else
+		NAME=$1
+	fi
+	BRANCH=$NAME
+}

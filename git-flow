@@ -101,6 +101,7 @@ usage() {
 	echo "   version   Shows version information."
 	echo "   config    Manage your git-flow configuration."
 	echo "   log       Show log deviating from base branch."
+	echo "   gh        Manages GitHub connection."
 	echo
 	echo "Try 'git flow <subcommand> help' for details."
 }
