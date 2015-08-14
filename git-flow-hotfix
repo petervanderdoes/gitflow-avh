@@ -228,8 +228,8 @@ F,[no]fetch       Fetch from origin before performing local operation
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo
 	echo "Follow-up actions:"
-	echo "- Bump the version number now!"
 	echo "- Start committing your hot fixes"
+	echo "- Bump the version number now!"
 	echo "- When done, run:"
 	echo
 	echo "     git flow hotfix finish '$VERSION'"
