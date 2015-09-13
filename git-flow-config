@@ -114,6 +114,9 @@ file=     Use given config file
 	output=$(git config $gitflow_config_option --get gitflow.prefix.feature)
 	echo "Feature branch prefix: $output "
 
+	output=$(git config $gitflow_config_option --get gitflow.prefix.bugfix)
+	echo "Bugfix branch prefix: $output "
+
 	output=$(git config $gitflow_config_option --get gitflow.prefix.release)
 	echo "Release branch prefix: $output "
 
@@ -166,6 +169,10 @@ file=     Use given config file
 	feature)
 		cfg_option="gitflow.prefix.feature"
 		txt="Feature branch prefix"
+		;;
+	bugfix)
+		cfg_option="gitflow.prefix.bugfix"
+		txt="Bugfix branch prefix"
 		;;
 	hotfix)
 		cfg_option="gitflow.prefix.hotfix"

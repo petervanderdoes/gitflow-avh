@@ -38,25 +38,25 @@
 initialize() {
 	require_git_repo
 	require_gitflow_initialized
-	git config --get gitflow.prefix.feature >/dev/null 2>&1 || die "Feature prefix not set. Please run 'git flow init'."
+	git config --get gitflow.prefix.bugfix >/dev/null 2>&1 || die "Bugfix prefix not set. Please run 'git flow init'."
 	gitflow_load_settings
-	PREFIX=$(git config --get gitflow.prefix.feature)
+	PREFIX=$(git config --get gitflow.prefix.bugfix)
 }
 
 usage() {
 	OPTIONS_SPEC="\
-git flow feature [list]
-git flow feature start
-git flow feature finish
-git flow feature publish
-git flow feature track
-git flow feature diff
-git flow feature rebase
-git flow feature checkout
-git flow feature pull
-git flow feature delete
+git flow bugfix [list]
+git flow bugfix start
+git flow bugfix finish
+git flow bugfix publish
+git flow bugfix track
+git flow bugfix diff
+git flow bugfix rebase
+git flow bugfix checkout
+git flow bugfix pull
+git flow bugfix delete
 
-Manage your feature branches.
+Manage your bugfix branches.
 
 For more specific help type the command followed by --help
 --
@@ -70,14 +70,14 @@ cmd_default() {
 
 cmd_list() {
 	OPTIONS_SPEC="\
-git flow feature [list] [-h] [-v]
+git flow bugfix [list] [-h] [-v]
 
-Lists all the existing feature branches in the local repository.
+Lists all the existing bugfix branches in the local repository.
 --
 h,help!     Show this help
 v,verbose   Verbose (more) output
 "
-	local feature_branches current_branch width branch len
+	local bugfix_branches current_branch width branch len
 	local base develop_sha branch_sha
 
 	# Define flags
@@ -86,13 +86,13 @@ v,verbose   Verbose (more) output
 	# Parse argun=ments
 	parse_args "$@"
 
-	feature_branches=$(git_local_branches_prefixed "$PREFIX")
-	if [ -z "$feature_branches" ]; then
-		warn "No feature branches exist."
+	bugfix_branches=$(git_local_branches_prefixed "$PREFIX")
+	if [ -z "$bugfix_branches" ]; then
+		warn "No bugfix branches exist."
 		warn ""
-		warn "You can start a new feature branch:"
+		warn "You can start a new bugfix branch:"
 		warn ""
-		warn "    git flow feature start <name> [<base>]"
+		warn "    git flow bugfix start <name> [<base>]"
 		warn ""
 		exit 0
 	fi
@@ -100,13 +100,13 @@ v,verbose   Verbose (more) output
 
 	# Determine column width first
 	width=0
-	for branch in $feature_branches; do
+	for branch in $bugfix_branches; do
 		len=${#branch}
 		width=$(max $width $len)
 	done
 	width=$(($width+3-${#PREFIX}))
 
-	for branch in $feature_branches; do
+	for branch in $bugfix_branches; do
 		base=$(git merge-base "$branch" "$DEVELOP_BRANCH")
 		develop_sha=$(git rev-parse "$DEVELOP_BRANCH")
 		branch_sha=$(git rev-parse "$branch")
@@ -174,9 +174,9 @@ parse_remote_name() {
 
 cmd_start() {
 	OPTIONS_SPEC="\
-git flow feature start [-h] [-F] <name> [<base>]
+git flow bugfix start [-h] [-F] <name> [<base>]
 
-Start new feature <name>, optionally basing it on <base> instead of <develop>
+Start new bugfix <name>, optionally basing it on <base> instead of <develop>
 --
 h,help!          Show this help
 showcommands!    Show git commands while executing them
@@ -188,7 +188,7 @@ F,[no]fetch      Fetch from origin before performing local operation
 	DEFINE_boolean 'fetch' false 'fetch from origin before performing local operation' F
 
 	# Override defaults with values from config
-	gitflow_override_flag_boolean   "feature.start.fetch"   "fetch"
+	gitflow_override_flag_boolean   "bugfix.start.fetch"   "fetch"
 
 	# Parse arguments
 	parse_args "$@"
@@ -217,7 +217,7 @@ F,[no]fetch      Fetch from origin before performing local operation
 
 
 	# create branch
-	git_do checkout -b "$BRANCH" "$base" || die "Could not create feature branch '$BRANCH'."
+	git_do checkout -b "$BRANCH" "$base" || die "Could not create bugfix branch '$BRANCH'."
 
 	run_post_hook "$NAME" "$ORIGIN" "$BRANCH" "$base"
 
@@ -226,17 +226,17 @@ F,[no]fetch      Fetch from origin before performing local operation
 	echo "- A new branch '$BRANCH' was created, based on '$base'"
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo ""
-	echo "Now, start committing on your feature. When done, use:"
+	echo "Now, start committing on your bugfix. When done, use:"
 	echo ""
-	echo "     git flow feature finish $NAME"
+	echo "     git flow bugfix finish $NAME"
 	echo
 }
 
 cmd_finish() {
 	OPTIONS_SPEC="\
-git flow feature finish [-h] [-F] [-r] [-p] [-k] [-D] [-S] [--no-ff] <name|nameprefix>
+git flow bugfix finish [-h] [-F] [-r] [-p] [-k] [-D] [-S] [--no-ff] <name|nameprefix>
 
-Finish feature <name>
+Finish bugfix <name>
 --
 h,help!                Show this help
 showcommands!          Show git commands while executing them
@@ -246,8 +246,8 @@ p,[no]preserve-merges  Preserve merges while rebasing
 k,[no]keep             Keep branch after performing finish
 keepremote!        	   Keep the remote branch
 keeplocal!             Keep the local branch
-D,[no]force_delete     Force delete feature branch after finish
-S,[no]squash           Squash feature during merge
+D,[no]force_delete     Force delete bugfix branch after finish
+S,[no]squash           Squash bugfix during merge
 no-ff!                 Never fast-forward during the merge
 "
 	local finish_base
@@ -259,22 +259,22 @@ no-ff!                 Never fast-forward during the merge
 	DEFINE_boolean 'keep' false "keep branch after performing finish" k
 	DEFINE_boolean 'keepremote' false "keep the remote branch"
 	DEFINE_boolean 'keeplocal' false "keep the local branch"
-	DEFINE_boolean 'force_delete' false "force delete feature branch after finish" D
-	DEFINE_boolean 'squash' false "squash feature during merge" S
+	DEFINE_boolean 'force_delete' false "force delete bugfix branch after finish" D
+	DEFINE_boolean 'squash' false "squash bugfix during merge" S
 	DEFINE_boolean 'squash-info' false "add branch info during squash"
 	DEFINE_boolean 'no-ff!' false "Don't fast-forward ever during merge "
 
 	# Override defaults with values from config
-	gitflow_override_flag_boolean   "feature.finish.fetch"             "fetch"
-	gitflow_override_flag_boolean   "feature.finish.rebase"            "rebase"
-	gitflow_override_flag_boolean   "feature.finish.preserve-merges"   "preserve_merges"
-	gitflow_override_flag_boolean   "feature.finish.keep"              "keep"
-	gitflow_override_flag_boolean   "feature.finish.keepremote"        "keepremote"
-	gitflow_override_flag_boolean   "feature.finish.keeplocal"         "keeplocal"
-	gitflow_override_flag_boolean   "feature.finish.force-delete"      "force_delete"
-	gitflow_override_flag_boolean   "feature.finish.squash"            "squash"
-	gitflow_override_flag_boolean   "feature.finish.squash-info"       "squash_info"
-	gitflow_override_flag_boolean   "feature.finish.no-ff"             "no_ff"
+	gitflow_override_flag_boolean   "bugfix.finish.fetch"             "fetch"
+	gitflow_override_flag_boolean   "bugfix.finish.rebase"            "rebase"
+	gitflow_override_flag_boolean   "bugfix.finish.preserve-merges"   "preserve_merges"
+	gitflow_override_flag_boolean   "bugfix.finish.keep"              "keep"
+	gitflow_override_flag_boolean   "bugfix.finish.keepremote"        "keepremote"
+	gitflow_override_flag_boolean   "bugfix.finish.keeplocal"         "keeplocal"
+	gitflow_override_flag_boolean   "bugfix.finish.force-delete"      "force_delete"
+	gitflow_override_flag_boolean   "bugfix.finish.squash"            "squash"
+	gitflow_override_flag_boolean   "bugfix.finish.squash-info"       "squash_info"
+	gitflow_override_flag_boolean   "bugfix.finish.no-ff"             "no_ff"
 
 	# Parse arguments
 	parse_args "$@"
@@ -294,7 +294,7 @@ no-ff!                 Never fast-forward during the merge
 
 	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
 	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
-	git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't finish the feature branch '$BRANCH'."
+	git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't finish the bugfix branch '$BRANCH'."
 
 	# Detect if we're restoring from a merge conflict
 	if [ -f "$DOT_GIT_DIR/.gitflow/MERGE_BASE" ]; then
@@ -331,7 +331,7 @@ no-ff!                 Never fast-forward during the merge
 			echo "    git commit"
 			echo
 			echo "You can then complete the finish by running it again:"
-			echo "    git flow feature finish $NAME"
+			echo "    git flow bugfix finish $NAME"
 			echo
 			exit 1
 		fi
@@ -371,11 +371,11 @@ no-ff!                 Never fast-forward during the merge
 		if flag showcommands; then
 			_rebase_opts="$_rebase_opts --showcommands"
 		fi
-		if ! git flow feature rebase $_rebase_opts "$NAME"; then
+		if ! git flow bugfix rebase $_rebase_opts "$NAME"; then
 			warn "Finish was aborted due to conflicts during rebase."
 			warn "Please finish the rebase manually now."
 			warn "When finished, re-run:"
-			warn "    git flow feature finish '$NAME' '$BASE_BRANCH'"
+			warn "    git flow bugfix finish '$NAME' '$BASE_BRANCH'"
 			exit 1
 		fi
 	fi
@@ -395,7 +395,7 @@ no-ff!                 Never fast-forward during the merge
 		fi
 	else
 		git_do merge --squash "$BRANCH"
-		flag squash_info && gitflow_create_squash_message "Merged feature branch '$BRANCH'" "$BASE_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
+		flag squash_info && gitflow_create_squash_message "Merged bugfix branch '$BRANCH'" "$BASE_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
 		git_do commit
 	fi
 
@@ -411,14 +411,14 @@ no-ff!                 Never fast-forward during the merge
 		echo "    git commit"
 		echo
 		echo "You can then complete the finish by running it again:"
-		echo "    git flow feature finish $NAME"
+		echo "    git flow bugfix finish $NAME"
 		echo
 		exit 1
 	fi
 
 	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
 
-	# When no merge conflict is detected, just clean up the feature branch
+	# When no merge conflict is detected, just clean up the bugfix branch
 	gitflow_config_remove_base_branch "$BRANCH"
 	helper_finish_cleanup
 }
@@ -466,7 +466,7 @@ helper_finish_cleanup() {
 
 	echo
 	echo "Summary of actions:"
-	echo "- The feature branch '$BRANCH' was merged into '$BASE_BRANCH'"
+	echo "- The bugfix branch '$BRANCH' was merged into '$BASE_BRANCH'"
 	#echo "- Merge conflicts were resolved"		# TODO: Add this line when it's supported
 	if noflag keep; then
 		if [ $localbranchdeleted -eq $FLAGS_TRUE ]; then
@@ -485,17 +485,17 @@ helper_finish_cleanup() {
 			keepmsg=$keepmsg"; it is still remotely available on '$ORIGIN'"
 		fi
 	fi
-	echo "- Feature branch '$BRANCH' "$keepmsg
+	echo "- bugfix branch '$BRANCH' "$keepmsg
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo
 }
 
 cmd_publish() {
 	OPTIONS_SPEC="\
-git flow feature publish [-h] [<name>]
+git flow bugfix publish [-h] [<name>]
 
-Publish feature branch <name> on $ORIGIN.
-When <name> is omitted the current branch is used, but only if it's a feature branch.
+Publish bugfix branch <name> on $ORIGIN.
+When <name> is omitted the current branch is used, but only if it's a bugfix branch.
 --
 h,help!          Show this help
 showcommands!    Show git commands while executing them
@@ -534,9 +534,9 @@ showcommands!    Show git commands while executing them
 
 cmd_track() {
 	OPTIONS_SPEC="\
-git flow feature track [-h] <name>
+git flow bugfix track [-h] <name>
 
-Start tracking feature <name> that is shared on $ORIGIN
+Start tracking bugfix <name> that is shared on $ORIGIN
 --
 h,help!          Show this help
 showcommands!    Show git commands while executing them
@@ -569,7 +569,7 @@ showcommands!    Show git commands while executing them
 
 cmd_diff() {
 	OPTIONS_SPEC="\
-git flow feature diff [-h] [<name|nameprefix>]
+git flow bugfix diff [-h] [<name|nameprefix>]
 
 Show all changes in <name> that are not in the base
 --
@@ -594,9 +594,9 @@ showcommands!    Show git commands while executing them
 
 cmd_checkout() {
 	OPTIONS_SPEC="\
-git flow feature checkout [-h] [<name|nameprefix>]
+git flow bugfix checkout [-h] [<name|nameprefix>]
 
-Switch to feature branch <name>
+Switch to bugfix branch <name>
 --
 h,help!          Show this help
 showcommands!    Show git commands while executing them
@@ -604,7 +604,7 @@ showcommands!    Show git commands while executing them
 	# Parse arguments
 	parse_args "$@"
 
-	warn "The command 'git flow feature checkout/co' will be deprecated per version 2.0.0"
+	warn "The command 'git flow bugfix checkout/co' will be deprecated per version 2.0.0"
 	gitflow_require_name_arg
 
 	git_do checkout "$BRANCH"  || die "Could not check out branch '$BRANCH'."
@@ -617,7 +617,7 @@ cmd_co() {
 
 cmd_rebase() {
 	OPTIONS_SPEC="\
-git flow feature rebase [-h] [-i] [-p] [<name|nameprefix>]
+git flow bugfix rebase [-h] [-i] [-p] [<name|nameprefix>]
 
 Rebase <name> on <base_branch>
 --
@@ -633,8 +633,8 @@ p,[no]preserve-merges  Preserve merges
 	DEFINE_boolean 'preserve-merges' false 'try to recreate merges' p
 
 	# Override defaults with values from config
-	gitflow_override_flag_boolean   "feature.rebase.interactive"       "interactive"
-	gitflow_override_flag_boolean   "feature.rebase.preserve-merges"   "preserve_merges"
+	gitflow_override_flag_boolean   "bugfix.rebase.interactive"       "interactive"
+	gitflow_override_flag_boolean   "bugfix.rebase.preserve-merges"   "preserve_merges"
 
 	# Parse arguments
 	parse_args "$@"
@@ -652,7 +652,7 @@ p,[no]preserve-merges  Preserve merges
 	require_clean_working_tree
 	require_branch "$BRANCH"
 
-	git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't rebase the feature branch '$BRANCH'."
+	git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't rebase the bugfix branch '$BRANCH'."
 
 	git_do checkout -q "$BRANCH"  || die "Could not check out branch '$BRANCH'."
 	if flag interactive; then
@@ -678,9 +678,9 @@ avoid_accidental_cross_branch_action() {
 
 cmd_pull() {
 	OPTIONS_SPEC="\
-git flow feature pull [-h] <remote> [<name>]
+git flow bugfix pull [-h] <remote> [<name>]
 
-Pull feature <name> from <remote>
+Pull bugfix <name> from <remote>
 --
 h,help!          Show this help
 showcommands!    Show git commands while executing them
@@ -690,7 +690,7 @@ showcommands!    Show git commands while executing them
 	# Define flags
 	DEFINE_boolean 'rebase' false "pull with rebase" r
 
-	warn "The command 'git flow feature pull' will be deprecated per version 2.0.0. Use 'git flow feature track' instead."
+	warn "The command 'git flow bugfix pull' will be deprecated per version 2.0.0. Use 'git flow bugfix track' instead."
 
 	# Parse arguments
 	parse_remote_name "$@"
@@ -704,12 +704,12 @@ showcommands!    Show git commands while executing them
 		gitflow_use_current_branch_name
 	fi
 
-	# To avoid accidentally merging different feature branches into each other,
-	# die if the current feature branch differs from the requested $NAME
+	# To avoid accidentally merging different bugfix branches into each other,
+	# die if the current bugfix branch differs from the requested $NAME
 	# argument.
 	current_branch=$(git_current_branch)
 	if startswith "$current_branch" "$PREFIX"; then
-		# We are on a local feature branch already, so $BRANCH must be equal to
+		# We are on a local bugfix branch already, so $BRANCH must be equal to
 		# the current branch
 		avoid_accidental_cross_branch_action || die
 	fi
@@ -747,9 +747,9 @@ showcommands!    Show git commands while executing them
 
 cmd_delete() {
 	OPTIONS_SPEC="\
-git flow feature delete [-h] [-f] [-r] <name>
+git flow bugfix delete [-h] [-f] [-r] <name>
 
-Delete a given feature branch
+Delete a given bugfix branch
 --
 h,help!          Show this help
 showcommands!    Show git commands while executing them
@@ -763,8 +763,8 @@ r,[no]remote     Delete remote branch
 	DEFINE_boolean 'remote' false "delete remote branch" r
 
 	# Override defaults with values from config
-	gitflow_override_flag_boolean   "feature.delete.force"    "force"
-	gitflow_override_flag_boolean   "feature.delete.remote"   "remote"
+	gitflow_override_flag_boolean   "bugfix.delete.force"    "force"
+	gitflow_override_flag_boolean   "bugfix.delete.remote"   "remote"
 
 	# Parse arguments
 	parse_args "$@"
@@ -802,7 +802,7 @@ r,[no]remote     Delete remote branch
 				git_do push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
 			fi
 		else
-			die "Feature branch '$BRANCH' has been not been merged yet. Use -f to force the deletion."
+			die "bugfix branch '$BRANCH' has been not been merged yet. Use -f to force the deletion."
 		fi
 	fi
 
@@ -811,8 +811,8 @@ r,[no]remote     Delete remote branch
 
 	echo
 	echo "Summary of actions:"
-	echo "- Feature branch '$BRANCH' has been deleted."
-	flag remote && echo "- Feature branch '$BRANCH' in '$ORIGIN' has been deleted."
+	echo "- bugfix branch '$BRANCH' has been deleted."
+	flag remote && echo "- bugfix branch '$BRANCH' in '$ORIGIN' has been deleted."
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo
 }
