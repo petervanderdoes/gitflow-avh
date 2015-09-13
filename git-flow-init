@@ -272,6 +272,7 @@ file=    use given config file
 	# Ask the user for naming conventions (branch and tag prefixes )
 	if flag force || \
 		! git config --get gitflow.prefix.feature >/dev/null 2>&1 ||
+		! git config --get gitflow.prefix.bugfix >/dev/null 2>&1 ||
 		! git config --get gitflow.prefix.release >/dev/null 2>&1 ||
 		! git config --get gitflow.prefix.hotfix >/dev/null 2>&1 ||
 		! git config --get gitflow.prefix.support >/dev/null 2>&1 ||
@@ -291,6 +292,19 @@ file=    use given config file
 		fi
 		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
 		git_do config $gitflow_config_option gitflow.prefix.feature "$prefix"
+	fi
+
+	# Bugfix branches
+	if ! git config --get gitflow.prefix.bugfix >/dev/null 2>&1 || flag force; then
+		default_suggestion=$(git config --get gitflow.prefix.bugfix || echo bugfix/)
+		printf "Bugfix branches? [$default_suggestion] "
+		if noflag defaults; then
+			read answer
+		else
+			printf "\n"
+		fi
+		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
+		git_do config $gitflow_config_option gitflow.prefix.bugfix "$prefix"
 	fi
 
 	# Release branches
