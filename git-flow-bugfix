@@ -38,6 +38,7 @@
 initialize() {
 	require_git_repo
 	require_gitflow_initialized
+	git config --get gitflow.prefix.bugfix >/dev/null 2>&1 || die "Bugfix prefix not set. Please run 'git flow init'."
 	gitflow_load_settings
 	PREFIX=$(git config --get gitflow.prefix.bugfix)
 }

@@ -279,20 +279,11 @@ gitflow_has_develop_configured() {
 	[ "$develop" != "" ] && git_local_branch_exists "$develop"
 }
 
-gitflow_has_prefixes_configured() {
-	git config --get gitflow.prefix.feature >/dev/null 2>&1     && \
-	git config --get gitflow.prefix.bugfix >/dev/null 2>&1      && \
-	git config --get gitflow.prefix.release >/dev/null 2>&1     && \
-	git config --get gitflow.prefix.hotfix >/dev/null 2>&1      && \
-	git config --get gitflow.prefix.support >/dev/null 2>&1     && \
-	git config --get gitflow.prefix.versiontag >/dev/null 2>&1
-}
-
 gitflow_is_initialized() {
 	gitflow_has_master_configured                    && \
 	gitflow_has_develop_configured                   && \
 	[ "$(git config --get gitflow.branch.master)" != "$(git config --get gitflow.branch.develop)" ] && \
-	gitflow_has_prefixes_configured
+	$(git config --get-regexp gitflow.prefix >/dev/null 2>&1)
 }
 
 # Loading settings that can be overridden using git config
@@ -595,6 +586,7 @@ require_git_repo() {
 
 require_gitflow_initialized() {
 	gitflow_is_initialized || die "Not a gitflow-enabled repo yet. Please run 'git flow init' first."
+	$(git config --get gitflow.prefix.versiontag >/dev/null 2>&1) || die "Version tag not set. Please run 'git flow init'."
 }
 
 require_clean_working_tree() {
