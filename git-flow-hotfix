@@ -356,7 +356,7 @@ showcommands!     Show git commands while executing them
 
 cmd_finish() {
 	OPTIONS_SPEC="\
-git flow hotfix finish [-h] [-F] [-s] [-u] [-m | -f ] [-p] [-k] [-n] [-b] <version>
+git flow hotfix finish [-h] [-F] [-s] [-u] [-m | -f ] [-p] [-k] [-n] [-b] [-S] <version>
 
 Finish hotfix branch <version>
 --
@@ -374,6 +374,7 @@ k,[no]keep            Keep branch after performing finish
 D,[no]force_delete    Force delete hotfix branch after finish
 n,[no]notag           Don't tag this hotfix
 b,[no]nobackmerge     Don't back-merge master, or tag if applicable, in develop
+S,[no]squash          Squash hotfix during merge
 "
 	local opts commit keepmsg remotebranchdeleted localbranchdeleted
 
@@ -390,6 +391,8 @@ b,[no]nobackmerge     Don't back-merge master, or tag if applicable, in develop
 	DEFINE_boolean 'force_delete' false "force delete hotfix branch after finish" D
 	DEFINE_boolean 'notag' false "don't tag this hotfix" n
 	DEFINE_boolean 'nobackmerge' false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
+	DEFINE_boolean 'squash' false "squash release during merge" S
+	DEFINE_boolean 'squash-info' false "add branch info during squash"
 
 	# Override defaults with values from config
 	gitflow_override_flag_boolean   "hotfix.finish.fetch"          "fetch"
@@ -401,6 +404,8 @@ b,[no]nobackmerge     Don't back-merge master, or tag if applicable, in develop
 	gitflow_override_flag_boolean   "hotfix.finish.force-delete"   "force_delete"
 	gitflow_override_flag_boolean   "hotfix.finish.notag"          "notag"
 	gitflow_override_flag_boolean   "hotfix.finish.nobackmerge"    "nobackmerge"
+	gitflow_override_flag_boolean   "release.finish.squash"        "squash"
+	gitflow_override_flag_boolean   "release.finish.squash-info"   "squash_info"
 	gitflow_override_flag_string    "hotfix.finish.signingkey"     "signingkey"
 	gitflow_override_flag_string    "hotfix.finish.message"        "message"
 	gitflow_override_flag_string    "hotfix.finish.messagefile"    "messagefile"
@@ -499,8 +504,13 @@ b,[no]nobackmerge     Don't back-merge master, or tag if applicable, in develop
 	# but the merge into BASE was successful, we skip it now
 	if ! git_is_branch_merged_into "$BRANCH" "$BASE_BRANCH"; then
 		git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
-		git_do merge --no-ff "$BRANCH" || die "There were merge conflicts."
-		# TODO: What do we do now?
+		if noflag squash; then
+			git_do merge --no-ff "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+		else
+			git_do merge --squash "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+			flag squash_info && gitflow_create_squash_message "Merged hotfix branch '$BRANCH'" "$BASE_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
+			git_do commit
+		fi
 	fi
 
 	if noflag notag; then
