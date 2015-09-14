@@ -36,6 +36,7 @@
   By setting the config gitflow.multi-hotfix to true, you can have multiple 
   hotfix branches. Example: git config --set gitflow.multi-hotfix true
  * Can't delete branch if the base branch is not the develop branch.
+ * Add squash and squash-info flag to hotfix finish.
 
 [Gergely Nagy][algernon]
 * Remove bash code.
