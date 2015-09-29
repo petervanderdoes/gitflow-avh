@@ -26,7 +26,7 @@
  
 # Changelog
 
-#### 1.9.0-dev.53
+#### 1.9.0-dev.59
 [Peter van der Does][petervanderdoes]
 * Add bugfix command.
 * Repositories with spaces in path cause the pre * post hook to fail.
@@ -37,6 +37,7 @@
   hotfix branches. Example: git config --set gitflow.multi-hotfix true
  * Can't delete branch if the base branch is not the develop branch.
  * Add squash and squash-info flag to hotfix finish.
+ * Problem when the repository directory has multiple spaces.
 
 [Gergely Nagy][algernon]
 * Remove bash code.
