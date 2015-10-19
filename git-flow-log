@@ -9,7 +9,7 @@
 #    http://github.com/petervanderdoes/gitflow
 #
 # Authors:
-# Copyright 2012,2013 Peter van der Does. All rights reserved.
+# Copyright 2012-2015 Peter van der Does. All rights reserved.
 #
 # Original Author:
 # Copyright 2010 Vincent Driessen. All rights reserved.
@@ -35,29 +35,36 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+
 initialize() {
-    require_git_repo
-    require_gitflow_initialized
-    gitflow_load_settings
+	require_git_repo
+	require_gitflow_initialized
+	gitflow_load_settings
 }
 
 usage() {
-    OPTIONS_SPEC="\
+	OPTIONS_SPEC="\
 git flow log
 
 shows current branch log compared to develop
 'git help log' for arguments
 --
 "
-    flags_help
+	flags_help
+}
+
+# Parse arguments and set common variables
+parse_args() {
+	FLAGS "$@" || exit $?
+	eval set -- "${FLAGS_ARGV}"
 }
 
 cmd_default() {
-    cmd_list "$@"
+	cmd_list "$@"
 }
 
 cmd_list() {
-    OPTIONS_SPEC="\
+	OPTIONS_SPEC="\
 git flow feature log [<options>]
 
 Show log on <feature> branch since the fork of <develop> branch
@@ -66,25 +73,24 @@ Options come from git log
 h,help!         Show this help
 showcommands!   Show git commands while executing them
 "
-    # Display gitflow's help messages instead
-    if [[ $@ = "--help" || $@ = "-h" ]]; then
-        flags_help
-    fi
 
-    # get base branch from current branch
-    local base=$(gitflow_config_get_base_branch $(git_current_branch))
+	# Parse arguments
+	parse_args "$@"
 
-    # no base branch found, comparing against $master
-    if [[ -z $base ]]; then
-        base=$MASTER_BRANCH
-    fi
+	# get base branch from current branch
+	local base=$(gitflow_config_get_base_branch $(git_current_branch))
 
-    # Get the log
-    echo "Comparing against \"$base\" branch\n"
-    git_do log "$@""$base.."
+	# no base branch found, comparing against $master
+	if [ -z $base ]; then
+		base=$MASTER_BRANCH
+	fi
+
+	# Get the log
+	echo "Comparing against \"$base\" branch\n"
+	git_do log "$@""$base.."
 }
 
 cmd_help() {
-    usage
-    exit 0
+	usage
+	exit 0
 }

@@ -9,7 +9,7 @@
 #    http://github.com/petervanderdoes/gitflow
 #
 # Authors:
-# Copyright 2012-2014 Peter van der Does. All rights reserved.
+# Copyright 2012-2015 Peter van der Does. All rights reserved.
 #
 # Original Author:
 # Copyright 2010 Vincent Driessen. All rights reserved.
@@ -383,6 +383,7 @@ _finish_base() {
 initialize() {
 	require_git_repo
 	require_gitflow_initialized
+	git config --get gitflow.prefix.release >/dev/null 2>&1 || die "Release prefix not set. Please run 'git flow init'."
 	gitflow_load_settings
 	VERSION_PREFIX=$(git config --get gitflow.prefix.versiontag)
 	PREFIX=$(git config --get gitflow.prefix.release)
@@ -863,20 +864,16 @@ showcommands!    Show git commands while executing them
 
 	run_pre_hook "$VERSION" "$ORIGIN" "$BRANCH"
 
-	# Create remote branch
-	git_do push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH"
-	git_do fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
-
-	# Configure remote tracking
-	git_do config "branch.$BRANCH.remote" "$ORIGIN"
-	git_do config "branch.$BRANCH.merge" "refs/heads/$BRANCH"
+	# Create remote branch with remote tracking
+	git_do push -u "$ORIGIN" "$BRANCH:$BRANCH"
+	git_do fetch -q "$ORIGIN" "$BRANCH" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
 	git_do checkout "$BRANCH" || die "Could not check out branch '$BRANCH'."
 
 	run_post_hook "$VERSION" "$ORIGIN" "$BRANCH"
 
 	echo
 	echo "Summary of actions:"
-	echo "- A new remote branch '$BRANCH' was created"
+	echo "- The remote branch '$BRANCH' was created or updated"
 	echo "- The local branch '$BRANCH' was configured to track the remote branch"
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo
@@ -953,7 +950,7 @@ p,[no]preserve-merges  Preserve merges
 	require_clean_working_tree
 	require_branch "$BRANCH"
 
-    git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't rebase the release branch '$BRANCH'."
+	git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't rebase the release branch '$BRANCH'."
 
 	git_do checkout -q "$BRANCH"  || die "Could not check out branch '$BRANCH'."
 	if flag interactive; then
@@ -994,16 +991,23 @@ r,[no]remote     Delete remote branch
 	# Sanity checks
 	require_branch "$BRANCH"
 
+	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
+	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
+
 	run_pre_hook "$VERSION" "$ORIGIN" "$BRANCH"
 
 	current_branch=$(git_current_branch)
 	# We can't delete a branch we are on, switch to the develop branch.
 	if [ "$BRANCH" = "$current_branch" ]; then
 		require_clean_working_tree
-		git_do checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
+		if git_local_branch_exists "$BASE_BRANCH"; then
+			git_do checkout "$BASE_BRANCH"
+		else
+			git_do checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
+		fi
 	fi
 
-	if ( git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH" && git_is_branch_merged_into "$BRANCH" "$DEVELOP_BRANCH" ); then
+	if ( git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH" && git_is_branch_merged_into "$BRANCH" "$BASE_BRANCH" ); then
 		git_do branch -d "$BRANCH" || die "Could not delete the $BRANCH."
 		if flag remote; then
 			git_do push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
@@ -1015,7 +1019,7 @@ r,[no]remote     Delete remote branch
 				git_do push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
 			fi
 		else
-			die "Release branch '$BRANCH' has been not been merged in branch '$MASTER_BRANCH' and/or branch '$DEVELOP_BRANCH'. Use -f to force the deletion."
+			die "Release branch '$BRANCH' has been not been merged in branch '$MASTER_BRANCH' and/or branch '$BASE_BRANCH'. Use -f to force the deletion."
 		fi
 	fi
 

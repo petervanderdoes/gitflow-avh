@@ -65,10 +65,17 @@ using the complete version number.
 Fork the repository.  Then, run:
 
 ```shell
-git clone git@github.com:<username>/gitflow.git
-cd gitflow
+git clone -b master git@github.com:<username>/gitflow-avh.git
+cd gitflow-avh
 ```
-Install the git-flow software by running make.
+
+The `-b master` switch has to be added since the fork operation automatically 
+clones the `develop` branch of the official gitflow repository and cloning it 
+results in a local repository with just a `develop` branch.
+
+If you do not have gitflow installed yet install it by running `make && make install`.
+
+After that initialize the local gitflow repository with gitflow itself:
 
 ```shell
 git flow init -d
@@ -122,7 +129,7 @@ The ``-d`` flag will accept all defaults.
 * To push/pull a feature branch to the remote repository, use:
 
   		git flow feature publish <name>
-		git flow feature pull <remote> <name>
+		  git flow feature track <name>
 
 * To list/start/finish/delete release branches, use:
 
@@ -149,6 +156,30 @@ The ``-d`` flag will accept all defaults.
 
   For support branches, the `<base>` arg must be a branch, when omitted it defaults to the production branch.
 
+### Share features with others
+
+You can easily publish a feature you are working on. The reason can be to allow other programmers to work on it or to access it from another machine. The publish/track feature of gitflow simplify the creation of a remote branch and its tracking.
+
+When you want to publish a feature just use:
+
+      git flow feature publish <name>
+
+or, if you already are into the `feature/<name>` branch, just issue:
+
+      git flow feature publish
+
+Now if you execute `git branch -avv` you will see that your branch `feature/<name>` tracks `[origin/feature/<name>]`. To track the same remote branch in another clone of the same repository use:
+
+      git flow feature track <name>
+
+This will create a local feature `feature/<name>` that tracks the same remote branch as the original one, that is `origin/feature/<name>`.
+
+When one developer (depending on your work flow) finishes working on the feature he or she can issue `git flow feature finish <name>` and this will automatically delete the remote branch. All other developers shall then run:
+
+      git flow feature delete <name>
+
+to get rid of the local feature that tracks a remote branch that no more exist.
+
 ### Using Hooks and Filters
 
 For a wide variety of commands hooks or filters can called before and after
@@ -165,6 +196,7 @@ in another way, however, consider donating through PayPal:
 [![PayPal][2]][1]
 
 [1]: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=S85FXJ9EBHAF2&lc=US&item_name=gitflow&item_number=gitflow&no_note=0&cn=Add%20special%20instructions%20to%20the%20seller&no_shipping=1&rm=1&return=https%3a%2f%2fgithub%2ecom%2fpetervanderdoes%2fgitflow&cancel_return=https%3a%2f%2fgithub%2ecom%2fpetervanderdoes%2fgitflow&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted
+
 [2]: https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif
 
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/petervanderdoes/gitflow/trend.png)](https://bitdeli.com/free "Bitdeli Badge")

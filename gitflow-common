@@ -9,7 +9,7 @@
 #    http://github.com/petervanderdoes/gitflow
 #
 # Authors:
-# Copyright 2012-2014 Peter van der Does. All rights reserved.
+# Copyright 2012-2015 Peter van der Does. All rights reserved.
 #
 # Original Author:
 # Copyright 2010 Vincent Driessen. All rights reserved.
@@ -114,14 +114,14 @@ check_boolean() {
 # Git specific common functionality
 #
 
-git_local_branches() { git for-each-ref --format='%(refname:short)' refs/heads; }
-git_remote_branches() { git for-each-ref --format='%(refname:short)' refs/remotes; }
-git_all_branches() { git for-each-ref --format='%(refname:short)' refs/remotes refs/heads; }
+git_local_branches() { git for-each-ref --sort refname --format='%(refname:short)' refs/heads; }
+git_remote_branches() { git for-each-ref --sort refname --format='%(refname:short)' refs/remotes; }
+git_all_branches() { git for-each-ref --sort refname --format='%(refname:short)' refs/remotes refs/heads; }
 git_all_tags() { git for-each-ref --format='%(refname:short)' refs/tags; }
 
 git_local_branches_prefixed() {
 	[ -z $1 ] && die "Prefix parameter missing." # This should never happen.
-	git for-each-ref --format='%(refname:short)' refs/heads/$1 ;
+	git for-each-ref --format='%(refname:short)' refs/heads/$1\* ;
 }
 
 git_current_branch() {
@@ -279,32 +279,24 @@ gitflow_has_develop_configured() {
 	[ "$develop" != "" ] && git_local_branch_exists "$develop"
 }
 
-gitflow_has_prefixes_configured() {
-	git config --get gitflow.prefix.feature >/dev/null 2>&1     && \
-	git config --get gitflow.prefix.release >/dev/null 2>&1     && \
-	git config --get gitflow.prefix.hotfix >/dev/null 2>&1      && \
-	git config --get gitflow.prefix.support >/dev/null 2>&1     && \
-	git config --get gitflow.prefix.versiontag >/dev/null 2>&1
-}
-
 gitflow_is_initialized() {
 	gitflow_has_master_configured                    && \
 	gitflow_has_develop_configured                   && \
 	[ "$(git config --get gitflow.branch.master)" != "$(git config --get gitflow.branch.develop)" ] && \
-	gitflow_has_prefixes_configured
+	$(git config --get-regexp gitflow.prefix >/dev/null 2>&1)
 }
 
 # Loading settings that can be overridden using git config
 gitflow_load_settings() {
 	export GIT_CURRENT_REPO_DIR="$(git rev-parse --show-toplevel 2>/dev/null)"
 	DOT_GIT_DIR=$(git rev-parse --git-dir)
-	export DOT_GIT_DIR=$(cd "$DOT_GIT_DIR" && pwd)
-	export HOOKS_DIR=$(git config --get gitflow.path.hooks || echo "$DOT_GIT_DIR"/hooks) # the second option is used to support previous versions of git-flow
+	export DOT_GIT_DIR="(cd ${DOT_GIT_DIR} >/dev/null 2>&1 && pwd)"
+	export HOOKS_DIR="$(git config --get gitflow.path.hooks || echo ${DOT_GIT_DIR}/hooks)" # the second option is used to support previous versions of git-flow
 	export MASTER_BRANCH=$(git config --get gitflow.branch.master)
 	export DEVELOP_BRANCH=$(git config --get gitflow.branch.develop)
 	export ORIGIN=$(git config --get gitflow.origin || echo origin)
 
-	GITFLOW_CONFIG=$DOT_GIT_DIR/gitflow_config
+	GITFLOW_CONFIG="$DOT_GIT_DIR/gitflow_config"
 	if [ -f "$GITFLOW_CONFIG" ]; then # move all settings from old .git/gitflow_config to the local conf.
 		warn "Migrating old \"$GITFLOW_CONFIG\" to the \"--local\" repo config."
 		_config_lines=`git config --list --file="$GITFLOW_CONFIG"`;
@@ -376,6 +368,7 @@ gitflow_is_prefixed_branch() {
 	branch=$1
 	case $branch in
 	$(git config --get gitflow.prefix.feature)* | \
+	$(git config --get gitflow.prefix.bugfix)* | \
 	$(git config --get gitflow.prefix.release)* | \
 	$(git config --get gitflow.prefix.hotfix)*  | \
 	$(git config --get gitflow.prefix.support)* )
@@ -593,6 +586,7 @@ require_git_repo() {
 
 require_gitflow_initialized() {
 	gitflow_is_initialized || die "Not a gitflow-enabled repo yet. Please run 'git flow init' first."
+	$(git config --get gitflow.prefix.versiontag >/dev/null 2>&1) || die "Version tag not set. Please run 'git flow init'."
 }
 
 require_clean_working_tree() {
@@ -684,7 +678,7 @@ run_filter_hook() {
 	command=$1
 	shift
 	scriptfile="${HOOKS_DIR}/filter-flow-${command}"
-	if [ -x $scriptfile ]; then
+	if [ -x "$scriptfile" ]; then
 		return=`$scriptfile "$@"`
 		if [ $? -eq 127 ]; then
 			echo "$return"
@@ -712,8 +706,8 @@ run_pre_hook() {
 
 	scriptfile="${HOOKS_DIR}/pre-flow-${SUBCOMMAND}-${SUBACTION}"
 	exitcode=0
-	if [ -x $scriptfile ]; then
-		$scriptfile "$@"
+	if [ -x "$scriptfile" ]; then
+		"$scriptfile" "$@"
 		exitcode=$?
 
 		if [ $exitcode -gt 0 ]; then
@@ -736,8 +730,8 @@ run_post_hook() {
 	local scriptfile
 
 	scriptfile="${HOOKS_DIR}/post-flow-${SUBCOMMAND}-${SUBACTION}"
-	if [ -x $scriptfile ]; then
-		$scriptfile "$@"
+	if [ -x "$scriptfile" ]; then
+		"$scriptfile" "$@"
 	fi
 }
 

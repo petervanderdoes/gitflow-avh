@@ -1,6 +1,6 @@
 #
 # Authors:
-# Copyright 2012-2014 Peter van der Does. All rights reserved.
+# Copyright 2012-2015 Peter van der Does. All rights reserved.
 #
 # Original Author:
 # Copyright 2010 Vincent Driessen. All rights reserved.
@@ -36,6 +36,7 @@ EXEC_FILES=git-flow
 # files that need mode 644
 SCRIPT_FILES =git-flow-init
 SCRIPT_FILES+=git-flow-feature
+SCRIPT_FILES+=git-flow-bugfix
 SCRIPT_FILES+=git-flow-hotfix
 SCRIPT_FILES+=git-flow-release
 SCRIPT_FILES+=git-flow-support

@@ -9,7 +9,7 @@
 #    http://github.com/petervanderdoes/gitflow
 #
 # Authors:
-# Copyright 2012-2014 Peter van der Does. All rights reserved.
+# Copyright 2012-2015 Peter van der Does. All rights reserved.
 #
 # Original Author:
 # Copyright 2010 Vincent Driessen. All rights reserved.
@@ -65,14 +65,14 @@ showcommands!       Show git commands while executing them
 d,[no]defaults      Use default branch naming conventions
 f,[no]force         Force setting of gitflow branches, even if already configured
 
- Use config file location
+Use config file location
 local!   use repository config file
 global!  use global config file
 system!  use system config file
 file=    use given config file
 "
 	local gitflow_config_option should_check_existence branchcount guess
-  	local master_branch develop_branch default_suggestion answer prefix
+	local master_branch develop_branch default_suggestion answer prefix
 
 	# Define flags
 	DEFINE_boolean 'force' false 'force setting of gitflow branches, even if already configured' f
@@ -147,6 +147,12 @@ file=    use given config file
 					break
 				fi
 			done
+
+		fi
+
+		if [ -z $default_suggestion ] && flag defaults; then
+				should_check_existence=YES
+				default_suggestion=$(git config --get gitflow.branch.master || echo master)
 		fi
 
 		printf "Branch name for production releases: [$default_suggestion] "
@@ -195,12 +201,11 @@ file=    use given config file
 					break
 				fi
 			done
+		fi
 
-			if [ -z $default_suggestion ]; then
-				should_check_existence=NO
-				default_suggestion=$(git config --get gitflow.branch.develop || echo develop)
-			fi
-
+		if [ -z $default_suggestion ] && flag defaults; then
+			should_check_existence=YES
+			default_suggestion=$(git config --get gitflow.branch.develop || echo develop)
 		fi
 
 		printf "Branch name for \"next release\" development: [$default_suggestion] "
@@ -267,6 +272,7 @@ file=    use given config file
 	# Ask the user for naming conventions (branch and tag prefixes )
 	if flag force || \
 		! git config --get gitflow.prefix.feature >/dev/null 2>&1 ||
+		! git config --get gitflow.prefix.bugfix >/dev/null 2>&1 ||
 		! git config --get gitflow.prefix.release >/dev/null 2>&1 ||
 		! git config --get gitflow.prefix.hotfix >/dev/null 2>&1 ||
 		! git config --get gitflow.prefix.support >/dev/null 2>&1 ||
@@ -286,6 +292,19 @@ file=    use given config file
 		fi
 		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
 		git_do config $gitflow_config_option gitflow.prefix.feature "$prefix"
+	fi
+
+	# Bugfix branches
+	if ! git config --get gitflow.prefix.bugfix >/dev/null 2>&1 || flag force; then
+		default_suggestion=$(git config --get gitflow.prefix.bugfix || echo bugfix/)
+		printf "Bugfix branches? [$default_suggestion] "
+		if noflag defaults; then
+			read answer
+		else
+			printf "\n"
+		fi
+		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
+		git_do config $gitflow_config_option gitflow.prefix.bugfix "$prefix"
 	fi
 
 	# Release branches
@@ -343,7 +362,7 @@ file=    use given config file
 	# Paths
 	if ! git config --get gitflow.path.hooks >/dev/null 2>&1 || flag force; then
 		DOT_GIT_DIR=$(git rev-parse --git-dir)
-		DOT_GIT_DIR=$(cd "$DOT_GIT_DIR" && pwd)
+		DOT_GIT_DIR=$(cd "$DOT_GIT_DIR" >/dev/null 2>&1 && pwd)
 		default_suggestion=$(git config --get gitflow.path.hooks || echo "$DOT_GIT_DIR"/hooks)
 		printf "Hooks and filters directory? [$default_suggestion] "
 		if noflag defaults; then

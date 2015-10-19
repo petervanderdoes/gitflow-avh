@@ -10,7 +10,7 @@
 #    http://github.com/petervanderdoes/gitflow
 #
 # Authors:
-# Copyright 2012-2014 Peter van der Does. All rights reserved.
+# Copyright 2012-2015 Peter van der Does. All rights reserved.
 #
 # Original Author:
 # Copyright 2010 Vincent Driessen. All rights reserved.
@@ -79,13 +79,13 @@ esac
 
 # Extra environment settings
 if [ -f ~/.gitflow_export ]; then
-    if grep -E 'GITFLOW_FLAG_(SHOWCOMMANDS|INIT|FEATURE|HOTFIX|RELEASE|SUPPORT)' ~/.gitflow_export > /dev/null; then
-        echo "Using environment variables for \"showcommands\", \"init\", \"feature\", \"hotfix\", \"release\" and \"support\" in ~/.gitflow_export has deprecated, use git config instead."
-        echo ""
-        exit 1;
-    else
-        . ~/.gitflow_export
-    fi
+	if grep -E 'GITFLOW_FLAG_(SHOWCOMMANDS|INIT|FEATURE|HOTFIX|RELEASE|SUPPORT)' ~/.gitflow_export > /dev/null; then
+		echo "Using environment variables for \"showcommands\", \"init\", \"feature\", \"hotfix\", \"release\" and \"support\" in ~/.gitflow_export has deprecated, use git config instead."
+		echo ""
+		exit 1;
+	else
+		. ~/.gitflow_export
+	fi
 fi
 
 usage() {
@@ -94,6 +94,7 @@ usage() {
 	echo "Available subcommands are:"
 	echo "   init      Initialize a new git repo with support for the branching model."
 	echo "   feature   Manage your feature branches."
+	echo "   bugfix    Manage your bugfix branches."
 	echo "   release   Manage your release branches."
 	echo "   hotfix    Manage your hotfix branches."
 	echo "   support   Manage your support branches."
@@ -134,17 +135,24 @@ main() {
 				_prefix=$(git config --get gitflow.prefix.feature)
 				_short_branch_name=$(echo ${_current_branch#*${_prefix}})
 			else
-				if startswith "${_current_branch}" $(git config --get gitflow.prefix.hotfix); then
+				if startswith "${_current_branch}" $(git config --get gitflow.prefix.bugfix); then
 					SUBACTION="${SUBCOMMAND}"
-					SUBCOMMAND="hotfix"
-					_prefix=$(git config --get gitflow.prefix.hotfix)
+					SUBCOMMAND="bugfix"
+					_prefix=$(git config --get gitflow.prefix.bugfix)
 					_short_branch_name=$(echo ${_current_branch#*${_prefix}})
 				else
-					if startswith "${_current_branch}" $(git config --get gitflow.prefix.release); then
+					if startswith "${_current_branch}" $(git config --get gitflow.prefix.hotfix); then
 						SUBACTION="${SUBCOMMAND}"
-						SUBCOMMAND="release"
-						_prefix=$(git config --get gitflow.prefix.release)
+						SUBCOMMAND="hotfix"
+						_prefix=$(git config --get gitflow.prefix.hotfix)
 						_short_branch_name=$(echo ${_current_branch#*${_prefix}})
+					else
+						if startswith "${_current_branch}" $(git config --get gitflow.prefix.release); then
+							SUBACTION="${SUBCOMMAND}"
+							SUBCOMMAND="release"
+							_prefix=$(git config --get gitflow.prefix.release)
+							_short_branch_name=$(echo ${_current_branch#*${_prefix}})
+						fi
 					fi
 				fi
 			fi

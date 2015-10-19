@@ -20,8 +20,35 @@
 [OpherV]: https://github.com/OpherV
 [craigfowler]: https://github.com/craigfowler
 [havvg]: https://github.com/havvg
+[algernon]: https://github.com/algernon
+[jebmeier]: https://github.com/jebmeier
+[aleno]: https://github.com/aleno
  
 # Changelog
+
+#### 1.9.0-dev.59
+[Peter van der Does][petervanderdoes]
+* Add bugfix command.
+* Repositories with spaces in path cause the pre * post hook to fail.
+* Error using git flow log.
+* Using defaults with init fails with existing repository.
+* Allow multiple hotfix branches.
+  By setting the config gitflow.multi-hotfix to true, you can have multiple 
+  hotfix branches. Example: git config --set gitflow.multi-hotfix true
+ * Can't delete branch if the base branch is not the develop branch.
+ * Add squash and squash-info flag to hotfix finish.
+ * Problem when the repository directory has multiple spaces.
+
+[Gergely Nagy][algernon]
+* Remove bash code.
+
+[Joe Ebmeier][jebmeier]
+* Fix issue in case CDPATH is being used.
+  In the case of CDPATH being used, it is possible DOT_GIT_DIR variable
+  is incorrect.
+ 
+[Alexander Norström][aleno]
+* Fix issue when a prefix is chosen that doesn't end in a slash
 
 #### 1.8.0
 [Peter van der Does][petervanderdoes]
