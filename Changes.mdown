@@ -26,7 +26,11 @@
  
 # Changelog
 
-#### 1.9.1-rc.1
+#### 1.9.1-rc1
+[Peter van der Does][petervanderdoes]
+* Bugfix: git-flow directories are not set correctly
+
+#### 1.9.0
 [Peter van der Does][petervanderdoes]
 * Add bugfix command.
 * Repositories with spaces in path cause the pre * post hook to fail.
