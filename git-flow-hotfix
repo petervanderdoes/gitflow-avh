@@ -624,6 +624,9 @@ S,[no]squash          Squash hotfix during merge
 
 	if flag push; then
 		if [ "$BASE_BRANCH" = "$MASTER_BRANCH" ]; then
+			for RELEASE_BRANCH in $RELEASE_BRANCHES; do
+				git_do push "$ORIGIN" "$RELEASE_BRANCH" || die "Could not push branch '$RELEASE_BRANCH' to remote '$ORIGIN'."
+			done
 			git_do push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
 		fi
 		git_do push "$ORIGIN" "$BASE_BRANCH" || die "Could not push branch '$BASE_BRANCH' to remote '$ORIGIN'."
