@@ -114,6 +114,7 @@ those questions to accept the (sane) default suggestions.
 
 The ``-d`` flag will accept all defaults.
 
+![Screencast git flow init](http://i.imgur.com/lFQbY5V.gif)
 
 ### Creating feature/release/hotfix/support branches
 
