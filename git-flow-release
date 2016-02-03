@@ -179,7 +179,10 @@ _finish_from_develop() {
 	fi
 
 	if flag push; then
-		git_do push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
+		if noflag nopushdevelop; then
+			git_do push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
+		fi
+
 		git_do push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push branch '$MASTER_BRANCH' to remote '$ORIGIN'."
 		if noflag notag; then
 			git_do push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
@@ -219,7 +222,9 @@ _finish_from_develop() {
 	echo "- Release branch '$BRANCH' "$keepmsg
 
 	if flag push; then
-		echo "- '$DEVELOP_BRANCH', '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
+		if noflag nopushdevelop; then
+			echo "- '$DEVELOP_BRANCH', '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
+		fi
 	fi
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo
@@ -592,6 +597,7 @@ u,signingkey!       Use the given GPG-key for the digital signature (implies -s)
 m,message!          Use the given tag message
 f,[no]messagefile=  Use the contents of the given file as a tag message
 p,[no]push          Push to origin after performing finish
+nopushdevelop       Don't push develop to origin
 k,[no]keep          Keep branch after performing finish
 [no]keepremote      Keep the remote branch
 [no]keeplocal       Keep the local branch
@@ -607,6 +613,7 @@ S,[no]squash        Squash release during merge
 	DEFINE_string  'message' "" "use the given tag message" m
 	DEFINE_string  'messagefile' "" "use the contents of the given file as a tag message" f
 	DEFINE_boolean 'push' false "push to $ORIGIN after performing finish" p
+	DEFINE_boolean 'nopushdevelop' false "Don't push $DEVELOP_BRANCH to $ORIGIN"
 	DEFINE_boolean 'keep' false "keep branch after performing finish" k
 	DEFINE_boolean 'keepremote' false "keep the remote branch"
 	DEFINE_boolean 'keeplocal' false "keep the local branch"
@@ -620,6 +627,7 @@ S,[no]squash        Squash release during merge
 	gitflow_override_flag_boolean   "release.finish.fetch"          "fetch"
 	gitflow_override_flag_boolean   "release.finish.sign"           "sign"
 	gitflow_override_flag_boolean   "release.finish.push"           "push"
+	gitflow_override_flag_boolean   "release.finish.nopushdevelop"  "nopushdevelop"
 	gitflow_override_flag_boolean   "release.finish.keep"           "keep"
 	gitflow_override_flag_boolean   "release.finish.keepremote"     "keepremote"
 	gitflow_override_flag_boolean   "release.finish.keeplocal"      "keeplocal"
