@@ -21,7 +21,7 @@ Or have a look at one of these screen casts:
 
 ## Installing git-flow
 
-See the Wiki for up-to-date [Installation Instructions](https://github.com/petervanderdoes/gitflow/wiki/Installation).
+See the Wiki for up-to-date [Installation Instructions](https://github.com/petervanderdoes/gitflow-avh/wiki/Installation).
 
 
 ## Integration with your shell
@@ -37,7 +37,7 @@ for the commands not found in the original git-flow.
 
 ## FAQ
 
-* See the [FAQ](http://github.com/petervanderdoes/gitflow/wiki/FAQ) section
+* See the [FAQ](http://github.com/petervanderdoes/gitflow-avh/wiki/FAQ) section
 of the project Wiki.
 * Version Numbering Scheme.  
 Starting with version 1.0, the project uses the following scheme:
@@ -47,7 +47,7 @@ Starting with version 1.0, the project uses the following scheme:
 
 This project is under constant development. Feedback and suggestions are very
 welcome and I encourage you to use the [Issues
-list](http://github.com/petervanderdoes/gitflow/issues) on Github to provide that
+list](http://github.com/petervanderdoes/gitflow-avh/issues) on Github to provide that
 feedback.
 
 Feel free to fork this repository and to commit your additions. For a list of 
@@ -199,5 +199,3 @@ in another way, however, consider donating through PayPal:
 [1]: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=S85FXJ9EBHAF2&lc=US&item_name=gitflow&item_number=gitflow&no_note=0&cn=Add%20special%20instructions%20to%20the%20seller&no_shipping=1&rm=1&return=https%3a%2f%2fgithub%2ecom%2fpetervanderdoes%2fgitflow&cancel_return=https%3a%2f%2fgithub%2ecom%2fpetervanderdoes%2fgitflow&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted
 
 [2]: https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/petervanderdoes/gitflow/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
