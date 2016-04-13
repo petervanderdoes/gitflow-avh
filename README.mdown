@@ -42,6 +42,7 @@ of the project Wiki.
 * Version Numbering Scheme.  
 Starting with version 1.0, the project uses the following scheme:
 \<MAJOR\>.\<MINOR\>.\<REVISION\>\
+* AVH is the acronym of "A VirtualHome" 
 
 ## Please help out
 
