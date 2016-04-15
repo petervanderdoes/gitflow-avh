@@ -26,8 +26,9 @@
  
 # Changelog
 
-#### 1.10.0-dev.1
-* Preparation for new development cycle.
+#### 1.10.0-dev.7
+* Update github links.
+* Add explanation of AVH.
 
 #### 1.9.1
 [Peter van der Does][petervanderdoes]
