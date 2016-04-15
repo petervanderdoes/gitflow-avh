@@ -614,7 +614,7 @@ S,[no]squash        Squash release during merge
 	DEFINE_boolean 'notag' false "don't tag this release" n
 	DEFINE_boolean 'nobackmerge' false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
 	DEFINE_boolean 'squash' false "squash release during merge" S
-	DEFINE_boolean 'squash-info' false "add branch info during squash"
+	DEFINE_boolean 'squash_info' false "add branch info during squash"
 
 	# Override defaults with values from config
 	gitflow_override_flag_boolean   "release.finish.fetch"          "fetch"
@@ -710,7 +710,7 @@ S,[no]squash 		Squash release during merge
 	DEFINE_boolean 'push' false "push to $ORIGIN after performing finish" p
 	DEFINE_boolean 'notag' false "don't tag this release" n
 	DEFINE_boolean 'squash' false "squash release during merge" S
-	DEFINE_boolean 'squash-info' false "add branch info during squash"
+	DEFINE_boolean 'squash_info' false "add branch info during squash"
 
 	# Override defaults with values from config
 	gitflow_override_flag_boolean   "release.branch.fetch"         "fetch"
