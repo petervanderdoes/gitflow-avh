@@ -264,7 +264,7 @@ _finish_base() {
 
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
 
-	git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
+	git_do checkout "$BRANCH" || die "Could not check out branch '$BRANCH'."
 
 	if noflag notag; then
 		# Try to tag the release.
