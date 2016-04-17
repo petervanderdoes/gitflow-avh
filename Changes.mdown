@@ -31,6 +31,7 @@
 * Update github links.
 * Add explanation of AVH.
 * Add ability when finishing a release to push or not push the branches and/or tag involved.
+* The finishing of a release branch based on a branch other than develop fails with errors.
 
 #### 1.9.1
 [Peter van der Does][petervanderdoes]
