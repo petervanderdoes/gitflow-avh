@@ -179,9 +179,13 @@ _finish_from_develop() {
 	fi
 
 	if flag push; then
-		git_do push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
-		git_do push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push branch '$MASTER_BRANCH' to remote '$ORIGIN'."
-		if noflag notag; then
+        if flag pushdevelop; then
+		    git_do push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
+		fi
+		if flag pushproduction; then
+		    git_do push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push branch '$MASTER_BRANCH' to remote '$ORIGIN'."
+		fi
+		if noflag notag && flag pushtag; then
 			git_do push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
 		fi
 	fi
@@ -339,8 +343,10 @@ _finish_base() {
 	fi
 
 	if flag push; then
-		git_do push "$ORIGIN" "$BASE_BRANCH" || die "Could not push branch '$BASE_BRANCH' to remote '$ORIGIN'."
-		if noflag notag; then
+	    if flag pushdevelop; then
+		    git_do push "$ORIGIN" "$BASE_BRANCH" || die "Could not push branch '$BASE_BRANCH' to remote '$ORIGIN'."
+		fi
+		if noflag notag && flag pushtag; then
 			git_do push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
 		fi
 	fi
@@ -592,6 +598,9 @@ u,signingkey!       Use the given GPG-key for the digital signature (implies -s)
 m,message!          Use the given tag message
 f,[no]messagefile=  Use the contents of the given file as a tag message
 p,[no]push          Push to origin after performing finish
+[no]pushproduction  Push the production branch
+[no]pushdevelop     Push the develop branch
+[no]pushtag         Push the tag
 k,[no]keep          Keep branch after performing finish
 [no]keepremote      Keep the remote branch
 [no]keeplocal       Keep the local branch
@@ -607,6 +616,9 @@ S,[no]squash        Squash release during merge
 	DEFINE_string  'message' "" "use the given tag message" m
 	DEFINE_string  'messagefile' "" "use the contents of the given file as a tag message" f
 	DEFINE_boolean 'push' false "push to $ORIGIN after performing finish" p
+    DEFINE_boolean 'pushproduction' false "push the production branch"
+    DEFINE_boolean 'pushdevelop' false "push the develop branch"
+    DEFINE_boolean 'pushtag' false "push the tag"
 	DEFINE_boolean 'keep' false "keep branch after performing finish" k
 	DEFINE_boolean 'keepremote' false "keep the remote branch"
 	DEFINE_boolean 'keeplocal' false "keep the local branch"
@@ -620,6 +632,9 @@ S,[no]squash        Squash release during merge
 	gitflow_override_flag_boolean   "release.finish.fetch"          "fetch"
 	gitflow_override_flag_boolean   "release.finish.sign"           "sign"
 	gitflow_override_flag_boolean   "release.finish.push"           "push"
+	gitflow_override_flag_boolean   "release.finish.pushproduction" "pushproduction"
+	gitflow_override_flag_boolean   "release.finish.pushdevelop"    "pushdevelop"
+	gitflow_override_flag_boolean   "release.finish.pushtag"        "pushtag"
 	gitflow_override_flag_boolean   "release.finish.keep"           "keep"
 	gitflow_override_flag_boolean   "release.finish.keepremote"     "keepremote"
 	gitflow_override_flag_boolean   "release.finish.keeplocal"      "keeplocal"
@@ -661,6 +676,17 @@ S,[no]squash        Squash release during merge
 	# Keeping both branches implies the --keep flag to be true.
 	if flag keepremote && flag keeplocal; then
 		FLAGS_keep=$FLAGS_TRUE
+	fi
+
+	# Pushing implies we push all.
+	if flag push; then
+	    FLAGS_pushproduction=$FLAGS_TRUE
+	    FLAGS_pushdevelop=$FLAGS_TRUE
+	    FLAGS_pushtag=$FLAGS_TRUE
+	fi
+	# If we push either of these it means we need to do a push
+    if flag pushproduction || flag pushdevelop || flag pushtag; then
+	    FLAGS_push=$FLAGS_TRUE
 	fi
 
 	# Sanity checks
