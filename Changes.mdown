@@ -27,8 +27,10 @@
 # Changelog
 
 #### 1.10.0-dev.7
+[Peter van der Does][petervanderdoes]
 * Update github links.
 * Add explanation of AVH.
+* Add ability when finishing a release to push or not push the branches and/or tag involved.
 
 #### 1.9.1
 [Peter van der Does][petervanderdoes]
