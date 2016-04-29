@@ -598,7 +598,7 @@ showcommands!    Show git commands while executing them
 	base=$(gitflow_config_get_base_branch $BRANCH)
 	base=${base:-$DEVELOP_BRANCH}
 
-	git_do diff "$base..$BRANCH"
+	git_do diff "$base...$BRANCH"
 }
 
 cmd_checkout() {
