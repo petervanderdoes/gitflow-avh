@@ -24,7 +24,8 @@
 [jebmeier]: https://github.com/jebmeier
 [aleno]: https://github.com/aleno
 [sirn]: https://github.com/sirn
- 
+[jpenney78]: https://github.com/jpenney78
+
 # Changelog
 
 #### 1.10.0-dev.34
@@ -37,6 +38,9 @@
 
 [Kridsada Thanabulpong][sirn]
 * Fix infinite loop during Darwin link resolving.
+
+[Justin Penney][jpenney78]
+* Add detection for BusyBox getopt.
 
 #### 1.9.1
 [Peter van der Does][petervanderdoes]
