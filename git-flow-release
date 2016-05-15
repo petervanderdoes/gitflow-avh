@@ -40,7 +40,7 @@
 # Called when the base of the release is the $DEVELOP_BRANCH
 #
 _finish_from_develop() {
-	local opts merge_branch commit keepmsg remotebranchdeleted localbranchdeleted
+	local opts merge_branch commit keepmsg remotebranchdeleted localbranchdeleted compare_refs_result merge_result
 
 	remotebranchdeleted=$FLAGS_FALSE
 	localbranchdeleted=$FLAGS_FALSE
@@ -56,7 +56,31 @@ _finish_from_develop() {
 		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
 	fi
 	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
-		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
+	    if flag ff-master; then
+        	git_compare_refs "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
+	        compare_refs_result=$?
+
+	        if [ $compare_refs_result -gt 0 ]; then
+		        warn "Branches '"$MASTER_BRANCH"' and '"$ORIGIN/$MASTER_BRANCH"' have diverged."
+		        if [ $compare_refs_result -eq 1 ]; then
+		            warn "Fast forwarding '"$MASTER_BRANCH"'."
+		            git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
+			        git_do merge  --ff-only "$ORIGIN/$MASTER_BRANCH" >/dev/null 2>&1
+			        merge_result=$?
+			        git_do checkout "$BRANCH"
+			        if [ $merge_result -gt 0 ]; then
+			            die "'"$MASTER_BRANCH"' can not be fast forwarded."
+			        fi
+		        elif [ $compare_refs_result -eq 2 ]; then
+			        # Warn here, since there is no harm in being ahead
+			        warn "And local branch '$1' is ahead of '$2'."
+		        else
+			        die "Branches need merging first."
+			    fi
+		    fi
+		else
+		    require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
+		fi
 	fi
 	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
@@ -595,6 +619,7 @@ D,[no]force_delete  Force delete release branch after finish
 n,[no]tag           Don't tag this release
 b,[no]nobackmerge   Don't back-merge master, or tag if applicable, in develop
 S,[no]squash        Squash release during merge
+[no]ff-master       Fast forward master branch if possible
 "
 	# Define flags
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
@@ -614,6 +639,7 @@ S,[no]squash        Squash release during merge
 	DEFINE_boolean 'nobackmerge' false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
 	DEFINE_boolean 'squash' false "squash release during merge" S
 	DEFINE_boolean 'squash-info' false "add branch info during squash"
+	DEFINE_boolean 'ff-master' false "fast forward master branch if possible"
 
 	# Override defaults with values from config
 	gitflow_override_flag_boolean   "release.finish.fetch"          "fetch"
@@ -630,6 +656,7 @@ S,[no]squash        Squash release during merge
 	gitflow_override_flag_boolean   "release.finish.nobackmerge"    "nobackmerge"
 	gitflow_override_flag_boolean   "release.finish.squash"         "squash"
 	gitflow_override_flag_boolean   "release.finish.squash-info"    "squash_info"
+	gitflow_override_flag_boolean   "release.finish.ff-master"      "ff-master"
 	gitflow_override_flag_string    "release.finish.signingkey"     "signingkey"
 	gitflow_override_flag_string    "release.finish.message"        "message"
 	gitflow_override_flag_string    "release.finish.messagefile"    "messagefile"
