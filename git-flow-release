@@ -116,6 +116,7 @@ _finish_from_develop() {
 		# In case a previous attempt to finish this release branch has failed,
 		# but the tag was set successful, we skip it now
 		if ! git_tag_exists "$VERSION_PREFIX$VERSION"; then
+		    git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
 			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
 			fi
