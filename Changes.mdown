@@ -23,6 +23,7 @@
 [algernon]: https://github.com/algernon
 [jebmeier]: https://github.com/jebmeier
 [aleno]: https://github.com/aleno
+[sirn]: https://github.com/sirn
  
 # Changelog
 
@@ -32,6 +33,9 @@
 * Add explanation of AVH.
 * Add ability when finishing a release to push or not push the branches and/or tag involved.
 * The finishing of a release branch based on a branch other than develop fails with errors.
+
+[Kridsada Thanabulpong][sirn]
+* Fix infinite loop during Darwin link resolving.
 
 #### 1.9.1
 [Peter van der Does][petervanderdoes]
