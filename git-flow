@@ -55,7 +55,7 @@ FreeBSD|OpenBSD|NetBSD)
 Darwin)
 	PRG="$0"
 	while [ -h "$PRG" ]; do
-		link=$(readlink "$0")
+		link=$(readlink "$PRG")
 		if expr "$link" : '/.*' > /dev/null; then
 			PRG="$link"
 		else
