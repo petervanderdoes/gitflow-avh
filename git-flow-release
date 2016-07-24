@@ -155,16 +155,16 @@ _finish_from_develop() {
 			else
 				commit="$MASTER_BRANCH"
 			fi
-		else
-			commit="$BRANCH"
-		fi
-
-		if noflag squash; then
 			git_do merge --no-ff "$commit" || die "There were merge conflicts." # TODO: What do we do now?
 		else
-			git_do merge --squash "$commit" || die "There were merge conflicts." # TODO: What do we do now?
-			flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$DEVELOP_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
-			git_do commit
+			commit="$BRANCH"
+			if noflag squash; then
+		    	git_do merge --no-ff "$commit" || die "There were merge conflicts." # TODO: What do we do now?
+		    else
+			    git_do merge --squash "$commit" || die "There were merge conflicts." # TODO: What do we do now?
+			    flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$DEVELOP_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
+			    git_do commit
+		    fi
 		fi
 	fi
 
