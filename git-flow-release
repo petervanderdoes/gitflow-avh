@@ -56,30 +56,30 @@ _finish_from_develop() {
 		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
 	fi
 	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
-	    if flag ff-master; then
-        	git_compare_refs "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
-	        compare_refs_result=$?
+		if flag ff-master; then
+			git_compare_refs "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
+			compare_refs_result=$?
 
-	        if [ $compare_refs_result -gt 0 ]; then
-		        warn "Branches '"$MASTER_BRANCH"' and '"$ORIGIN/$MASTER_BRANCH"' have diverged."
-		        if [ $compare_refs_result -eq 1 ]; then
-		            warn "Fast forwarding '"$MASTER_BRANCH"'."
-		            git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
-			        git_do merge  --ff-only "$ORIGIN/$MASTER_BRANCH" >/dev/null 2>&1
-			        merge_result=$?
-			        git_do checkout "$BRANCH"
-			        if [ $merge_result -gt 0 ]; then
-			            die "'"$MASTER_BRANCH"' can not be fast forwarded."
-			        fi
-		        elif [ $compare_refs_result -eq 2 ]; then
-			        # Warn here, since there is no harm in being ahead
-			        warn "And local branch '$1' is ahead of '$2'."
-		        else
-			        die "Branches need merging first."
-			    fi
-		    fi
+			if [ $compare_refs_result -gt 0 ]; then
+				warn "Branches '"$MASTER_BRANCH"' and '"$ORIGIN/$MASTER_BRANCH"' have diverged."
+				if [ $compare_refs_result -eq 1 ]; then
+					warn "Fast forwarding '"$MASTER_BRANCH"'."
+					git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
+					git_do merge  --ff-only "$ORIGIN/$MASTER_BRANCH" >/dev/null 2>&1
+					merge_result=$?
+					git_do checkout "$BRANCH"
+					if [ $merge_result -gt 0 ]; then
+						die "'"$MASTER_BRANCH"' can not be fast forwarded."
+					fi
+				elif [ $compare_refs_result -eq 2 ]; then
+					# Warn here, since there is no harm in being ahead
+					warn "And local branch '$1' is ahead of '$2'."
+				else
+					die "Branches need merging first."
+				fi
+			fi
 		else
-		    require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
+			require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
 		fi
 	fi
 	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
@@ -116,7 +116,7 @@ _finish_from_develop() {
 		# In case a previous attempt to finish this release branch has failed,
 		# but the tag was set successful, we skip it now
 		if ! git_tag_exists "$VERSION_PREFIX$TAGNAME"; then
-		    git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
+			git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
 			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
 			fi
@@ -159,12 +159,12 @@ _finish_from_develop() {
 		else
 			commit="$BRANCH"
 			if noflag squash; then
-		    	git_do merge --no-ff "$commit" || die "There were merge conflicts." # TODO: What do we do now?
-		    else
-			    git_do merge --squash "$commit" || die "There were merge conflicts." # TODO: What do we do now?
-			    flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$DEVELOP_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
-			    git_do commit
-		    fi
+				git_do merge --no-ff "$commit" || die "There were merge conflicts." # TODO: What do we do now?
+			else
+				git_do merge --squash "$commit" || die "There were merge conflicts." # TODO: What do we do now?
+				flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$DEVELOP_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
+				git_do commit
+			fi
 		fi
 	fi
 
@@ -204,11 +204,11 @@ _finish_from_develop() {
 	fi
 
 	if flag push; then
-        if flag pushdevelop; then
-		    git_do push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
+		if flag pushdevelop; then
+			git_do push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
 		fi
 		if flag pushproduction; then
-		    git_do push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push branch '$MASTER_BRANCH' to remote '$ORIGIN'."
+			git_do push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push branch '$MASTER_BRANCH' to remote '$ORIGIN'."
 		fi
 		if noflag notag && flag pushtag; then
 			git_do push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
@@ -355,8 +355,8 @@ _finish_base() {
 	fi
 
 	if flag push; then
-	    if flag pushdevelop; then
-		    git_do push "$ORIGIN" "$BASE_BRANCH" || die "Could not push branch '$BASE_BRANCH' to remote '$ORIGIN'."
+		if flag pushdevelop; then
+			git_do push "$ORIGIN" "$BASE_BRANCH" || die "Could not push branch '$BASE_BRANCH' to remote '$ORIGIN'."
 		fi
 		if noflag notag && flag pushtag; then
 			git_do push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
@@ -630,9 +630,9 @@ T,tagname!          Use given tag name
 	DEFINE_string  'message' "" "use the given tag message" m
 	DEFINE_string  'messagefile' "" "use the contents of the given file as a tag message" f
 	DEFINE_boolean 'push' false "push to $ORIGIN after performing finish" p
-    DEFINE_boolean 'pushproduction' false "push the production branch"
-    DEFINE_boolean 'pushdevelop' false "push the develop branch"
-    DEFINE_boolean 'pushtag' false "push the tag"
+	DEFINE_boolean 'pushproduction' false "push the production branch"
+	DEFINE_boolean 'pushdevelop' false "push the develop branch"
+	DEFINE_boolean 'pushtag' false "push the tag"
 	DEFINE_boolean 'keep' false "keep branch after performing finish" k
 	DEFINE_boolean 'keepremote' false "keep the remote branch"
 	DEFINE_boolean 'keeplocal' false "keep the local branch"
@@ -705,13 +705,13 @@ T,tagname!          Use given tag name
 
 	# Pushing implies we push all.
 	if flag push; then
-	    FLAGS_pushproduction=$FLAGS_TRUE
-	    FLAGS_pushdevelop=$FLAGS_TRUE
-	    FLAGS_pushtag=$FLAGS_TRUE
+		FLAGS_pushproduction=$FLAGS_TRUE
+		FLAGS_pushdevelop=$FLAGS_TRUE
+		FLAGS_pushtag=$FLAGS_TRUE
 	fi
 	# If we push either of these it means we need to do a push
-    if flag pushproduction || flag pushdevelop || flag pushtag; then
-	    FLAGS_push=$FLAGS_TRUE
+	if flag pushproduction || flag pushdevelop || flag pushtag; then
+		FLAGS_push=$FLAGS_TRUE
 	fi
 
 	# Sanity checks
