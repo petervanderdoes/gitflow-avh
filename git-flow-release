@@ -89,13 +89,13 @@ _finish_from_develop() {
 	if noflag notag; then
 		# We ask for a tag, be sure it does not exists or
 		# points to the latest hotfix commit
-		if git_tag_exists "$VERSION_PREFIX$VERSION"; then
-			git_compare_refs  "$BRANCH" "$VERSION_PREFIX$VERSION"^2 2>/dev/null
+		if git_tag_exists "$VERSION_PREFIX$TAGNAME"; then
+			git_compare_refs  "$BRANCH" "$VERSION_PREFIX$TAGNAME"^2 2>/dev/null
 			[ $? -eq 0 ] || die "Tag already exists and does not point to release branch '$BRANCH'"
 		fi
 	fi
 
-	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+	run_pre_hook "$VERSION_PREFIX$TAGNAME" "$ORIGIN" "$BRANCH"
 
 	# Try to merge into master.
 	# In case a previous attempt to finish this release branch has failed,
@@ -115,7 +115,7 @@ _finish_from_develop() {
 		# Try to tag the release.
 		# In case a previous attempt to finish this release branch has failed,
 		# but the tag was set successful, we skip it now
-		if ! git_tag_exists "$VERSION_PREFIX$VERSION"; then
+		if ! git_tag_exists "$VERSION_PREFIX$TAGNAME"; then
 		    git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
 			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
@@ -125,11 +125,11 @@ _finish_from_develop() {
 			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
 			if [ "$FLAGS_message" != "" ]; then
 				# Run filter on the tag message
-				FLAGS_message=$(run_filter_hook release-finish-tag-message "${FLAGS_message}" "$VERSION_PREFIX$VERSION")
+				FLAGS_message=$(run_filter_hook release-finish-tag-message "${FLAGS_message}" "$VERSION_PREFIX$TAGNAME")
 				opts="$opts -m '$FLAGS_message'"
 			fi
 			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
-			eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
+			eval git_do tag $opts "$VERSION_PREFIX$TAGNAME" || die "Tagging failed. Please run finish again to retry."
 		fi
 	fi
 
@@ -151,7 +151,7 @@ _finish_from_develop() {
 			# Accounting for 'git describe', if a release is tagged
 			# we use the tag commit instead of the branch.
 			if noflag notag; then
-				commit="$VERSION_PREFIX$VERSION"
+				commit="$VERSION_PREFIX$TAGNAME"
 			else
 				commit="$MASTER_BRANCH"
 			fi
@@ -168,7 +168,7 @@ _finish_from_develop() {
 		fi
 	fi
 
-	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+	run_post_hook "$VERSION_PREFIX$TAGNAME" "$ORIGIN" "$BRANCH"
 
 	# Delete branch
 	if noflag keep; then
@@ -222,10 +222,10 @@ _finish_from_develop() {
 	fi
 	echo "- Release branch '$BRANCH' has been merged into '$MASTER_BRANCH'"
 	if noflag notag; then
-		echo "- The release was tagged '$VERSION_PREFIX$VERSION'"
+		echo "- The release was tagged '$VERSION_PREFIX$TAGNAME'"
 	fi
 	[ "$commit" = "$MASTER_BRANCH" ] && echo "- Master branch '$MASTER_BRANCH' has been back-merged into '$DEVELOP_BRANCH'"
-	[ "$commit" = "$VERSION_PREFIX$VERSION" ] && echo "- Release tag '$VERSION_PREFIX$VERSION' has been back-merged into '$DEVELOP_BRANCH'"
+	[ "$commit" = "$VERSION_PREFIX$TAGNAME" ] && echo "- Release tag '$VERSION_PREFIX$TAGNAME' has been back-merged into '$DEVELOP_BRANCH'"
 	[ "$commit" = "$BRANCH" ] && echo "- Release branch '$BRANCH' has been merged into '$DEVELOP_BRANCH'"
 
 	if noflag keep; then
@@ -281,13 +281,13 @@ _finish_base() {
 	if noflag notag; then
 		# We ask for a tag, be sure it does not exists or
 		# points to the latest hotfix commit
-		if git_tag_exists "$VERSION_PREFIX$VERSION"; then
-			git_compare_refs  "$BRANCH" "$VERSION_PREFIX$VERSION"^2 2>/dev/null
+		if git_tag_exists "$VERSION_PREFIX$TAGNAME"; then
+			git_compare_refs  "$BRANCH" "$VERSION_PREFIX$TAGNAME"^2 2>/dev/null
 			[ $? -eq 0 ] || die "Tag already exists and does not point to release branch '$BRANCH'"
 		fi
 	fi
 
-	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+	run_pre_hook "$VERSION_PREFIX$TAGNAME" "$ORIGIN" "$BRANCH"
 
 	# Try to merge into base branch.
 	# In case a previous attempt to finish this release branch has failed,
@@ -307,7 +307,7 @@ _finish_base() {
 		# Try to tag the release.
 		# In case a previous attempt to finish this release branch has failed,
 		# but the tag was set successful, we skip it now
-		if ! git_tag_exists "$VERSION_PREFIX$VERSION"; then
+		if ! git_tag_exists "$VERSION_PREFIX$TAGNAME"; then
 			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
 			fi
@@ -316,15 +316,15 @@ _finish_base() {
 			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
 			if [ "$FLAGS_message" != "" ]; then
 				# Run filter on the tag message
-				FLAGS_message=$(run_filter_hook release-finish-tag-message "${FLAGS_message}" "$VERSION_PREFIX$VERSION")
+				FLAGS_message=$(run_filter_hook release-finish-tag-message "${FLAGS_message}" "$VERSION_PREFIX$TAGNAME")
 				opts="$opts -m '$FLAGS_message'"
 			fi
 			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
-			eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
+			eval git_do tag $opts "$VERSION_PREFIX$TAGNAME" || die "Tagging failed. Please run finish again to retry."
 		fi
 	fi
 
-	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+	run_post_hook "$VERSION_PREFIX$TAGNAME" "$ORIGIN" "$BRANCH"
 
 	# Delete branch
 	if noflag keep; then
@@ -369,9 +369,9 @@ _finish_base() {
 		echo "- Latest objects have been fetched from '$ORIGIN'"
 	fi
 	if noflag notag; then
-		echo "- The release was tagged '$VERSION_PREFIX$VERSION'"
+		echo "- The release was tagged '$VERSION_PREFIX$TAGNAME'"
 	fi
-	[ "$commit" = "$VERSION_PREFIX$VERSION" ] && echo "- Release tag '$VERSION_PREFIX$VERSION' has been merged into '$BASE_BRANCH'"
+	[ "$commit" = "$VERSION_PREFIX$TAGNAME" ] && echo "- Release tag '$VERSION_PREFIX$TAGNAME' has been merged into '$BASE_BRANCH'"
 	[ "$commit" = "$BRANCH" ] && echo "- Release branch '$BRANCH' has been merged into '$BASE_BRANCH'"
 	if noflag keep; then
 		if [ $localbranchdeleted -eq $FLAGS_TRUE ]; then
@@ -621,6 +621,7 @@ n,[no]tag           Don't tag this release
 b,[no]nobackmerge   Don't back-merge master, or tag if applicable, in develop
 S,[no]squash        Squash release during merge
 [no]ff-master       Fast forward master branch if possible
+T,tagname!          Use given tag name
 "
 	# Define flags
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
@@ -641,6 +642,7 @@ S,[no]squash        Squash release during merge
 	DEFINE_boolean 'squash' false "squash release during merge" S
 	DEFINE_boolean 'squash-info' false "add branch info during squash"
 	DEFINE_boolean 'ff-master' false "fast forward master branch if possible"
+	DEFINE_string  'tagname' "" "use the given tag name" T
 
 	# Override defaults with values from config
 	gitflow_override_flag_boolean   "release.finish.fetch"          "fetch"
@@ -670,10 +672,18 @@ S,[no]squash        Squash release during merge
 		gitflow_use_current_branch_version
 	fi
 
+
 	# Run filter on the version
 	VERSION=$(run_filter_hook release-finish-version $VERSION)
 	if [ $? -eq 127 ]; then
 		die $VERSION
+	fi
+
+	# Use branch name if no tag name is given
+	if [ "$FLAGS_tagname" != "" ]; then
+		TAGNAME=$FLAGS_tagname
+	else
+		TAGNAME=$VERSION
 	fi
 
 	# As VERSION might have changed reset BRANCH with new VERSION

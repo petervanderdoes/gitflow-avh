@@ -375,6 +375,7 @@ D,[no]force_delete    Force delete hotfix branch after finish
 n,[no]notag           Don't tag this hotfix
 b,[no]nobackmerge     Don't back-merge master, or tag if applicable, in develop
 S,[no]squash          Squash hotfix during merge
+T,tagname!            Use given tag name
 "
 	local opts commit keepmsg remotebranchdeleted localbranchdeleted
 
@@ -393,6 +394,7 @@ S,[no]squash          Squash hotfix during merge
 	DEFINE_boolean 'nobackmerge' false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
 	DEFINE_boolean 'squash' false "squash release during merge" S
 	DEFINE_boolean 'squash-info' false "add branch info during squash"
+	DEFINE_string  'tagname' "" "use the given tag name" T
 
 	# Override defaults with values from config
 	gitflow_override_flag_boolean   "hotfix.finish.fetch"          "fetch"
@@ -416,6 +418,13 @@ S,[no]squash          Squash hotfix during merge
 	# Use current branch if no version is given
 	if [ "$VERSION" = "" ]; then
 		gitflow_use_current_branch_version
+	fi
+
+	# Use branch name if no tag name is given
+	if [ "$FLAGS_tagname" != "" ]; then
+		TAGNAME=$FLAGS_tagname
+	else
+		TAGNAME=$VERSION
 	fi
 
 	remotebranchdeleted=$FLAGS_FALSE
@@ -491,13 +500,13 @@ S,[no]squash          Squash hotfix during merge
 	if noflag notag; then
 		# We ask for a tag, be sure it does not exists or
 		# points to the latest hotfix commit
-		if git_tag_exists "$VERSION_PREFIX$VERSION"; then
-			git_compare_refs  "$BRANCH" "$VERSION_PREFIX$VERSION"^2 2>/dev/null
+		if git_tag_exists "$VERSION_PREFIX$TAGNAME"; then
+			git_compare_refs  "$BRANCH" "$VERSION_PREFIX$TAGNAME"^2 2>/dev/null
 			[ $? -eq 0 ] || die "Tag already exists and does not point to hotfix branch '$BRANCH'"
 		fi
 	fi
 
-	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+	run_pre_hook "$VERSION_PREFIX$TAGNAME" "$ORIGIN" "$BRANCH"
 
 	# Try to merge into BASE.
 	# In case a previous attempt to finish this release branch has failed,
@@ -517,7 +526,7 @@ S,[no]squash          Squash hotfix during merge
 		# Try to tag the release.
 		# In case a previous attempt to finish this release branch has failed,
 		# but the tag was set successful, we skip it now
-		if ! git_tag_exists "$VERSION_PREFIX$VERSION"; then
+		if ! git_tag_exists "$VERSION_PREFIX$TAGNAME"; then
 			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
 			fi
@@ -526,11 +535,11 @@ S,[no]squash          Squash hotfix during merge
 			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
 			if [ "$FLAGS_message" != "" ]; then
 				# Run filter on the tag message
-				FLAGS_message=$(run_filter_hook hotfix-finish-tag-message "${FLAGS_message}" "$VERSION_PREFIX$VERSION")
+				FLAGS_message=$(run_filter_hook hotfix-finish-tag-message "${FLAGS_message}" "$VERSION_PREFIX$TAGNAME")
 				opts="$opts -m '$FLAGS_message'"
 			fi
 			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
-			eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
+			eval git_do tag $opts "$VERSION_PREFIX$TAGNAME" || die "Tagging failed. Please run finish again to retry."
 		fi
 	fi
 
@@ -553,7 +562,7 @@ S,[no]squash          Squash hotfix during merge
 				# Accounting for 'git describe', if a release is tagged
 				# we use the tag commit instead of the branch.
 				if noflag notag; then
-					commit="$VERSION_PREFIX$VERSION"
+					commit="$VERSION_PREFIX$TAGNAME"
 				else
 					commit="$BASE_BRANCH"
 				fi
@@ -566,7 +575,7 @@ S,[no]squash          Squash hotfix during merge
 		fi
 	fi
 
-	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+	run_post_hook "$VERSION_PREFIX$TAGNAME" "$ORIGIN" "$BRANCH"
 
 	# Delete branch
 	if noflag keep; then
@@ -614,11 +623,11 @@ S,[no]squash          Squash hotfix during merge
 	fi
 	echo "- Hotfix branch '$BRANCH' has been merged into '$BASE_BRANCH'"
 	if noflag notag; then
-		echo "- The hotfix was tagged '$VERSION_PREFIX$VERSION'"
+		echo "- The hotfix was tagged '$VERSION_PREFIX$TAGNAME'"
 	fi
 	if [ "$BASE_BRANCH" = "$MASTER_BRANCH" ]; then
 		[ "$commit" = "$BASE_BRANCH" ] && echo "- Master branch '$BASE_BRANCH' has been back-merged into '$DEVELOP_BRANCH'"
-		[ "$commit" = "$VERSION_PREFIX$VERSION" ] && echo "- Hotfix tag '$VERSION_PREFIX$VERSION' has been back-merged into '$DEVELOP_BRANCH'"
+		[ "$commit" = "$VERSION_PREFIX$TAGNAME" ] && echo "- Hotfix tag '$VERSION_PREFIX$TAGNAME' has been back-merged into '$DEVELOP_BRANCH'"
 		[ "$commit" = "$BRANCH" ] && echo "- Hotfix branch '$BRANCH' has been merged into '$DEVELOP_BRANCH'"
 	fi
 	if noflag keep; then
