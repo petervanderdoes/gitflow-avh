@@ -375,7 +375,7 @@ D,[no]force_delete    Force delete hotfix branch after finish
 n,[no]notag           Don't tag this hotfix
 b,[no]nobackmerge     Don't back-merge master, or tag if applicable, in develop
 S,[no]squash          Squash hotfix during merge
-T,tagname             Use given tag name
+T,tagname!            Use given tag name
 "
 	local opts commit keepmsg remotebranchdeleted localbranchdeleted
 

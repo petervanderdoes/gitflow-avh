@@ -621,7 +621,7 @@ n,[no]tag           Don't tag this release
 b,[no]nobackmerge   Don't back-merge master, or tag if applicable, in develop
 S,[no]squash        Squash release during merge
 [no]ff-master       Fast forward master branch if possible
-T,tagname           Use given tag name
+T,tagname!          Use given tag name
 "
 	# Define flags
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
