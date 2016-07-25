@@ -27,12 +27,13 @@
  
 # Changelog
 
-#### 1.10.0-dev.30
+#### 1.10.0-dev.34
 [Peter van der Does][petervanderdoes]
 * Update github links.
 * Add explanation of AVH.
 * Add ability when finishing a release to push or not push the branches and/or tag involved.
 * The finishing of a release branch based on a branch other than develop fails with errors.
+* Add --push flag for feature finish. This gives the ability to push the bas branch after the finish.
 
 [Kridsada Thanabulpong][sirn]
 * Fix infinite loop during Darwin link resolving.
