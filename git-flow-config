@@ -137,8 +137,6 @@ git flow config set <option> <value>
 Set the git-flow configuration option to the given value
 --
 h,help!           Show this help
-
-Use config file location
 local!    Use repository config file
 global!   Use global config file
 system!   Use system config file
@@ -190,6 +188,10 @@ file=     Use given config file
 		cfg_option="gitflow.prefix.versiontag"
 		txt="Version tag prefix"
 		;;
+	allowmultihotfix)
+		cfg_option="gitflow.multi-hotfix"
+		txt="Allow multiple hotfix branches"
+		;;
 	*)
 		die_help "Invalid option given."
 		;;
@@ -221,6 +223,17 @@ file=     Use given config file
 		elif ! git_local_branch_exists "$value"; then
 			die "Local branch '$value' does not exist."
 		fi
+	fi
+
+	if [ $OPTION = "allowmultihotfix" ]; then
+		check_boolean "${value}"
+		case $? in
+		${FLAGS_ERROR})
+			die "Invalid value for option 'allowmultihotfix'. Valid values are 'true' or 'false'"
+			;;
+		*)
+			;;
+		esac
 	fi
 
 	git_do config $gitflow_config_option $cfg_option "$value"
