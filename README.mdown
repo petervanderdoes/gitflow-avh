@@ -18,6 +18,9 @@ Or have a look at one of these screen casts:
 * [A short introduction to git-flow](http://vimeo.com/16018419) (by Mark Derricutt)
 * [On the path with git-flow](https://vimeo.com/codesherpas/on-the-path-gitflow) (by Dave Bock)
 
+A quick cheatsheet was made by Daniel Kummer:
+
+[http://danielkummer.github.io/git-flow-cheatsheet/](http://danielkummer.github.io/git-flow-cheatsheet/)
 
 ## Installing git-flow
 
