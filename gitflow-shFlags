@@ -138,6 +138,15 @@ __FLAGS_GETOPT_VERS_BSD=2
 ${FLAGS_GETOPT_CMD} >/dev/null 2>&1
 case $? in
   0) __FLAGS_GETOPT_VERS=${__FLAGS_GETOPT_VERS_STD} ;;  # bsd getopt
+  1)
+    # Probably BusyBox. Getting a return of 4 with -T will confirm
+    ${FLAGS_GETOPT_CMD} -T >/dev/null 2>&1
+    if [ "$?" == 4 ] ; then
+      __FLAGS_GETOPT_VERS=${__FLAGS_GETOPT_VERS_ENH}
+    else
+      _flags_fatal 'unable to determine getopt version'
+    fi
+    ;;
   2)
 	# TODO(kward): look into '-T' option to test the internal getopt() version
 	if [ "`${FLAGS_GETOPT_CMD} --version`" = '-- ' ]; then
