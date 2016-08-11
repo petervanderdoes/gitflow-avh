@@ -1,10 +1,10 @@
 #
 # Authors:
-# Copyright 2012-2015 Peter van der Does. All rights reserved.
+# Copyright 2012-2016 Peter van der Does. All rights reserved.
 #
 # Original Author:
 # Copyright 2010 Vincent Driessen. All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
 #

@@ -9,7 +9,7 @@
 #    http://github.com/petervanderdoes/gitflow
 #
 # Authors:
-# Copyright 2012-2015 Peter van der Does. All rights reserved.
+# Copyright 2012-2016 Peter van der Does. All rights reserved.
 #
 # Original Author:
 # Copyright 2010 Vincent Driessen. All rights reserved.
@@ -40,7 +40,7 @@
 # Called when the base of the release is the $DEVELOP_BRANCH
 #
 _finish_from_develop() {
-	local opts merge_branch commit keepmsg remotebranchdeleted localbranchdeleted
+	local opts merge_branch commit keepmsg remotebranchdeleted localbranchdeleted compare_refs_result merge_result
 
 	remotebranchdeleted=$FLAGS_FALSE
 	localbranchdeleted=$FLAGS_FALSE
@@ -56,7 +56,31 @@ _finish_from_develop() {
 		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
 	fi
 	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
-		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
+		if flag ff-master; then
+			git_compare_refs "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
+			compare_refs_result=$?
+
+			if [ $compare_refs_result -gt 0 ]; then
+				warn "Branches '"$MASTER_BRANCH"' and '"$ORIGIN/$MASTER_BRANCH"' have diverged."
+				if [ $compare_refs_result -eq 1 ]; then
+					warn "Fast forwarding '"$MASTER_BRANCH"'."
+					git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
+					git_do merge  --ff-only "$ORIGIN/$MASTER_BRANCH" >/dev/null 2>&1
+					merge_result=$?
+					git_do checkout "$BRANCH"
+					if [ $merge_result -gt 0 ]; then
+						die "'"$MASTER_BRANCH"' can not be fast forwarded."
+					fi
+				elif [ $compare_refs_result -eq 2 ]; then
+					# Warn here, since there is no harm in being ahead
+					warn "And local branch '$1' is ahead of '$2'."
+				else
+					die "Branches need merging first."
+				fi
+			fi
+		else
+			require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
+		fi
 	fi
 	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
@@ -65,13 +89,13 @@ _finish_from_develop() {
 	if noflag notag; then
 		# We ask for a tag, be sure it does not exists or
 		# points to the latest hotfix commit
-		if git_tag_exists "$VERSION_PREFIX$VERSION"; then
-			git_compare_refs  "$BRANCH" "$VERSION_PREFIX$VERSION"^2 2>/dev/null
+		if git_tag_exists "$VERSION_PREFIX$TAGNAME"; then
+			git_compare_refs  "$BRANCH" "$VERSION_PREFIX$TAGNAME"^2 2>/dev/null
 			[ $? -eq 0 ] || die "Tag already exists and does not point to release branch '$BRANCH'"
 		fi
 	fi
 
-	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+	run_pre_hook "$VERSION_PREFIX$TAGNAME" "$ORIGIN" "$BRANCH"
 
 	# Try to merge into master.
 	# In case a previous attempt to finish this release branch has failed,
@@ -91,7 +115,8 @@ _finish_from_develop() {
 		# Try to tag the release.
 		# In case a previous attempt to finish this release branch has failed,
 		# but the tag was set successful, we skip it now
-		if ! git_tag_exists "$VERSION_PREFIX$VERSION"; then
+		if ! git_tag_exists "$VERSION_PREFIX$TAGNAME"; then
+			git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
 			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
 			fi
@@ -100,11 +125,11 @@ _finish_from_develop() {
 			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
 			if [ "$FLAGS_message" != "" ]; then
 				# Run filter on the tag message
-				FLAGS_message=$(run_filter_hook release-finish-tag-message "${FLAGS_message}" "$VERSION_PREFIX$VERSION")
+				FLAGS_message=$(run_filter_hook release-finish-tag-message "${FLAGS_message}" "$VERSION_PREFIX$TAGNAME")
 				opts="$opts -m '$FLAGS_message'"
 			fi
 			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
-			eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
+			eval git_do tag $opts "$VERSION_PREFIX$TAGNAME" || die "Tagging failed. Please run finish again to retry."
 		fi
 	fi
 
@@ -126,24 +151,24 @@ _finish_from_develop() {
 			# Accounting for 'git describe', if a release is tagged
 			# we use the tag commit instead of the branch.
 			if noflag notag; then
-				commit="$VERSION_PREFIX$VERSION"
+				commit="$VERSION_PREFIX$TAGNAME"
 			else
 				commit="$MASTER_BRANCH"
 			fi
-		else
-			commit="$BRANCH"
-		fi
-
-		if noflag squash; then
 			git_do merge --no-ff "$commit" || die "There were merge conflicts." # TODO: What do we do now?
 		else
-			git_do merge --squash "$commit" || die "There were merge conflicts." # TODO: What do we do now?
-			flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$DEVELOP_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
-			git_do commit
+			commit="$BRANCH"
+			if noflag squash; then
+				git_do merge --no-ff "$commit" || die "There were merge conflicts." # TODO: What do we do now?
+			else
+				git_do merge --squash "$commit" || die "There were merge conflicts." # TODO: What do we do now?
+				flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$DEVELOP_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
+				git_do commit
+			fi
 		fi
 	fi
 
-	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+	run_post_hook "$VERSION_PREFIX$TAGNAME" "$ORIGIN" "$BRANCH"
 
 	# Delete branch
 	if noflag keep; then
@@ -179,9 +204,13 @@ _finish_from_develop() {
 	fi
 
 	if flag push; then
-		git_do push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
-		git_do push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push branch '$MASTER_BRANCH' to remote '$ORIGIN'."
-		if noflag notag; then
+		if flag pushdevelop; then
+			git_do push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
+		fi
+		if flag pushproduction; then
+			git_do push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push branch '$MASTER_BRANCH' to remote '$ORIGIN'."
+		fi
+		if noflag notag && flag pushtag; then
 			git_do push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
 		fi
 	fi
@@ -193,10 +222,10 @@ _finish_from_develop() {
 	fi
 	echo "- Release branch '$BRANCH' has been merged into '$MASTER_BRANCH'"
 	if noflag notag; then
-		echo "- The release was tagged '$VERSION_PREFIX$VERSION'"
+		echo "- The release was tagged '$VERSION_PREFIX$TAGNAME'"
 	fi
 	[ "$commit" = "$MASTER_BRANCH" ] && echo "- Master branch '$MASTER_BRANCH' has been back-merged into '$DEVELOP_BRANCH'"
-	[ "$commit" = "$VERSION_PREFIX$VERSION" ] && echo "- Release tag '$VERSION_PREFIX$VERSION' has been back-merged into '$DEVELOP_BRANCH'"
+	[ "$commit" = "$VERSION_PREFIX$TAGNAME" ] && echo "- Release tag '$VERSION_PREFIX$TAGNAME' has been back-merged into '$DEVELOP_BRANCH'"
 	[ "$commit" = "$BRANCH" ] && echo "- Release branch '$BRANCH' has been merged into '$DEVELOP_BRANCH'"
 
 	if noflag keep; then
@@ -252,21 +281,34 @@ _finish_base() {
 	if noflag notag; then
 		# We ask for a tag, be sure it does not exists or
 		# points to the latest hotfix commit
-		if git_tag_exists "$VERSION_PREFIX$VERSION"; then
-			git_compare_refs  "$BRANCH" "$VERSION_PREFIX$VERSION"^2 2>/dev/null
+		if git_tag_exists "$VERSION_PREFIX$TAGNAME"; then
+			git_compare_refs  "$BRANCH" "$VERSION_PREFIX$TAGNAME"^2 2>/dev/null
 			[ $? -eq 0 ] || die "Tag already exists and does not point to release branch '$BRANCH'"
 		fi
 	fi
 
-	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+	run_pre_hook "$VERSION_PREFIX$TAGNAME" "$ORIGIN" "$BRANCH"
 
-	git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
+	# Try to merge into base branch.
+	# In case a previous attempt to finish this release branch has failed,
+	# but the merge into develop was successful, we skip it now
+	if ! git_is_branch_merged_into "$BRANCH" "$BASE_BRANCH"; then
+		git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
+		if noflag squash; then
+			git_do merge --no-ff "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+		else
+			git_do merge --squash "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+			flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$BASE_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
+			git_do commit
+		fi
+	fi
 
 	if noflag notag; then
 		# Try to tag the release.
 		# In case a previous attempt to finish this release branch has failed,
 		# but the tag was set successful, we skip it now
-		if ! git_tag_exists "$VERSION_PREFIX$VERSION"; then
+		if ! git_tag_exists "$VERSION_PREFIX$TAGNAME"; then
+			git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
 			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
 			fi
@@ -275,40 +317,15 @@ _finish_base() {
 			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
 			if [ "$FLAGS_message" != "" ]; then
 				# Run filter on the tag message
-				FLAGS_message=$(run_filter_hook release-finish-tag-message "${FLAGS_message}" "$VERSION_PREFIX$VERSION")
+				FLAGS_message=$(run_filter_hook release-finish-tag-message "${FLAGS_message}" "$VERSION_PREFIX$TAGNAME")
 				opts="$opts -m '$FLAGS_message'"
 			fi
 			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
-			eval git_do tag $opts "$VERSION_PREFIX$VERSION" || die "Tagging failed. Please run finish again to retry."
+			eval git_do tag $opts "$VERSION_PREFIX$TAGNAME" || die "Tagging failed. Please run finish again to retry."
 		fi
 	fi
 
-	merge_branch="$BRANCH"
-
-	# Try to merge into develop.
-	# In case a previous attempt to finish this release branch has failed,
-	# but the merge into develop was successful, we skip it now
-	if ! git_is_branch_merged_into "$merge_branch" "$BASE_BRANCH"; then
-		git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
-
-		# Accounting for 'git describe', if a release is tagged
-		# we use the tag commit instead of the branch.
-		if noflag notag; then
-			commit="$VERSION_PREFIX$VERSION"
-		else
-			commit="$BRANCH"
-		fi
-
-		if noflag squash; then
-			git_do merge --no-ff "$commit" || die "There were merge conflicts." # TODO: What do we do now?
-		else
-			git_do merge --squash "$commit" || die "There were merge conflicts." # TODO: What do we do now?
-			flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$BASE_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
-			git_do commit
-		fi
-	fi
-
-	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
+	run_post_hook "$VERSION_PREFIX$TAGNAME" "$ORIGIN" "$BRANCH"
 
 	# Delete branch
 	if noflag keep; then
@@ -339,8 +356,10 @@ _finish_base() {
 	fi
 
 	if flag push; then
-		git_do push "$ORIGIN" "$BASE_BRANCH" || die "Could not push branch '$BASE_BRANCH' to remote '$ORIGIN'."
-		if noflag notag; then
+		if flag pushdevelop; then
+			git_do push "$ORIGIN" "$BASE_BRANCH" || die "Could not push branch '$BASE_BRANCH' to remote '$ORIGIN'."
+		fi
+		if noflag notag && flag pushtag; then
 			git_do push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
 		fi
 	fi
@@ -351,9 +370,9 @@ _finish_base() {
 		echo "- Latest objects have been fetched from '$ORIGIN'"
 	fi
 	if noflag notag; then
-		echo "- The release was tagged '$VERSION_PREFIX$VERSION'"
+		echo "- The release was tagged '$VERSION_PREFIX$TAGNAME'"
 	fi
-	[ "$commit" = "$VERSION_PREFIX$VERSION" ] && echo "- Release tag '$VERSION_PREFIX$VERSION' has been merged into '$BASE_BRANCH'"
+	[ "$commit" = "$VERSION_PREFIX$TAGNAME" ] && echo "- Release tag '$VERSION_PREFIX$TAGNAME' has been merged into '$BASE_BRANCH'"
 	[ "$commit" = "$BRANCH" ] && echo "- Release branch '$BRANCH' has been merged into '$BASE_BRANCH'"
 	if noflag keep; then
 		if [ $localbranchdeleted -eq $FLAGS_TRUE ]; then
@@ -592,6 +611,9 @@ u,signingkey!       Use the given GPG-key for the digital signature (implies -s)
 m,message!          Use the given tag message
 f,[no]messagefile=  Use the contents of the given file as a tag message
 p,[no]push          Push to origin after performing finish
+[no]pushproduction  Push the production branch
+[no]pushdevelop     Push the develop branch
+[no]pushtag         Push the tag
 k,[no]keep          Keep branch after performing finish
 [no]keepremote      Keep the remote branch
 [no]keeplocal       Keep the local branch
@@ -599,6 +621,8 @@ D,[no]force_delete  Force delete release branch after finish
 n,[no]tag           Don't tag this release
 b,[no]nobackmerge   Don't back-merge master, or tag if applicable, in develop
 S,[no]squash        Squash release during merge
+[no]ff-master       Fast forward master branch if possible
+T,tagname!          Use given tag name
 "
 	# Define flags
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
@@ -607,6 +631,9 @@ S,[no]squash        Squash release during merge
 	DEFINE_string  'message' "" "use the given tag message" m
 	DEFINE_string  'messagefile' "" "use the contents of the given file as a tag message" f
 	DEFINE_boolean 'push' false "push to $ORIGIN after performing finish" p
+	DEFINE_boolean 'pushproduction' false "push the production branch"
+	DEFINE_boolean 'pushdevelop' false "push the develop branch"
+	DEFINE_boolean 'pushtag' false "push the tag"
 	DEFINE_boolean 'keep' false "keep branch after performing finish" k
 	DEFINE_boolean 'keepremote' false "keep the remote branch"
 	DEFINE_boolean 'keeplocal' false "keep the local branch"
@@ -615,11 +642,16 @@ S,[no]squash        Squash release during merge
 	DEFINE_boolean 'nobackmerge' false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
 	DEFINE_boolean 'squash' false "squash release during merge" S
 	DEFINE_boolean 'squash-info' false "add branch info during squash"
+	DEFINE_boolean 'ff-master' false "fast forward master branch if possible"
+	DEFINE_string  'tagname' "" "use the given tag name" T
 
 	# Override defaults with values from config
 	gitflow_override_flag_boolean   "release.finish.fetch"          "fetch"
 	gitflow_override_flag_boolean   "release.finish.sign"           "sign"
 	gitflow_override_flag_boolean   "release.finish.push"           "push"
+	gitflow_override_flag_boolean   "release.finish.pushproduction" "pushproduction"
+	gitflow_override_flag_boolean   "release.finish.pushdevelop"    "pushdevelop"
+	gitflow_override_flag_boolean   "release.finish.pushtag"        "pushtag"
 	gitflow_override_flag_boolean   "release.finish.keep"           "keep"
 	gitflow_override_flag_boolean   "release.finish.keepremote"     "keepremote"
 	gitflow_override_flag_boolean   "release.finish.keeplocal"      "keeplocal"
@@ -628,6 +660,7 @@ S,[no]squash        Squash release during merge
 	gitflow_override_flag_boolean   "release.finish.nobackmerge"    "nobackmerge"
 	gitflow_override_flag_boolean   "release.finish.squash"         "squash"
 	gitflow_override_flag_boolean   "release.finish.squash-info"    "squash_info"
+	gitflow_override_flag_boolean   "release.finish.ff-master"      "ff-master"
 	gitflow_override_flag_string    "release.finish.signingkey"     "signingkey"
 	gitflow_override_flag_string    "release.finish.message"        "message"
 	gitflow_override_flag_string    "release.finish.messagefile"    "messagefile"
@@ -640,10 +673,18 @@ S,[no]squash        Squash release during merge
 		gitflow_use_current_branch_version
 	fi
 
+
 	# Run filter on the version
 	VERSION=$(run_filter_hook release-finish-version $VERSION)
 	if [ $? -eq 127 ]; then
 		die $VERSION
+	fi
+
+	# Use branch name if no tag name is given
+	if [ "$FLAGS_tagname" != "" ]; then
+		TAGNAME=$FLAGS_tagname
+	else
+		TAGNAME=$VERSION
 	fi
 
 	# As VERSION might have changed reset BRANCH with new VERSION
@@ -661,6 +702,17 @@ S,[no]squash        Squash release during merge
 	# Keeping both branches implies the --keep flag to be true.
 	if flag keepremote && flag keeplocal; then
 		FLAGS_keep=$FLAGS_TRUE
+	fi
+
+	# Pushing implies we push all.
+	if flag push; then
+		FLAGS_pushproduction=$FLAGS_TRUE
+		FLAGS_pushdevelop=$FLAGS_TRUE
+		FLAGS_pushtag=$FLAGS_TRUE
+	fi
+	# If we push either of these it means we need to do a push
+	if flag pushproduction || flag pushdevelop || flag pushtag; then
+		FLAGS_push=$FLAGS_TRUE
 	fi
 
 	# Sanity checks
