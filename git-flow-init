@@ -374,16 +374,27 @@ file=    use given config file
 		git_do config $gitflow_config_option gitflow.path.hooks "$hooks_dir"
 	fi
 
-    # Automate Pre-Commit hook install if it exists on git-flow hooks directory
+	# Automate pre-commit hook install if it exists on git-flow hooks directory
     hooks_dir=$(git config --get gitflow.path.hooks)
+    hooks_dir=${hooks_dir%%/}
     if [ -f "$hooks_dir/pre-commit" ]; then
-        # Check whether there's a previous local pre-commit hook 
-        if [ -f "./.git/hooks/pre-commit" ]; then
-            echo "A backup of your local pre-commit hook will be created."
+        DOT_GIT_DIR=$(git rev-parse --git-dir)
+        LOCAL_GIT_HOOKS_DIR="$DOT_GIT_DIR/hooks"
+        # Check whether there's a previous local pre-commit hook to backup
+        if [ -f "$LOCAL_GIT_HOOKS_DIR/pre-commit" ]; then
+            backup="(local hook will be saved)"
         fi
-        ln -s "$hooks_dir/pre-commit" -t "./.git/hooks" --backup
+        default_suggestion="Y"
+        printf "Install pre-commit hook%s? [$default_suggestion] " " $backup"
+        if noflag defaults; then
+            read answer
+        else
+            printf "\n"
+        fi
+        if [ "${answer:-$default_suggestion}" = "Y" ]; then
+            ln -s "$hooks_dir/pre-commit" -t "$LOCAL_GIT_HOOKS_DIR" --backup
+        fi
     fi
-
 
 	# TODO: what to do with origin?
 }
