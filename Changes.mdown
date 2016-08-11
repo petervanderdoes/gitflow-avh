@@ -28,7 +28,7 @@
 
 # Changelog
 
-#### 1.10.0-rc.1
+#### 1.10.0
 [Peter van der Does][petervanderdoes]
 * Update github links.
 * Add explanation of AVH.
