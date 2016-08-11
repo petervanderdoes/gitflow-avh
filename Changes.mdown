@@ -34,7 +34,12 @@
 * Add explanation of AVH.
 * Add ability when finishing a release to push or not push the branches and/or tag involved.
 * The finishing of a release branch based on a branch other than develop fails with errors.
-* Add --push flag for feature finish. This gives the ability to push the bas branch after the finish.
+* Add --push flag for feature finish. This gives the ability to push the base branch after the finish.
+* When finishing a release have the ability to fast-forward the master branch, if possible.
+  This is controlled by the flag --ff-master.
+* Add new flag -T, --tagname to override the tag name when finishing a release or hotfix.
+* Allow multiple hotfix branches by setting the config allowmultihotfix to true.  
+  The command to set it is  
 
 [Kridsada Thanabulpong][sirn]
 * Fix infinite loop during Darwin link resolving.
