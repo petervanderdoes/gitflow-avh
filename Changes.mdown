@@ -28,7 +28,7 @@
 
 # Changelog
 
-#### 1.11.0-dev.4
+#### 1.10.1
 [Peter van der Does][petervanderdoes]
 * Bugfix: flag short name (p) already defined
 
