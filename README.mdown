@@ -187,7 +187,7 @@ to get rid of the local feature that tracks a remote branch that no more exist.
 
 ### Using Hooks and Filters
 
-For a wide variety of commands hooks or filters can called before and after
+For a wide variety of commands hooks or filters can be called before and after
 the command.  
 The files should be placed in .git/hooks  
 In the directory hooks you can find examples of all the hooks available.

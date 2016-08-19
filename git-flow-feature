@@ -258,7 +258,7 @@ no-ff!                 Never fast-forward during the merge
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
 	DEFINE_boolean 'rebase' false "rebase before merging" r
 	DEFINE_boolean 'preserve-merges' false 'try to recreate merges while rebasing' p
-	DEFINE_boolean 'push' false "push to $ORIGIN after performing finish" p
+	DEFINE_boolean 'push' false "push to $ORIGIN after performing finish"
 	DEFINE_boolean 'keep' false "keep branch after performing finish" k
 	DEFINE_boolean 'keepremote' false "keep the remote branch"
 	DEFINE_boolean 'keeplocal' false "keep the local branch"

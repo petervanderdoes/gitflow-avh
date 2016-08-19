@@ -35,7 +35,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-GITFLOW_VERSION=1.10.0
+GITFLOW_VERSION=1.10.1
 
 initialize() {
 	# A function can not be empty. Comments count as empty.
