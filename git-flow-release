@@ -56,7 +56,7 @@ _finish_from_develop() {
 		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
 	fi
 	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
-		if flag ff-master; then
+		if flag ff_master; then
 			git_compare_refs "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
 			compare_refs_result=$?
 
