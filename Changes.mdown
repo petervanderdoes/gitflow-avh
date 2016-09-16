@@ -28,7 +28,7 @@
 
 # Changelog
 
-#### 1.10.2-rc.1
+#### 1.10.2
 [Peter van der Does][petervanderdoes]
 * Bugfix: Error finishing a release.
 
