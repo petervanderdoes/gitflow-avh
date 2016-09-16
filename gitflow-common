@@ -342,7 +342,7 @@ gitflow_resolve_nameprefix() {
 	num_matches=$(echo "$matches" | wc -l)
 	if [ -z "$matches" ]; then
 		# no prefix match, so take it literally
-		warn "No branch matches prefix '$name'"
+		warn "No branches match '$prefix$name*'"
 		return 1
 	else
 		if [ $num_matches -eq 1 ]; then
