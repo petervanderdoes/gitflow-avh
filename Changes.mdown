@@ -28,6 +28,9 @@
 
 # Changelog
 
+#### 1.11.0-dev.1
+* Preparation for new development cycle.
+
 #### 1.10.2
 [Peter van der Does][petervanderdoes]
 * Bugfix: Error finishing a release.
