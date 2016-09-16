@@ -29,7 +29,8 @@
 # Changelog
 
 #### 1.10.2-rc.1
-* Preparation for new development cycle.
+[Peter van der Does][petervanderdoes]
+* Bugfix: Error finishing a release.
 
 #### 1.10.1
 [Peter van der Does][petervanderdoes]
