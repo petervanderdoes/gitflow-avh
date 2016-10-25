@@ -87,7 +87,7 @@ install)
 		git checkout develop
 		cd "$OLDPWD"
 		;;
-	develop)
+	version)
 		cd "$REPO_NAME"
 		git checkout tags/$3
 		cd "$OLDPWD"
