@@ -10,7 +10,7 @@
 # Updated for the fork at petervanderdoes
 
 usage() {
-	echo "Usage: [environment] gitflow-installer.sh [install|uninstall] [stable|develop]"
+	echo "Usage: [environment] gitflow-installer.sh [install|uninstall] [stable|develop|version] [tag]"
 	echo "Environment:"
 	echo "   PREFIX=$PREFIX"
 	echo "   REPO_HOME=$REPO_HOME"
