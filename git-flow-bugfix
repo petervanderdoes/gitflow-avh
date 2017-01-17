@@ -234,7 +234,7 @@ F,[no]fetch      Fetch from origin before performing local operation
 
 cmd_finish() {
 	OPTIONS_SPEC="\
-git flow bugfix finish [-h] [-F] [-r] [-p] [-k] [-D] [-S] [--no-ff] <name|nameprefix>
+git flow bugfix finish [-h] [-F] [-r] [-p] [-k] [-D] [-S] [--no-ff] [-e] <name|nameprefix>
 
 Finish bugfix <name>
 --
@@ -249,6 +249,7 @@ keeplocal!             Keep the local branch
 D,[no]force_delete     Force delete bugfix branch after finish
 S,[no]squash           Squash bugfix during merge
 no-ff!                 Never fast-forward during the merge
+e,[no]force_merge      Force merge (develop) branch before finish if diverged
 "
 	local finish_base
 
@@ -263,6 +264,7 @@ no-ff!                 Never fast-forward during the merge
 	DEFINE_boolean 'squash' false "squash bugfix during merge" S
 	DEFINE_boolean 'squash-info' false "add branch info during squash"
 	DEFINE_boolean 'no-ff!' false "Don't fast-forward ever during merge "
+	DEFINE_boolean 'force_merge' false "force merge (develop) branch before finish if diverged" e
 
 	# Override defaults with values from config
 	gitflow_override_flag_boolean   "bugfix.finish.fetch"             "fetch"
@@ -275,6 +277,7 @@ no-ff!                 Never fast-forward during the merge
 	gitflow_override_flag_boolean   "bugfix.finish.squash"            "squash"
 	gitflow_override_flag_boolean   "bugfix.finish.squash-info"       "squash_info"
 	gitflow_override_flag_boolean   "bugfix.finish.no-ff"             "no_ff"
+    gitflow_override_flag_boolean   "bugfix.finish.force_merge"       "force_merge"
 
 	# Parse arguments
 	parse_args "$@"
@@ -354,11 +357,19 @@ no-ff!                 Never fast-forward during the merge
 
 	# Check if the local branches have all the commits from the remote branches
 	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-			require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
-	fi
-	if git_remote_branch_exists "$ORIGIN/$BASE_BRANCH"; then
-		require_branches_equal "$BASE_BRANCH" "$ORIGIN/$BASE_BRANCH"
-	fi
+        if flag force_merge; then
+            require_branches_equal_force "$BRANCH" "$ORIGIN/$BRANCH"
+        else
+            require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
+        fi
+    fi
+    if git_remote_branch_exists "$ORIGIN/$BASE_BRANCH"; then
+        if flag force_merge; then
+            require_branches_equal_force "$BASE_BRANCH" "$ORIGIN/$BASE_BRANCH"
+        else
+            require_branches_equal "$BASE_BRANCH" "$ORIGIN/$BASE_BRANCH"
+        fi
+    fi
 
 	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
 
