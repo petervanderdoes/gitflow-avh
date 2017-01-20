@@ -376,7 +376,7 @@ n,[no]notag           Don't tag this hotfix
 b,[no]nobackmerge     Don't back-merge master, or tag if applicable, in develop
 S,[no]squash          Squash hotfix during merge
 T,tagname!            Use given tag name
-e,[no]force-merge     Force merge (develop) branch before finish if diverged
+e,[no]force_merge     Force merge (develop) branch before finish if diverged
 "
 	local opts commit keepmsg remotebranchdeleted localbranchdeleted
 
@@ -396,7 +396,7 @@ e,[no]force-merge     Force merge (develop) branch before finish if diverged
 	DEFINE_boolean 'squash' false "squash release during merge" S
 	DEFINE_boolean 'squash-info' false "add branch info during squash"
 	DEFINE_string  'tagname' "" "use the given tag name" T
-	DEFINE_boolean 'force-merge' false "force merge (develop) branch before finish if diverged" e
+	DEFINE_boolean 'force_merge' false "force merge (develop) branch before finish if diverged" e
 
 	# Override defaults with values from config
 	gitflow_override_flag_boolean   "hotfix.finish.fetch"          "fetch"
@@ -413,7 +413,7 @@ e,[no]force-merge     Force merge (develop) branch before finish if diverged
 	gitflow_override_flag_string    "hotfix.finish.signingkey"     "signingkey"
 	gitflow_override_flag_string    "hotfix.finish.message"        "message"
 	gitflow_override_flag_string    "hotfix.finish.messagefile"    "messagefile"
-	gitflow_override_flag_boolean   "hotfix.finish.force-merge"    "force-merge"
+	gitflow_override_flag_boolean   "hotfix.finish.force-merge"    "force_merge"
 
 	# Parse arguments
 	parse_args "$@"
@@ -466,14 +466,14 @@ e,[no]force-merge     Force merge (develop) branch before finish if diverged
 
 	# Check if the local branches have all the commits from the remote branches
 	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-		if flag force-merge; then
+		if flag force_merge; then
             require_branches_equal_force "$BRANCH" "$ORIGIN/$BRANCH"
         else
             require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
         fi
 	fi
 	if git_remote_branch_exists "$ORIGIN/$BASE_BRANCH"; then
-	    if flag force-merge; then
+	    if flag force_merge; then
             require_branches_equal_force "$BASE_BRANCH" "$ORIGIN/$BASE_BRANCH"
         else
             require_branches_equal "$BASE_BRANCH" "$ORIGIN/$BASE_BRANCH"
@@ -481,7 +481,7 @@ e,[no]force-merge     Force merge (develop) branch before finish if diverged
 	fi
 	if [ "$BASE_BRANCH" = "$MASTER_BRANCH" ]; then
 		if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
-		    if flag force-merge; then
+		    if flag force_merge; then
                 require_branches_equal_force "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
             else
                 require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
