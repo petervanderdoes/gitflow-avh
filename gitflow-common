@@ -652,9 +652,8 @@ require_branches_equal() {
 }
 
 require_branches_equal_force() {
-	git_compare_refs "$1"
 	require_remote_branch "$2"
-	git_compare_branches "$1" "$2"
+	git_compare_refs "$1" "$2"
 	local status=$?
     current_git_branch=$(git branch 2>/dev/null| sed -n '/^\*/s/^\* //p')
 	if [ $status -gt 0 ]; then
