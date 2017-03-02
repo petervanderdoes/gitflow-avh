@@ -254,7 +254,7 @@ git_fetch_branch() {
 	origin="$1"
 	branch="$2"
 	if git_remote_branch_exists "$origin/$branch"; then
-		git_do fetch -q "$origin" "$branch":refs/remotes/"$origin"/"$branch" || die "Could not fetch $branch from $origin."
+		git_do fetch -q "$origin" "$branch" || die "Could not fetch $branch from $origin."
 	else
 		warn "Trying to fetch branch '$origin/$branch' but it does not exist."
 	fi
