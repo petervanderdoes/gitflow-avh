@@ -89,7 +89,7 @@ file=    use given config file
 	parse_args "$@"
 
 	if [ "$FLAGS_file" != "" ]; then
-		gitflow_config_option="--file '$FLAGS_file''"
+		gitflow_config_option="--file $FLAGS_file"
 	elif flag local; then
 		gitflow_config_option="--local"
 	elif flag global; then
