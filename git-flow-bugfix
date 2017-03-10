@@ -650,7 +650,9 @@ p,[no]preserve-merges  Preserve merges
 	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
 
 	warn "Will try to rebase '$NAME' which is based on '$BASE_BRANCH'..."
-	require_clean_working_tree
+	if [ "$(git config --get --bool rebase.autostash)" != true ]; then
+		require_clean_working_tree
+	fi
 	require_branch "$BRANCH"
 
 	git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't rebase the bugfix branch '$BRANCH'."
