@@ -1,36 +1,41 @@
 [petervanderdoes]: https://github.com/petervanderdoes "Peter van der Does on github"
-[bloveridge]:  https://github.com/bloveridge "Ben Loveridge on github"
-[memleak]: https://github.com/memleak/
-[sinbad]: https://github.com/sinbad
-[bloomonkey]: https://github.com/bloomonkey
-[mallamanis]: https://github.com/mallamanis
-[kperi]: https://github.com/kperi
-[gvangool]: https://github.com/gvangool
-[baby-gnu]: https://github.com/baby-gnu
-[pcragone]: https://github.com/pcragone
-[mykehsd]: https://github.com/mykehsd
-[jeromebaum]: https://github.com/jeromebaum 
 [adutra]: https://github.com/adutra
-[floga]: https://github.com/FloGa
-[merelyapseudonym]: https://github.com/MerelyAPseudonym
-[shpoont]: https://github.com/shpoont
-[cyberbob]: https://github.com/cyberbob
-[shpoont]: https://github.com/shpoont
-[jsivak]: https://github.com/jsivak
-[OpherV]: https://github.com/OpherV
-[craigfowler]: https://github.com/craigfowler
-[havvg]: https://github.com/havvg
-[algernon]: https://github.com/algernon
-[jebmeier]: https://github.com/jebmeier
 [aleno]: https://github.com/aleno
-[sirn]: https://github.com/sirn
+[algernon]: https://github.com/algernon
+[asheiduk]: https://github.com/asheiduk
+[baby-gnu]: https://github.com/baby-gnu
+[bloomonkey]: https://github.com/bloomonkey
+[bloveridge]:  https://github.com/bloveridge "Ben Loveridge on github"
+[craigfowler]: https://github.com/craigfowler
+[cyberbob]: https://github.com/cyberbob
+[floga]: https://github.com/FloGa
+[gvangool]: https://github.com/gvangool
+[havvg]: https://github.com/havvg
+[jebmeier]: https://github.com/jebmeier
+[jeromebaum]: https://github.com/jeromebaum 
 [jpenney78]: https://github.com/jpenney78
+[jsivak]: https://github.com/jsivak
+[kperi]: https://github.com/kperi
+[mallamanis]: https://github.com/mallamanis
+[memleak]: https://github.com/memleak/
+[merelyapseudonym]: https://github.com/MerelyAPseudonym
+[mykehsd]: https://github.com/mykehsd
+[OpherV]: https://github.com/OpherV
+[pcragone]: https://github.com/pcragone
+[shpoont]: https://github.com/shpoont
+[shpoont]: https://github.com/shpoont
+[sinbad]: https://github.com/sinbad
+[sirn]: https://github.com/sirn
 
 # Changelog
 
 #### 1.11.0-dev.7
 [Peter van der Does][petervanderdoes]
 * Bugfix: Problems when using fetch.prune
+
+[Andreas Heiduk][asheiduk]
+* git flow * rebase now supports rebase.autoStash flag  
+  git rebase can automatically cleanup the working tree. Therefore skip the test when and where appropriate.
 
 #### 1.10.2
 [Peter van der Does][petervanderdoes]
