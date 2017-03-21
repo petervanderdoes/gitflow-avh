@@ -28,7 +28,7 @@
 
 # Changelog
 
-#### 1.11.0-dev.3
+#### 1.11.0-dev.7
 [Peter van der Does][petervanderdoes]
 * Bugfix: Problems when using fetch.prune
 
