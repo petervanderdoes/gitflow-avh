@@ -178,6 +178,13 @@ git_tag_exists() {
 	[ -n "$(git for-each-ref --format='%(refname:short)' refs/tags/$1)" ]
 }
 
+git_config_bool_exists() {
+	local value
+
+	[ -n "$1" ] || die "Missing config option"
+	value=$(git config --get --bool $1)
+	[ "$value" = "true" ]
+}
 #
 # git_compare_refs()
 #
