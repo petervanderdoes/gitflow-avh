@@ -32,6 +32,7 @@
 #### 1.11.0-dev.7
 [Peter van der Does][petervanderdoes]
 * Bugfix: Problems when using fetch.prune
+* Bugfix: Errors when initializing git flow and useconfigonly is set but the name and/or email has not been set.
 * Missing push on bugfix finish
 
 [Andreas Heiduk][asheiduk]
