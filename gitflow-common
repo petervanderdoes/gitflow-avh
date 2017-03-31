@@ -163,8 +163,10 @@ git_remote_branch_delete() {
 	[ -n "$1" ] || die "Missing branch name"
 	if git_remote_branch_exists "$ORIGIN/$1"; then
 		git_do push "$ORIGIN" :"$1" || die "Could not delete the remote $1 in $ORIGIN."
+		return 0
 	else
 		warn "Trying to delete the remote branch $1, but it does not exists in $ORIGIN"
+		return 1
 	fi
 }
 
