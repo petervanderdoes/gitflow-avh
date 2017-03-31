@@ -32,6 +32,7 @@
 #### 1.11.0-dev.7
 [Peter van der Does][petervanderdoes]
 * Bugfix: Problems when using fetch.prune
+* Missing push on bugfix finish
 
 [Andreas Heiduk][asheiduk]
 * git flow * rebase now supports rebase.autoStash flag  

@@ -243,6 +243,7 @@ showcommands!          Show git commands while executing them
 F,[no]fetch            Fetch from origin before performing finish
 r,[no]rebase           Rebase before merging
 p,[no]preserve-merges  Preserve merges while rebasing
+[no]push               Push to origin after performing finish
 k,[no]keep             Keep branch after performing finish
 keepremote!        	   Keep the remote branch
 keeplocal!             Keep the local branch
@@ -256,6 +257,7 @@ no-ff!                 Never fast-forward during the merge
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
 	DEFINE_boolean 'rebase' false "rebase before merging" r
 	DEFINE_boolean 'preserve-merges' false 'try to recreate merges while rebasing' p
+	DEFINE_boolean 'push' false "push to $ORIGIN after performing finish"
 	DEFINE_boolean 'keep' false "keep branch after performing finish" k
 	DEFINE_boolean 'keepremote' false "keep the remote branch"
 	DEFINE_boolean 'keeplocal' false "keep the local branch"
@@ -268,6 +270,7 @@ no-ff!                 Never fast-forward during the merge
 	gitflow_override_flag_boolean   "bugfix.finish.fetch"             "fetch"
 	gitflow_override_flag_boolean   "bugfix.finish.rebase"            "rebase"
 	gitflow_override_flag_boolean   "bugfix.finish.preserve-merges"   "preserve_merges"
+	gitflow_override_flag_boolean   "bugfix.finish.push"              "push"
 	gitflow_override_flag_boolean   "bugfix.finish.keep"              "keep"
 	gitflow_override_flag_boolean   "bugfix.finish.keepremote"        "keepremote"
 	gitflow_override_flag_boolean   "bugfix.finish.keeplocal"         "keeplocal"
@@ -462,6 +465,10 @@ helper_finish_cleanup() {
 		if ! git_remote_branch_exists "$ORIGIN/$BRANCH" -a ! git_local_branch_exists "$BRANCH"; then
 			gitflow_config_remove_base_section "$BRANCH"
 		fi
+	fi
+
+	if flag push; then
+		git_do push "$ORIGIN" "$BASE_BRANCH" || die "Could not push branch '$BASE_BRANCH' to remote '$ORIGIN'."
 	fi
 
 	echo
