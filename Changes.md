@@ -33,6 +33,7 @@
 [Peter van der Does][petervanderdoes]
 * Bugfix: Problems when using fetch.prune
 * Bugfix: Errors when initializing git flow and useconfigonly is set but the name and/or email has not been set.
+* Bugfix: Report summary on finish is incorrect.
 * Missing push on bugfix finish
 
 [Andreas Heiduk][asheiduk]
