@@ -100,6 +100,14 @@ file=    use given config file
 		gitflow_config_option=""
 	fi
 
+	if git_config_bool_exists "user.useconfigonly"; then
+		user_email=$(git config --get user.email)
+		user_name=$(git config --get user.name)
+		if [ -z $user_email ] || [ -z $user_name ]; then
+			die "Configuration useconfigonly is set but no name and/or email was set"
+		fi
+	fi
+
 	if ! git rev-parse --git-dir >/dev/null 2>&1; then
 		git_do init
 	else
