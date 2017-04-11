@@ -103,7 +103,7 @@ file=    use given config file
 	if git_config_bool_exists "user.useconfigonly"; then
 		user_email=$(git config --get user.email)
 		user_name=$(git config --get user.name)
-		if [ -z $user_email ] || [ -z $user_name ]; then
+		if [ -z "${user_email}" ] || [ -z "${user_name}" ]; then
 			die "Configuration useconfigonly is set but no name and/or email was set"
 		fi
 	fi
