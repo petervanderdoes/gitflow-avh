@@ -187,7 +187,6 @@ F,[no]fetch       Fetch from origin before performing local operation
 	# No need to continue if not clean
 	require_base_is_local_branch "$base"
 	require_clean_working_tree
-	gitflow_config_set_base_branch $base $BRANCH
 
 	# Update the local repo with remote changes, if asked
 	if flag fetch; then
@@ -217,6 +216,8 @@ F,[no]fetch       Fetch from origin before performing local operation
 
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$base"
 
+	gitflow_config_set_base_branch $base $BRANCH
+	
 	# Create branch
 	git_do checkout -b "$BRANCH" "$base"  || die "Could not create hotfix branch '$BRANCH'."
 
