@@ -35,6 +35,8 @@
 * Bugfix: Errors when initializing git flow and useconfigonly is set but the name and/or email has not been set.
 * Bugfix: Report summary on finish is incorrect.
 * Missing push on bugfix finish
+* Allow a dirty tree when starting a hotfix/support/release branch if set to do so.  
+If the config `gitflow.allowdirty` is set to `true`, allow starting from a dirty tree. 
 
 [Andreas Heiduk][asheiduk]
 * git flow * rebase now supports rebase.autoStash flag  

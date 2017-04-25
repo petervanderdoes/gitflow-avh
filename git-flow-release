@@ -565,7 +565,7 @@ v,verbose!           Verbose (more) output
 	require_no_existing_release_branches
 
 	# Sanity checks
-	require_clean_working_tree
+	git_config_bool_exists "gitflow.allowdirty" || require_clean_working_tree
 	require_branch_absent "$BRANCH"
 	require_tag_absent "$VERSION_PREFIX$VERSION"
 	if flag fetch; then

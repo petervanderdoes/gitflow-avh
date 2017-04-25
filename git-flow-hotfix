@@ -186,7 +186,7 @@ F,[no]fetch       Fetch from origin before performing local operation
 
 	# No need to continue if not clean
 	require_base_is_local_branch "$base"
-	require_clean_working_tree
+	git_config_bool_exists "gitflow.allowdirty" || require_clean_working_tree
 	gitflow_config_set_base_branch $base $BRANCH
 
 	# Update the local repo with remote changes, if asked

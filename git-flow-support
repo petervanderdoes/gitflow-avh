@@ -177,7 +177,7 @@ F,[no]fetch       Fetch from origin before performing finish
 	gitflow_require_base_arg
 
 	# Sanity checks
-	require_clean_working_tree
+	git_config_bool_exists "gitflow.allowdirty" || require_clean_working_tree
 
 	# Fetch remote changes
 	if flag fetch; then
