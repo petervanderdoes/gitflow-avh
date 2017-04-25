@@ -29,7 +29,7 @@
 
 # Changelog
 
-#### 1.11.0-dev.21
+#### 1.11.0-dev.23
 [Peter van der Does][petervanderdoes]
 * Bugfix: Problems when using fetch.prune
 * Bugfix: Errors when initializing git flow and useconfigonly is set but the name and/or email has not been set.
