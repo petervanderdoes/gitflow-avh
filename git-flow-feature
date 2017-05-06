@@ -1,4 +1,5 @@
-#@IgnoreInspection BashAddShebang
+# $Id$
+# vim:et:ft=sh:sts=2:sw=2
 #
 # git-flow -- A collection of Git extensions to provide high-level
 # repository operations for Vincent Driessen's branching model.
