@@ -38,6 +38,7 @@
 * Allow a dirty tree when starting a hotfix/support/release branch if set to do so.  
 If the config `gitflow.allowdirty` is set to `true`, allow starting from a dirty tree.
 * Bugfix: Error when trying to delete a non-existent remote branch
+* Feature: Add rename command to bugfix/hotfix/feature
 
 [Andreas Heiduk][asheiduk]
 * git flow * rebase now supports rebase.autoStash flag  
