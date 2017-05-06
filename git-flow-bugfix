@@ -826,3 +826,15 @@ r,[no]remote     Delete remote branch
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo
 }
+
+cmd_rename() {
+	OPTIONS_SPEC="\
+git flow bugfix rename <new_name> [<new_name>]
+
+Rename a given bugfix branch
+--
+h,help!          Show this help
+showcommands!    Show git commands while executing them
+"
+	gitflow_rename_branch "$@"
+}

@@ -439,6 +439,19 @@ gitflow_config_remove_base_branch() {
 	$(git_do config --local --unset "gitflow.branch.$branch.base" 2>/dev/null)
 }
 
+#
+# Remove the base of the git-flow branch from the.
+# @param $1 Name of the branch
+#
+gitflow_config_rename_sections() {
+	local new
+	local old
+
+	old=$1
+	new=$2
+	$(git_do config --local --rename-section "gitflow.branch.$old" "gitflow.branch.$new" 2>/dev/null)
+}
+
 # gitflow_override_flag_boolean()
 #
 # Override a boolean flag
@@ -584,6 +597,52 @@ gitflow_use_current_branch_version() {
 		warn "Please specify a <version> argument."
 		exit 1
 	fi
+}
+
+gitflow_rename_branch() {
+	# Parse arguments
+	FLAGS "$@" || exit $?
+	eval set -- "${FLAGS_ARGV}"
+
+	# read arguments into global variables
+	if [ -z $1 ]; then
+		NEW_NAME=''
+	else
+		NEW_NAME=$1
+	fi
+
+	if [ -z $2 ]; then
+		NAME=''
+	else
+		NAME=$2
+	fi
+	BRANCH=${PREFIX}${NAME}
+	NEW_BRANCH=${PREFIX}${NEW_NAME}
+
+	if [ -z "$NEW_NAME" ]; then
+		die "No new name given."
+	fi
+
+	# Use current branch if no name is given
+	if [ "$NAME" = "" ]; then
+		gitflow_use_current_branch_name
+	fi
+
+
+	# Sanity checks
+	require_branch "$BRANCH"
+	require_branch_absent "$NEW_BRANCH"
+
+	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
+	git_do branch -m "$BRANCH" "$NEW_BRANCH" || die "Error renaming branch '$BRANCH' to '$NEW_BRANCH'"
+	gitflow_config_rename_sections "$BRANCH" "$NEW_BRANCH"
+	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
+
+	echo
+	echo "Summary of actions:"
+	echo "- Branch '$BRANCH' has been renamed to '$NEW_BRANCH'."
+	echo "- You are now on branch '$(git_current_branch)'"
+	echo
 }
 #
 # Assertions for use in git-flow subcommands
