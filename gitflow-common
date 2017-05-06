@@ -600,7 +600,24 @@ gitflow_use_current_branch_version() {
 }
 
 gitflow_rename_branch() {
-	local current_branch
+	# Parse arguments
+	FLAGS "$@" || exit $?
+	eval set -- "${FLAGS_ARGV}"
+
+	# read arguments into global variables
+	if [ -z $1 ]; then
+		NEW_NAME=''
+	else
+		NEW_NAME=$1
+	fi
+
+	if [ -z $2 ]; then
+		NAME=''
+	else
+		NAME=$2
+	fi
+	BRANCH=${PREFIX}${NAME}
+	NEW_BRANCH=${PREFIX}${NEW_NAME}
 
 	if [ -z "$NEW_NAME" ]; then
 		die "No new name given."

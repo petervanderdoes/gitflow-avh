@@ -838,24 +838,5 @@ Rename a given feature branch
 h,help!          Show this help
 showcommands!    Show git commands while executing them
 "
-	# Parse arguments
-	FLAGS "$@" || exit $?
-	eval set -- "${FLAGS_ARGV}"
-
-	# read arguments into global variables
-	if [ -z $1 ]; then
-		NEW_NAME=''
-	else
-		NEW_NAME=$1
-	fi
-
-	if [ -z $2 ]; then
-		NAME=''
-	else
-		NAME=$2
-	fi
-	BRANCH=$PREFIX$NAME
-	NEW_BRANCH=$PREFIX$NEW_NAME
-
-	gitflow_rename_branch
+	gitflow_rename_branch "$@"
 }
