@@ -583,7 +583,7 @@ T,tagname!            Use given tag name
 
 	# Delete branch
 	if noflag keep; then
-
+	
 		# Always delete remote first
 		if noflag keepremote;then
 			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
