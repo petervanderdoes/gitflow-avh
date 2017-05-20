@@ -1,3 +1,5 @@
+# $Id$
+# vim:et:ft=sh:sts=2:sw=2
 #
 # git-flow -- A collection of Git extensions to provide high-level
 # repository operations for Vincent Driessen's branching model.
@@ -9,7 +11,7 @@
 #    http://github.com/petervanderdoes/gitflow
 #
 # Authors:
-# Copyright 2012-2016 Peter van der Does. All rights reserved.
+# Copyright 2012-2017 Peter van der Does. All rights reserved.
 #
 # Original Author:
 # Copyright 2010 Vincent Driessen. All rights reserved.
@@ -243,6 +245,7 @@ showcommands!          Show git commands while executing them
 F,[no]fetch            Fetch from origin before performing finish
 r,[no]rebase           Rebase before merging
 p,[no]preserve-merges  Preserve merges while rebasing
+[no]push               Push to origin after performing finish
 k,[no]keep             Keep branch after performing finish
 keepremote!        	   Keep the remote branch
 keeplocal!             Keep the local branch
@@ -256,6 +259,7 @@ no-ff!                 Never fast-forward during the merge
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
 	DEFINE_boolean 'rebase' false "rebase before merging" r
 	DEFINE_boolean 'preserve-merges' false 'try to recreate merges while rebasing' p
+	DEFINE_boolean 'push' false "push to $ORIGIN after performing finish"
 	DEFINE_boolean 'keep' false "keep branch after performing finish" k
 	DEFINE_boolean 'keepremote' false "keep the remote branch"
 	DEFINE_boolean 'keeplocal' false "keep the local branch"
@@ -268,6 +272,7 @@ no-ff!                 Never fast-forward during the merge
 	gitflow_override_flag_boolean   "bugfix.finish.fetch"             "fetch"
 	gitflow_override_flag_boolean   "bugfix.finish.rebase"            "rebase"
 	gitflow_override_flag_boolean   "bugfix.finish.preserve-merges"   "preserve_merges"
+	gitflow_override_flag_boolean   "bugfix.finish.push"              "push"
 	gitflow_override_flag_boolean   "bugfix.finish.keep"              "keep"
 	gitflow_override_flag_boolean   "bugfix.finish.keepremote"        "keepremote"
 	gitflow_override_flag_boolean   "bugfix.finish.keeplocal"         "keeplocal"
@@ -464,6 +469,10 @@ helper_finish_cleanup() {
 		fi
 	fi
 
+	if flag push; then
+		git_do push "$ORIGIN" "$BASE_BRANCH" || die "Could not push branch '$BASE_BRANCH' to remote '$ORIGIN'."
+	fi
+
 	echo
 	echo "Summary of actions:"
 	echo "- The bugfix branch '$BRANCH' was merged into '$BASE_BRANCH'"
@@ -650,7 +659,9 @@ p,[no]preserve-merges  Preserve merges
 	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
 
 	warn "Will try to rebase '$NAME' which is based on '$BASE_BRANCH'..."
-	require_clean_working_tree
+	if ! git_config_bool_exists "rebase.autostash"; then
+		require_clean_working_tree
+	fi
 	require_branch "$BRANCH"
 
 	git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't rebase the bugfix branch '$BRANCH'."
@@ -794,13 +805,13 @@ r,[no]remote     Delete remote branch
 	if git_is_branch_merged_into "$BRANCH" "$BASE_BRANCH"; then
 		git_do branch -d "$BRANCH" || die "Could not delete the $BRANCH."
 		if flag remote; then
-			git_do push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
+			git_remote_branch_delete "$BRANCH"
 		fi
 	else
 		if flag force; then
 			git_do branch -D "$BRANCH" || die "Could not delete the $BRANCH."
 			if flag remote; then
-				git_do push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
+				git_remote_branch_delete "$BRANCH"
 			fi
 		else
 			die "bugfix branch '$BRANCH' has been not been merged yet. Use -f to force the deletion."
@@ -816,4 +827,16 @@ r,[no]remote     Delete remote branch
 	flag remote && echo "- bugfix branch '$BRANCH' in '$ORIGIN' has been deleted."
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo
+}
+
+cmd_rename() {
+	OPTIONS_SPEC="\
+git flow bugfix rename <new_name> [<new_name>]
+
+Rename a given bugfix branch
+--
+h,help!          Show this help
+showcommands!    Show git commands while executing them
+"
+	gitflow_rename_branch "$@"
 }

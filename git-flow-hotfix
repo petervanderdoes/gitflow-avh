@@ -1,3 +1,5 @@
+# $Id$
+# vim:et:ft=sh:sts=2:sw=2
 #
 # git-flow -- A collection of Git extensions to provide high-level
 # repository operations for Vincent Driessen's branching model.
@@ -9,7 +11,7 @@
 #    http://github.com/petervanderdoes/gitflow
 #
 # Authors:
-# Copyright 2012-2016 Peter van der Does. All rights reserved.
+# Copyright 2012-2017 Peter van der Does. All rights reserved.
 #
 # Original Author:
 # Copyright 2010 Vincent Driessen. All rights reserved.
@@ -186,7 +188,7 @@ F,[no]fetch       Fetch from origin before performing local operation
 
 	# No need to continue if not clean
 	require_base_is_local_branch "$base"
-	require_clean_working_tree
+	git_config_bool_exists "gitflow.allowdirty" || require_clean_working_tree
 	gitflow_config_set_base_branch $base $BRANCH
 
 	# Update the local repo with remote changes, if asked
@@ -309,7 +311,9 @@ p,[no]preserve-merges  Preserve merges
 	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
 
 	warn "Will try to rebase '$NAME' which is based on '$BASE_BRANCH'..."
-	require_clean_working_tree
+	if ! git_config_bool_exists "rebase.autostash"; then
+		require_clean_working_tree
+	fi
 	require_branch "$BRANCH"
 
 	git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't rebase the hotfixe branch '$BRANCH'."
@@ -701,13 +705,13 @@ r,[no]remote          Delete remote branch
 	if ( git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH" && git_is_branch_merged_into "$BRANCH" "$DEVELOP_BRANCH" ); then
 		git_do branch -d "$BRANCH" || die "Could not delete the $BRANCH."
 		if flag remote; then
-			git_do push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
+			git_remote_branch_delete "$BRANCH"
 		fi
 	else
 		if flag force; then
 			git_do branch -D "$BRANCH" || die "Could not delete the $BRANCH."
 			if flag remote; then
-				git_do push "$ORIGIN" :"$BRANCH" || die "Could not delete the remote $BRANCH in $ORIGIN."
+				git_remote_branch_delete "$BRANCH"
 			fi
 		else
 			die "Hotfix branch '$BRANCH' has been not been merged in branch '$MASTER_BRANCH' and/or branch '$DEVELOP_BRANCH'. Use -f to force the deletion."
@@ -723,4 +727,16 @@ r,[no]remote          Delete remote branch
 	flag remote && echo "- Hotfix branch '$BRANCH' in '$ORIGIN' has been deleted."
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo
+}
+
+cmd_rename() {
+	OPTIONS_SPEC="\
+git flow hotfix rename <new_name> [<new_name>]
+
+Rename a given hotfix branch
+--
+h,help!          Show this help
+showcommands!    Show git commands while executing them
+"
+	gitflow_rename_branch "$@"
 }

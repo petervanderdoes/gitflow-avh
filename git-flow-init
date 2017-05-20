@@ -1,3 +1,5 @@
+# $Id$
+# vim:et:ft=sh:sts=2:sw=2
 #
 # git-flow -- A collection of Git extensions to provide high-level
 # repository operations for Vincent Driessen's branching model.
@@ -9,7 +11,7 @@
 #    http://github.com/petervanderdoes/gitflow
 #
 # Authors:
-# Copyright 2012-2016 Peter van der Does. All rights reserved.
+# Copyright 2012-2017 Peter van der Does. All rights reserved.
 #
 # Original Author:
 # Copyright 2010 Vincent Driessen. All rights reserved.
@@ -89,7 +91,7 @@ file=    use given config file
 	parse_args "$@"
 
 	if [ "$FLAGS_file" != "" ]; then
-		gitflow_config_option="--file '$FLAGS_file''"
+		gitflow_config_option="--file $FLAGS_file"
 	elif flag local; then
 		gitflow_config_option="--local"
 	elif flag global; then
@@ -98,6 +100,14 @@ file=    use given config file
 		gitflow_config_option="--system"
 	else
 		gitflow_config_option=""
+	fi
+
+	if git_config_bool_exists "user.useconfigonly"; then
+		user_email=$(git config --get user.email)
+		user_name=$(git config --get user.name)
+		if [ -z "${user_email}" ] || [ -z "${user_name}" ]; then
+			die "Configuration useconfigonly is set but no name and/or email was set"
+		fi
 	fi
 
 	if ! git rev-parse --git-dir >/dev/null 2>&1; then
