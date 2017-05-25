@@ -915,7 +915,8 @@ _flags_parseGetopt()
   done
 
   unset _flags_arg_ _flags_len_ _flags_name_ _flags_opt_ _flags_pos_ \
-	  _flags_strToEval_ _flags_type_ _flags_usName_ _flags_val_
+	  _flags_strToEval_ _flags_type_ _flags_usName_ _flags_val_ \
+	  _flags_argc_
   return ${flags_return}
 }
 
