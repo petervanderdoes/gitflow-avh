@@ -302,6 +302,7 @@ _flags_define()
   # if/then/else contains just a ':' which does nothing. a binary reversal via
   # '!' is not done because it does not work on all shells.
   if [ ${_flags_return_} -eq ${FLAGS_TRUE} ]; then
+	_flags_isNegate_=${FLAGS_FALSE}
 	case ${_flags_type_} in
 	  ${__FLAGS_TYPE_BOOLEAN})
 		if _flags_validBool "${_flags_default_}"; then
@@ -381,7 +382,7 @@ _flags_define()
 
   flags_return=${_flags_return_}
   unset _flags_default_ _flags_help_ _flags_name_ _flags_return_ \
-	  _flags_short_ _flags_type_ _flags_usName_
+	  _flags_short_ _flags_type_ _flags_usName_ _flags_isNegate_
   [ ${flags_return} -eq ${FLAGS_ERROR} ] && _flags_error "${flags_error}"
   return ${flags_return}
 }
