@@ -33,7 +33,7 @@
 
 # Changelog
 
-#### 1.12.0-dev.1
+#### 1.12.0-dev.11
 [Peter van der Does][petervanderdoes]
 * Bugfix: Remove inconsistency when pre_hook fails (Thanks [Gabriele Pongelli][gpongelli])
 * Fix indentation in README.md (Thanks [Shoozza][Shoozza])
