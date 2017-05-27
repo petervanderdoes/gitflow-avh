@@ -49,8 +49,8 @@
 [Oppodelldog][Oppodelldog]
 * Enhancement: Allows to install a specific version of git-flow when using the `gitflow-installer.sh` script
 
-[mayerc][mayerc-MSFT]"
-Enhancement: Add option that will not allow the a merge back into the develop branch.
+[mayerc][mayerc-MSFT]
+* Enhancement: Add option that will not allow the a merge back into the develop branch.
 
 #### 1.11.0
 [Peter van der Does][petervanderdoes]
