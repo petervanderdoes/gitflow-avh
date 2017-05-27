@@ -32,6 +32,9 @@
 #### 1.12.0-dev.1
 * Preparation for new development cycle.
 
+[Andreas Heiduk][asheiduk]
+* Bugfix: Unexpected operator
+
 #### 1.11.0
 [Peter van der Does][petervanderdoes]
 * Bugfix: Problems when using fetch.prune
