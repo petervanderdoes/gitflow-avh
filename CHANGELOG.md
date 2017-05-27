@@ -9,6 +9,7 @@
 [craigfowler]: https://github.com/craigfowler
 [cyberbob]: https://github.com/cyberbob
 [floga]: https://github.com/FloGa
+[gpongelli]: https://github.com/gpongelli
 [gvangool]: https://github.com/gvangool
 [havvg]: https://github.com/havvg
 [jebmeier]: https://github.com/jebmeier
@@ -21,20 +22,31 @@
 [merelyapseudonym]: https://github.com/MerelyAPseudonym
 [mykehsd]: https://github.com/mykehsd
 [OpherV]: https://github.com/OpherV
+[Oppodelldog]: https://github.com/Oppodelldog
 [pcragone]: https://github.com/pcragone
+[Shoozza]: https://github.com/Shoozza
 [shpoont]: https://github.com/shpoont
 [shpoont]: https://github.com/shpoont
 [sinbad]: https://github.com/sinbad
 [sirn]: https://github.com/sirn
+[zheeeng]: https://github.com/zheeeng
 
 # Changelog
 
 #### 1.12.0-dev.1
-* Preparation for new development cycle.
+[Peter van der Does][petervanderdoes]
+* Bugfix: Remove inconsistency when pre_hook fails (Thanks [Gabriele Pongelli][gpongelli])
+* Fix indentation in README.md (Thanks [Shoozza][Shoozza])
+
 
 [Andreas Heiduk][asheiduk]
-* Bugfix: Unexpected operator
+* Bugfix: Unexpected operator.
 
+[zheeeng][zheeeng]
+* Enhancement: Review your commits more easier on figuring out what this feature/bugfix added exactly.
+
+[Oppodelldog][Oppodelldog]
+* Enhancement: Allows to install a specific version of git-flow when using the `gitflow-installer.sh` script
 #### 1.11.0
 [Peter van der Does][petervanderdoes]
 * Bugfix: Problems when using fetch.prune
