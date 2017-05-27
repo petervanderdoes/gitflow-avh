@@ -199,7 +199,6 @@ F,[no]fetch      Fetch from origin before performing local operation
 
 	require_base_is_local_branch "$base"
 	gitflow_require_name_arg
-	gitflow_config_set_base_branch $base $BRANCH
 
 	# Update the local repo with remote changes, if asked
 	if flag fetch; then
@@ -217,6 +216,7 @@ F,[no]fetch      Fetch from origin before performing local operation
 
 	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH" "$base"
 
+	gitflow_config_set_base_branch $base $BRANCH
 
 	# create branch
 	git_do checkout -b "$BRANCH" "$base" || die "Could not create feature branch '$BRANCH'."

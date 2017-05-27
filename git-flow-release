@@ -562,7 +562,6 @@ v,verbose!           Verbose (more) output
 
 	require_base_is_local_branch "$base"
 	gitflow_require_version_arg
-	gitflow_config_set_base_branch $base $BRANCH
 
 	require_no_existing_release_branches
 
@@ -578,6 +577,8 @@ v,verbose!           Verbose (more) output
 	fi
 
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$base"
+
+	gitflow_config_set_base_branch $base $BRANCH
 
 	# Create branch
 	git_do checkout -b "$BRANCH" "$base" || die "Could not create release branch '$BRANCH'."
