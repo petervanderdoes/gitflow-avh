@@ -30,6 +30,7 @@
 [sinbad]: https://github.com/sinbad
 [sirn]: https://github.com/sirn
 [zheeeng]: https://github.com/zheeeng
+[mayerc-MSFT]: https://github.com/mayerc-MSFT
 
 # Changelog
 
@@ -47,6 +48,10 @@
 
 [Oppodelldog][Oppodelldog]
 * Enhancement: Allows to install a specific version of git-flow when using the `gitflow-installer.sh` script
+
+[mayerc][mayerc-MSFT]"
+Enhancement: Add option that will not allow the a merge back into the develop branch.
+
 #### 1.11.0
 [Peter van der Does][petervanderdoes]
 * Bugfix: Problems when using fetch.prune
