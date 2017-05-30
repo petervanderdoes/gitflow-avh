@@ -124,45 +124,50 @@ The ``-d`` flag will accept all defaults.
 
 * To list/start/finish/delete feature branches, use:
 
-
-    git flow feature
-    git flow feature start <name> [<base>]
-    git flow feature finish <name>
-    git flow feature delete <name>
+```shell
+git flow feature
+git flow feature start <name> [<base>]
+git flow feature finish <name>
+git flow feature delete <name>
+```
 
   For feature branches, the `<base>` arg must be a branch, when omitted it defaults to the develop branch.
 
 * To push/pull a feature branch to the remote repository, use:
 
-
-    git flow feature publish <name>
-    git flow feature track <name>
+```shell
+git flow feature publish <name>
+git flow feature track <name>
+```
 
 * To list/start/finish/delete release branches, use:
 
-
-    git flow release
-    git flow release start <release> [<base>]
-    git flow release finish <release>
-    git flow release delete <release>
+```shell
+git flow release
+git flow release start <release> [<base>]
+git flow release finish <release>
+git flow release delete <release>
+```
 
   For release branches, the `<base>` arg must be a branch, when omitted it defaults to the develop branch.
 
 * To list/start/finish/delete hotfix branches, use:
 
-
-    git flow hotfix
-    git flow hotfix start <release> [<base>]
-    git flow hotfix finish <release>
-    git flow hotfix delete <release>
+```shell
+git flow hotfix
+git flow hotfix start <release> [<base>]
+git flow hotfix finish <release>
+git flow hotfix delete <release>
+```
 
   For hotfix branches, the `<base>` arg must be a branch, when omitted it defaults to the production branch.
 
 * To list/start support branches, use:
 
-
-    git flow support
-    git flow support start <release> <base>
+```shell
+git flow support
+git flow support start <release> <base>
+```
 
   For support branches, the `<base>` arg must be a branch, when omitted it defaults to the production branch.
 
