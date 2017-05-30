@@ -29,12 +29,12 @@ See the Wiki for up-to-date [Installation Instructions](https://github.com/peter
 
 ## Integration with your shell
 
-For those who use the [Bash](http://www.gnu.org/software/bash/) or [ZSH](http://www.zsh.org) 
-shell, you can use my [fork of git-flow-completion](https://github.com/petervanderdoes/git-flow-completion) 
-which includes several additions for git-flow (AVH Edition), or you can use the 
-original [git-flow-completion](http://github.com/bobthecow/git-flow-completion) 
-project by [bobthecow](http://github.com/bobthecow). Both offer tab-completion 
-for git-flow subcommands and branch names with my fork including tab-completion 
+For those who use the [Bash](http://www.gnu.org/software/bash/) or [ZSH](http://www.zsh.org)
+shell, you can use my [fork of git-flow-completion](https://github.com/petervanderdoes/git-flow-completion)
+which includes several additions for git-flow (AVH Edition), or you can use the
+original [git-flow-completion](http://github.com/bobthecow/git-flow-completion)
+project by [bobthecow](http://github.com/bobthecow). Both offer tab-completion
+for git-flow subcommands and branch names with my fork including tab-completion
 for the commands not found in the original git-flow.
 
 
@@ -45,7 +45,7 @@ of the project Wiki.
 * Version Numbering Scheme.  
 Starting with version 1.0, the project uses the following scheme:
 \<MAJOR\>.\<MINOR\>.\<REVISION\>\
-* AVH is the acronym of "A VirtualHome" 
+* AVH is the acronym of "A VirtualHome"
 
 ## Please help out
 
@@ -54,7 +54,7 @@ welcome and I encourage you to use the [Issues
 list](http://github.com/petervanderdoes/gitflow-avh/issues) on Github to provide that
 feedback.
 
-Feel free to fork this repository and to commit your additions. For a list of 
+Feel free to fork this repository and to commit your additions. For a list of
 all contributors, please see the [AUTHORS](AUTHORS) file.
 
 Any questions, tips, or general discussion can be posted to the Google group:
@@ -73,8 +73,8 @@ git clone -b master git@github.com:<username>/gitflow-avh.git
 cd gitflow-avh
 ```
 
-The `-b master` switch has to be added since the fork operation automatically 
-clones the `develop` branch of the official gitflow repository and cloning it 
+The `-b master` switch has to be added since the fork operation automatically
+clones the `develop` branch of the official gitflow repository and cloning it
 results in a local repository with just a `develop` branch.
 
 If you do not have gitflow installed yet install it by running `make && make install`.
@@ -124,45 +124,50 @@ The ``-d`` flag will accept all defaults.
 
 * To list/start/finish/delete feature branches, use:
 
-
-    git flow feature
-    git flow feature start <name> [<base>]
-    git flow feature finish <name>
-    git flow feature delete <name>
+```shell
+git flow feature
+git flow feature start <name> [<base>]
+git flow feature finish <name>
+git flow feature delete <name>
+```
 
   For feature branches, the `<base>` arg must be a branch, when omitted it defaults to the develop branch.
 
 * To push/pull a feature branch to the remote repository, use:
 
-
-    git flow feature publish <name>
-    git flow feature track <name>
+```shell
+git flow feature publish <name>
+git flow feature track <name>
+```
 
 * To list/start/finish/delete release branches, use:
 
-
-    git flow release
-    git flow release start <release> [<base>]
-    git flow release finish <release>
-    git flow release delete <release>
+```shell
+git flow release
+git flow release start <release> [<base>]
+git flow release finish <release>
+git flow release delete <release>
+```
 
   For release branches, the `<base>` arg must be a branch, when omitted it defaults to the develop branch.
 
 * To list/start/finish/delete hotfix branches, use:
 
-
-    git flow hotfix
-    git flow hotfix start <release> [<base>]
-    git flow hotfix finish <release>
-    git flow hotfix delete <release>
+```shell
+git flow hotfix
+git flow hotfix start <release> [<base>]
+git flow hotfix finish <release>
+git flow hotfix delete <release>
+```
 
   For hotfix branches, the `<base>` arg must be a branch, when omitted it defaults to the production branch.
 
 * To list/start support branches, use:
 
-
-    git flow support
-    git flow support start <release> <base>
+```shell
+git flow support
+git flow support start <release> <base>
+```
 
   For support branches, the `<base>` arg must be a branch, when omitted it defaults to the production branch.
 
@@ -171,22 +176,26 @@ The ``-d`` flag will accept all defaults.
 You can easily publish a feature you are working on. The reason can be to allow other programmers to work on it or to access it from another machine. The publish/track feature of gitflow simplify the creation of a remote branch and its tracking.
 
 When you want to publish a feature just use:
-
-    git flow feature publish <name>
+```shell
+git flow feature publish <name>
+```
 
 or, if you already are into the `feature/<name>` branch, just issue:
-
-    git flow feature publish
+```shell
+git flow feature publish
+```
 
 Now if you execute `git branch -avv` you will see that your branch `feature/<name>` tracks `[origin/feature/<name>]`. To track the same remote branch in another clone of the same repository use:
-
-    git flow feature track <name>
+```shell
+git flow feature track <name>
+```
 
 This will create a local feature `feature/<name>` that tracks the same remote branch as the original one, that is `origin/feature/<name>`.
 
 When one developer (depending on your work flow) finishes working on the feature he or she can issue `git flow feature finish <name>` and this will automatically delete the remote branch. All other developers shall then run:
-
+```shell
     git flow feature delete <name>
+```
 
 to get rid of the local feature that tracks a remote branch that no more exist.
 

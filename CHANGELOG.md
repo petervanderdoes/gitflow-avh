@@ -31,6 +31,7 @@
 [sirn]: https://github.com/sirn
 [zheeeng]: https://github.com/zheeeng
 [mayerc-MSFT]: https://github.com/mayerc-MSFT
+[stevemao]: https://github.com/stevemao
 
 # Changelog
 
@@ -51,6 +52,9 @@
 
 [mayerc][mayerc-MSFT]
 * Enhancement: Add option that will not allow the a merge back into the develop branch.
+
+[Steve Mao][stevemao]
+* Fix: Standarize the README markdown.
 
 #### 1.11.0
 [Peter van der Does][petervanderdoes]
