@@ -32,10 +32,11 @@
 [zheeeng]: https://github.com/zheeeng
 [mayerc-MSFT]: https://github.com/mayerc-MSFT
 [stevemao]: https://github.com/stevemao
+[gpongelli]: https://github.com/gpongelli
 
 # Changelog
 
-#### 1.12.0-dev.11
+#### 1.11.1-dev.21
 [Peter van der Does][petervanderdoes]
 * Bugfix: Remove inconsistency when pre_hook fails (Thanks [Gabriele Pongelli][gpongelli])
 * Fix indentation in README.md (Thanks [Shoozza][Shoozza])
@@ -55,6 +56,9 @@
 
 [Steve Mao][stevemao]
 * Fix: Standarize the README markdown.
+
+[Gabriele Pongelli][gpongelli]
+* Enhancement: Also use core.hooksPath for suggestion for the hook path during initialization.
 
 #### 1.11.0
 [Peter van der Does][petervanderdoes]
