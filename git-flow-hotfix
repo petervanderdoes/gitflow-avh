@@ -557,6 +557,31 @@ T,tagname!            Use given tag name
 			MERGE_BRANCH="$BRANCH"
 		fi
 
+		RELEASE_PREFIX=$(git config --get gitflow.prefix.release)
+		RELEASE_BRANCHES=$(echo "$(git_local_branches)" | grep "^$RELEASE_PREFIX")
+		for RELEASE_BRANCH in $RELEASE_BRANCHES; do
+			# in case a previous attempt to finish this release branch has failed,
+			# but the merge into this release branch was successful, we skip it now
+			if ! git_is_branch_merged_into "$MERGE_BRANCH" "$RELEASE_BRANCH"; then
+				git_do checkout "$RELEASE_BRANCH" || die "Could not check out $RELEASE_BRANCH."
+
+				if noflag nobackmerge; then
+					# Accounting for 'git describe', if a release is tagged
+					# we use the tag commit instead of the branch.
+					if noflag notag; then
+						commit="$VERSION_PREFIX$VERSION"
+					else
+						commit="$BASE_BRANCH"
+					fi
+				else
+					commit="$BRANCH"
+				fi
+
+				git_do merge --no-ff "$commit" || die "There were merge conflicts."
+				# TODO: What do we do now?
+			fi
+		done
+
 		# Try to merge into develop.
 		# In case a previous attempt to finish this release branch has failed,
 		# but the merge into develop was successful, we skip it now
@@ -613,6 +638,9 @@ T,tagname!            Use given tag name
 
 	if flag push; then
 		if [ "$BASE_BRANCH" = "$MASTER_BRANCH" ]; then
+			for RELEASE_BRANCH in $RELEASE_BRANCHES; do
+				git_do push "$ORIGIN" "$RELEASE_BRANCH" || die "Could not push branch '$RELEASE_BRANCH' to remote '$ORIGIN'."
+			done
 			git_do push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
 		fi
 		git_do push "$ORIGIN" "$BASE_BRANCH" || die "Could not push branch '$BASE_BRANCH' to remote '$ORIGIN'."
