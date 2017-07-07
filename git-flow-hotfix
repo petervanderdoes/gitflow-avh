@@ -105,15 +105,15 @@ v,verbose!        Verbose (more) output
 	width=$(($width+3-${#PREFIX}))
 
 	for branch in $hotfix_branches; do
-		base=$(git merge-base "$branch" "$MASTER_BRANCH")
-		master_sha=$(git rev-parse "$MASTER_BRANCH")
-		branch_sha=$(git rev-parse "$branch")
 		if [ "$branch" = "$current_branch" ]; then
 			printf "* "
 		else
 			printf "  "
 		fi
 		if flag verbose; then
+			base=$(git merge-base "$branch" "$MASTER_BRANCH")
+			master_sha=$(git rev-parse "$MASTER_BRANCH")
+			branch_sha=$(git rev-parse "$branch")
 			printf "%-${width}s" "${branch#$PREFIX}"
 			if [ "$branch_sha" = "$master_sha" ]; then
 				printf "(no commits yet)"
