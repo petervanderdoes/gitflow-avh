@@ -35,6 +35,7 @@
 [gpongelli]: https://github.com/gpongelli
 [gene-pavlovsky]: https://github.com/gene-pavlovsky
 [lrkwz]: https://github.com/lrkwz
+[Tiscs]: https://github.com/Tiscs
 
 # Changelog
 
@@ -67,6 +68,9 @@
 
 [Luca Orlandi][lrkwz]
 * Reflect shared hotfix usage in readme.
+
+[Tiscs Sun][Tiscs]
+* Enhancement: Add parameters to set names for the branches during the init command.
 
 #### 1.11.0
 [Peter van der Does][petervanderdoes]
