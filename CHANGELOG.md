@@ -34,6 +34,7 @@
 [stevemao]: https://github.com/stevemao
 [gpongelli]: https://github.com/gpongelli
 [gene-pavlovsky]: https://github.com/gene-pavlovsky
+[lrkwz]: https://github.com/lrkwz
 
 # Changelog
 
@@ -64,6 +65,8 @@
 [Gene Pavlovsky][gene-pavlovsky]
 * Enhancement: Add .gitattributes to enforce Unix line endings for certain files.
 
+[Luca Orlandi][lrkwz]
+* Reflect shared hotfix usage in readme.
 
 #### 1.11.0
 [Peter van der Does][petervanderdoes]
