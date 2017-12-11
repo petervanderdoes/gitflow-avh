@@ -199,6 +199,31 @@ When one developer (depending on your work flow) finishes working on the feature
 
 to get rid of the local feature that tracks a remote branch that no more exist.
 
+### Share hotfixes with others
+
+You can publish an hotfix you are working on. The reason can be to allow other programmers to work on it or validate it or to access it from another machine.
+
+When you want to publish an hotfix just use (as you did for features):
+```shell
+git flow hotfix publish <name>
+```
+
+or, if you already are into the `hotfix/<name>` branch, just issue:
+```shell
+git flow hotfix publish
+```
+
+Other developers can now update their repositories and checkout the hotfix:
+```shell
+git pull
+git checkout hotfix/<name>
+```
+and eventually finish it:
+```shell
+git flow hotfix finish
+```
+
+
 ### Using Hooks and Filters
 
 For a wide variety of commands hooks or filters can be called before and after
