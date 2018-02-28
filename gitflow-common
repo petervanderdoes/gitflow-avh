@@ -130,8 +130,7 @@ git_current_branch() {
 	local branch_name
 
 	branch_name="$(git symbolic-ref --quiet HEAD)"
-	[ -z $branch_name ] && branch_name="(unnamed branch)" || branch_name="$(git for-each-ref --
-format='%(refname:short)' $branch_name)"
+	[ -z $branch_name ] && branch_name="(unnamed branch)" || branch_name="$(git for-each-ref --format='%(refname:short)' $branch_name)"
 	echo "$branch_name"
 }
 
@@ -780,12 +779,13 @@ run_prepare_name_branch_hook() {
 	scriptfile="${HOOKS_DIR}/pre-flow-${SUBCOMMAND}-prepare-name-branch"
 	exitcode=0
 	if [ -x "$scriptfile" ]; then
-		read NEW_NAME REST <<< $("$scriptfile" "$@")
+		OUTPUT=$("$scriptfile" "$@")
 		exitcode=$?
-
+        echo "exitcode=" $exitcode
 		if [ $exitcode -gt 0 ]; then
 			die "Hook command $scriptfile ended with exit code $exitcode."
 		fi
+		read NEW_NAME REST <<< $OUTPUT
 		if [ ! -z "$NEW_NAME" ]; then
 			if [ ! -z "$REST" ]; then
 				die "Hook command $scriptfile returned more than 1 argument instead of 1 (BRANCH)"
