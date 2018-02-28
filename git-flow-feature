@@ -40,7 +40,8 @@
 initialize() {
 	require_git_repo
 	require_gitflow_initialized
-	git config --get gitflow.prefix.feature >/dev/null 2>&1 || die "Feature prefix not set. Please run 'git flow init'."
+	git config --get gitflow.prefix.feature >/dev/null 2>&1 || die "Feature prefix not set. Please run 'git flow
+init'."
 	gitflow_load_settings
 	PREFIX=$(git config --get gitflow.prefix.feature)
 }
@@ -205,6 +206,9 @@ F,[no]fetch      Fetch from origin before performing local operation
 		git_fetch_branch "$ORIGIN" "$base"
 	fi
 
+	# hook for branch renaming
+	run_prepare_name_branch_hook "$NAME"
+
 	# Sanity checks
 	require_branch_absent "$BRANCH"
 
@@ -213,8 +217,6 @@ F,[no]fetch      Fetch from origin before performing local operation
 	if git_remote_branch_exists "$ORIGIN/$base"; then
 		require_branches_equal "$base" "$ORIGIN/$base"
 	fi
-
-	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH" "$base"
 
 	gitflow_config_set_base_branch $base $BRANCH
 
@@ -299,7 +301,8 @@ no-ff!                 Never fast-forward during the merge
 
 	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
 	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
-	git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't finish the feature branch '$BRANCH'."
+	git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a
+branch. Can't finish the feature branch '$BRANCH'."
 
 	# Detect if we're restoring from a merge conflict
 	if [ -f "$DOT_GIT_DIR/.gitflow/MERGE_BASE" ]; then
@@ -400,7 +403,8 @@ no-ff!                 Never fast-forward during the merge
 		fi
 	else
 		git_do merge --squash "$BRANCH"
-		flag squash_info && gitflow_create_squash_message "Merged feature branch '$BRANCH'" "$BASE_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
+		flag squash_info && gitflow_create_squash_message "Merged feature branch '$BRANCH'" "$BASE_BRANCH"
+"$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
 		git_do commit
 	fi
 
@@ -470,7 +474,8 @@ helper_finish_cleanup() {
 	fi
 
 	if flag push; then
-		git_do push "$ORIGIN" "$BASE_BRANCH" || die "Could not push branch '$BASE_BRANCH' to remote '$ORIGIN'."
+		git_do push "$ORIGIN" "$BASE_BRANCH" || die "Could not push branch '$BASE_BRANCH' to remote
+'$ORIGIN'."
 	fi
 
 	echo
@@ -665,7 +670,8 @@ p,[no]preserve-merges  Preserve merges
 
 	require_branch "$BRANCH"
 
-	git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't rebase the feature branch '$BRANCH'."
+	git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a
+branch. Can't rebase the feature branch '$BRANCH'."
 
 	git_do checkout -q "$BRANCH"  || die "Could not check out branch '$BRANCH'."
 	if flag interactive; then
@@ -703,7 +709,8 @@ showcommands!    Show git commands while executing them
 	# Define flags
 	DEFINE_boolean 'rebase' false "pull with rebase" r
 
-	warn "The command 'git flow feature pull' will be deprecated per version 2.0.0. Use 'git flow feature track' instead."
+	warn "The command 'git flow feature pull' will be deprecated per version 2.0.0. Use 'git flow feature track'
+instead."
 
 	# Parse arguments
 	parse_remote_name "$@"
@@ -739,7 +746,8 @@ showcommands!    Show git commands while executing them
 		# remote changes in
 		if flag rebase; then
 			if ! git_do pull --rebase -q "$REMOTE" "$BRANCH"; then
-				warn "Pull was aborted. There might be conflicts during rebase or '$REMOTE' might be inaccessible."
+				warn "Pull was aborted. There might be conflicts during rebase or '$REMOTE' might be
+inaccessible."
 				exit 1
 			fi
 		else
@@ -749,7 +757,8 @@ showcommands!    Show git commands while executing them
 		echo "Pulled $REMOTE's changes into $BRANCH."
 	else
 		# Setup the local branch clone for the first time
-		git_do fetch -q "$REMOTE" "$BRANCH" ||  die "Could not fetch branch '$BRANCH' from remote '$REMOTE'."     # Stores in FETCH_HEAD
+		git_do fetch -q "$REMOTE" "$BRANCH" ||  die "Could not fetch branch '$BRANCH' from remote '$REMOTE'."
+   # Stores in FETCH_HEAD
 		git_do branch --no-track "$BRANCH" FETCH_HEAD || die "Branch failed."
 		git_do checkout -q "$BRANCH" || die "Could not check out branch '$BRANCH'."
 		echo "Created local branch $BRANCH based on $REMOTE's $BRANCH."

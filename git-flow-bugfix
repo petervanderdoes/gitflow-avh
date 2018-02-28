@@ -205,6 +205,9 @@ F,[no]fetch      Fetch from origin before performing local operation
 		git_fetch_branch "$ORIGIN" "$base"
 	fi
 
+	# hook for branch renaming
+	run_prepare_name_branch_hook "$NAME"
+
 	# Sanity checks
 	require_branch_absent "$BRANCH"
 
