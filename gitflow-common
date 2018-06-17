@@ -294,7 +294,7 @@ gitflow_is_initialized() {
 	gitflow_has_master_configured                    && \
 	gitflow_has_develop_configured                   && \
 	[ "$(git config --get gitflow.branch.master)" != "$(git config --get gitflow.branch.develop)" ] && \
-	$(git config --get-regexp gitflow.prefix >/dev/null 2>&1)
+	! $(git config --get-regexp gitflow.prefix >/dev/null 2>&1)
 }
 
 # Loading settings that can be overridden using git config
