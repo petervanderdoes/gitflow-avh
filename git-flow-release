@@ -134,6 +134,12 @@ _finish_from_develop() {
 				opts="$opts -m '$FLAGS_message'"
 			fi
 			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
+			if noflag edit; then
+				if [ "$FLAGS_message" = "" ] && [ "$FLAGS_messagefile" = "" ]; then
+					# in order to fix annotated tag without message
+					opts="$opts -m $VERSION_PREFIX$TAGNAME"
+				fi
+			fi
 			eval git_do tag $opts "$VERSION_PREFIX$TAGNAME" || die "Tagging failed. Please run finish again to retry."
 		fi
 	fi
@@ -330,6 +336,12 @@ _finish_base() {
 				opts="$opts -m '$FLAGS_message'"
 			fi
 			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
+			if noflag edit; then
+				if [ "$FLAGS_message" = "" ] && [ "$FLAGS_messagefile" = "" ]; then
+					# in order to fix annotated tag without message
+					opts="$opts -m $VERSION_PREFIX$TAGNAME"
+				fi
+			fi
 			eval git_do tag $opts "$VERSION_PREFIX$TAGNAME" || die "Tagging failed. Please run finish again to retry."
 		fi
 	fi
