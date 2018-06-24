@@ -33,6 +33,7 @@
 [mayerc-MSFT]: https://github.com/mayerc-MSFT
 [stevemao]: https://github.com/stevemao
 [gpongelli]: https://github.com/gpongelli
+[gene-pavlovsky]: https://github.com/gene-pavlovsky
 
 # Changelog
 
@@ -59,6 +60,10 @@
 
 [Gabriele Pongelli][gpongelli]
 * Enhancement: Also use core.hooksPath for suggestion for the hook path during initialization.
+
+[Gene Pavlovsky][gene-pavlovsky]
+* Enhancement: Add .gitattributes to enforce Unix line endings for certain files.
+
 
 #### 1.11.0
 [Peter van der Does][petervanderdoes]
