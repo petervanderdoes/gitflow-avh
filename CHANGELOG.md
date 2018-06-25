@@ -9,6 +9,7 @@
 [craigfowler]: https://github.com/craigfowler
 [cyberbob]: https://github.com/cyberbob
 [floga]: https://github.com/FloGa
+[gene-pavlovsky]: https://github.com/gene-pavlovsky
 [gpongelli]: https://github.com/gpongelli
 [gvangool]: https://github.com/gvangool
 [havvg]: https://github.com/havvg
@@ -17,7 +18,9 @@
 [jpenney78]: https://github.com/jpenney78
 [jsivak]: https://github.com/jsivak
 [kperi]: https://github.com/kperi
+[lrkwz]: https://github.com/lrkwz
 [mallamanis]: https://github.com/mallamanis
+[mayerc-MSFT]: https://github.com/mayerc-MSFT
 [memleak]: https://github.com/memleak/
 [merelyapseudonym]: https://github.com/MerelyAPseudonym
 [mykehsd]: https://github.com/mykehsd
@@ -26,16 +29,12 @@
 [pcragone]: https://github.com/pcragone
 [Shoozza]: https://github.com/Shoozza
 [shpoont]: https://github.com/shpoont
-[shpoont]: https://github.com/shpoont
+[silasfn]: https://github.com/silasfn
 [sinbad]: https://github.com/sinbad
 [sirn]: https://github.com/sirn
-[zheeeng]: https://github.com/zheeeng
-[mayerc-MSFT]: https://github.com/mayerc-MSFT
 [stevemao]: https://github.com/stevemao
-[gpongelli]: https://github.com/gpongelli
-[gene-pavlovsky]: https://github.com/gene-pavlovsky
-[lrkwz]: https://github.com/lrkwz
 [Tiscs]: https://github.com/Tiscs
+[zheeeng]: https://github.com/zheeeng
 
 # Changelog
 
@@ -71,6 +70,9 @@
 
 [Tiscs Sun][Tiscs]
 * Enhancement: Add parameters to set names for the branches during the init command.
+
+[Silas Palmer][silasfn]
+* Fix: Comparability change for git for windows
 
 #### 1.11.0
 [Peter van der Does][petervanderdoes]
