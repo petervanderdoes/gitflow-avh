@@ -1,0 +1,18 @@
+#!/bin/sh
+#
+# Runs before git flow feature start
+#
+# Positional arguments:
+# $1    The friendly name of the branch
+#
+# The following variables are available as they are exported by git-flow:
+#
+# MASTER_BRANCH - The branch defined as Master
+# DEVELOP_BRANCH - The branch defined as Develop
+#
+NAME=$1
+
+# Implement your script here that outputs to stdout the new name of the branch
+
+# To terminate the git-flow action, return a non-zero exit code.
+exit 0

@@ -619,7 +619,7 @@ gitflow_rename_branch() {
 		NAME=$2
 	fi
 	BRANCH=${PREFIX}${NAME}
-	NEW_BRANCH=${PREFIX}${NEW_NAME}
+	NEW_NAME=${PREFIX}${NEW_NAME}
 
 	if [ -z "$NEW_NAME" ]; then
 		die "No new name given."
@@ -633,16 +633,16 @@ gitflow_rename_branch() {
 
 	# Sanity checks
 	require_branch "$BRANCH"
-	require_branch_absent "$NEW_BRANCH"
+	require_branch_absent "$NEW_NAME"
 
 	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
-	git_do branch -m "$BRANCH" "$NEW_BRANCH" || die "Error renaming branch '$BRANCH' to '$NEW_BRANCH'"
-	gitflow_config_rename_sections "$BRANCH" "$NEW_BRANCH"
+	git_do branch -m "$BRANCH" "$NEW_NAME" || die "Error renaming branch '$BRANCH' to '$NEW_NAME'"
+	gitflow_config_rename_sections "$BRANCH" "$NEW_NAME"
 	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
 
 	echo
 	echo "Summary of actions:"
-	echo "- Branch '$BRANCH' has been renamed to '$NEW_BRANCH'."
+	echo "- Branch '$BRANCH' has been renamed to '$NEW_NAME'."
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo
 }
@@ -656,7 +656,8 @@ require_git_repo() {
 
 require_gitflow_initialized() {
 	gitflow_is_initialized || die "Not a gitflow-enabled repo yet. Please run 'git flow init' first."
-	$(git config --get gitflow.prefix.versiontag >/dev/null 2>&1) || die "Version tag not set. Please run 'git flow init'."
+	$(git config --get gitflow.prefix.versiontag >/dev/null 2>&1) || die "Version tag not set. Please run 'git
+flow init'."
 }
 
 require_clean_working_tree() {
@@ -757,6 +758,43 @@ run_filter_hook() {
 			echo $return
 	else
 		echo "$@"
+	fi
+}
+
+#
+# run_prepare_name_branch_hook
+#
+# Looks for a Git hook script called
+#
+#     pre-flow-<subcmd>-prepare-name-branch
+#
+# If such a hook script exists and is executable, it is called with the given
+# positional arguments.  If its return code non-zero, the git-flow action is
+# aborted.
+#
+run_prepare_name_branch_hook() {
+	local scriptfile exitcode
+	echo "in run_prepare_name_branch_hook"
+
+	scriptfile="${HOOKS_DIR}/pre-flow-${SUBCOMMAND}-prepare-name-branch"
+	exitcode=0
+	if [ -x "$scriptfile" ]; then
+		OUTPUT=$("$scriptfile" "$@")
+		exitcode=$?
+        echo "exitcode=" $exitcode
+		if [ $exitcode -gt 0 ]; then
+			die "Hook command $scriptfile ended with exit code $exitcode."
+		fi
+		read NEW_NAME REST <<< $OUTPUT
+		if [ ! -z "$NEW_NAME" ]; then
+			if [ ! -z "$REST" ]; then
+				die "Hook command $scriptfile returned more than 1 argument instead of 1 (BRANCH)"
+			else
+				echo "Renaming $NAME to $NEW_NAME"
+				NAME=$NEW_NAME
+				BRANCH=$PREFIX$NEW_NAME
+			fi
+		fi
 	fi
 }
 
