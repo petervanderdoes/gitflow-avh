@@ -582,6 +582,16 @@ T,tagname!            Use given tag name
 
 	run_post_hook "$VERSION_PREFIX$TAGNAME" "$ORIGIN" "$BRANCH"
 
+	if flag push; then
+		if [ "$BASE_BRANCH" = "$MASTER_BRANCH" ]; then
+			git_do push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
+		fi
+		git_do push "$ORIGIN" "$BASE_BRANCH" || die "Could not push branch '$BASE_BRANCH' to remote '$ORIGIN'."
+		if noflag notag; then
+			git_do push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
+		fi
+	fi
+
 	# Delete branch
 	if noflag keep; then
 
@@ -609,16 +619,6 @@ T,tagname!            Use given tag name
 			gitflow_config_remove_base_section "$BRANCH"
 		fi
 
-	fi
-
-	if flag push; then
-		if [ "$BASE_BRANCH" = "$MASTER_BRANCH" ]; then
-			git_do push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
-		fi
-		git_do push "$ORIGIN" "$BASE_BRANCH" || die "Could not push branch '$BASE_BRANCH' to remote '$ORIGIN'."
-		if noflag notag; then
-			git_do push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
-		fi
 	fi
 
 	echo

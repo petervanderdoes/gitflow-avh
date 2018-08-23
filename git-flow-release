@@ -174,6 +174,18 @@ _finish_from_develop() {
 
 	run_post_hook "$VERSION_PREFIX$TAGNAME" "$ORIGIN" "$BRANCH"
 
+	if flag push; then
+		if flag pushdevelop; then
+			git_do push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
+		fi
+		if flag pushproduction; then
+			git_do push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push branch '$MASTER_BRANCH' to remote '$ORIGIN'."
+		fi
+		if noflag notag && flag pushtag; then
+			git_do push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
+		fi
+	fi
+
 	# Delete branch
 	if noflag keep; then
 
@@ -204,18 +216,6 @@ _finish_from_develop() {
 		# no more branches: we can safely remove config section
 		if ! git_remote_branch_exists "$ORIGIN/$BRANCH" -a ! git_local_branch_exists "$BRANCH"; then
 			gitflow_config_remove_base_section "$BRANCH"
-		fi
-	fi
-
-	if flag push; then
-		if flag pushdevelop; then
-			git_do push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
-		fi
-		if flag pushproduction; then
-			git_do push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push branch '$MASTER_BRANCH' to remote '$ORIGIN'."
-		fi
-		if noflag notag && flag pushtag; then
-			git_do push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
 		fi
 	fi
 

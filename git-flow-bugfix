@@ -438,6 +438,10 @@ helper_finish_cleanup() {
 	remotebranchdeleted=$FLAGS_FALSE
 	localbranchdeleted=$FLAGS_FALSE
 
+	if flag push; then
+		git_do push "$ORIGIN" "$BASE_BRANCH" || die "Could not push branch '$BASE_BRANCH' to remote '$ORIGIN'."
+	fi
+
 	if noflag keep; then
 
 		# Always delete remote first
@@ -467,10 +471,6 @@ helper_finish_cleanup() {
 		if ! git_remote_branch_exists "$ORIGIN/$BRANCH" -a ! git_local_branch_exists "$BRANCH"; then
 			gitflow_config_remove_base_section "$BRANCH"
 		fi
-	fi
-
-	if flag push; then
-		git_do push "$ORIGIN" "$BASE_BRANCH" || die "Could not push branch '$BASE_BRANCH' to remote '$ORIGIN'."
 	fi
 
 	echo
