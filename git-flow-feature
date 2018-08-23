@@ -435,12 +435,12 @@ helper_finish_cleanup() {
 	require_branch "$BRANCH"
 	require_clean_working_tree
 
+	remotebranchdeleted=$FLAGS_FALSE
+	localbranchdeleted=$FLAGS_FALSE
+
 	if flag push; then
 		git_do push "$ORIGIN" "$BASE_BRANCH" || die "Could not push branch '$BASE_BRANCH' to remote '$ORIGIN'."
 	fi
-
-	remotebranchdeleted=$FLAGS_FALSE
-	localbranchdeleted=$FLAGS_FALSE
 
 	if noflag keep; then
 
