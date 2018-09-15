@@ -627,7 +627,7 @@ cmd_co() {
 
 cmd_rebase() {
 	OPTIONS_SPEC="\
-git flow feature rebase [-h] [-i] [-p] [<name|nameprefix>]
+git flow feature rebase [-h] [-i] [-p] [-F] [<name|nameprefix>]
 
 Rebase <name> on <base_branch>
 --
@@ -635,16 +635,19 @@ h,help!                Show this help
 showcommands!          Show git commands while executing them
 i,[no]interactive      Do an interactive rebase
 p,[no]preserve-merges  Preserve merges
+F,[no]fetch	           Fetch from origin before performing local operation
 "
 	local opts
 
 	# Define flags
 	DEFINE_boolean 'interactive' false 'do an interactive rebase' i
 	DEFINE_boolean 'preserve-merges' false 'try to recreate merges' p
+	DEFINE_boolean 'fetch' false 'fetch from origin before performing local operation' F
 
 	# Override defaults with values from config
 	gitflow_override_flag_boolean   "feature.rebase.interactive"       "interactive"
 	gitflow_override_flag_boolean   "feature.rebase.preserve-merges"   "preserve_merges"
+	gitflow_override_flag_boolean   "feature.rebase.fetch"             "fetch"
 
 	# Parse arguments
 	parse_args "$@"
@@ -666,6 +669,11 @@ p,[no]preserve-merges  Preserve merges
 	require_branch "$BRANCH"
 
 	git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't rebase the feature branch '$BRANCH'."
+
+	# Update local branches with remote branches
+	if flag fetch; then
+		git_fetch_branch "$ORIGIN" "$BASE_BRANCH"
+	fi
 
 	git_do checkout -q "$BRANCH"  || die "Could not check out branch '$BRANCH'."
 	if flag interactive; then
