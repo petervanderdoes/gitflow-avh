@@ -322,11 +322,6 @@ F,[no]fetch	           Fetch from origin before performing local operation
 
 	git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't rebase the hotfixe branch '$BRANCH'."
 
-	# Update local branches with remote branches
-	if flag fetch; then
-		git_fetch_branch "$ORIGIN" "$BASE_BRANCH"
-	fi
-	
 	git_do checkout -q "$BRANCH"  || die "Could not check out branch '$BRANCH'."
 	if flag interactive; then
 		opts="$opts -i"
@@ -334,7 +329,14 @@ F,[no]fetch	           Fetch from origin before performing local operation
 	if flag preserve_merges; then
 		opts="$opts -p"
 	fi
-	git_do rebase $opts "$BASE_BRANCH"
+
+	if flag fetch; then
+		# Update local branches with remote branches
+		git_fetch_branch "$ORIGIN" "$BASE_BRANCH"
+		git_do rebase $opts "$ORIGIN/$BASE_BRANCH"
+	else
+		git_do rebase $opts "$BASE_BRANCH"
+	fi
 }
 
 cmd_track() {
