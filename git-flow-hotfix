@@ -548,35 +548,22 @@ T,tagname!            Use given tag name
 		fi
 	fi
 
-	if [ "$BASE_BRANCH" = "$MASTER_BRANCH" ]; then
-		# By default we back-merge the $MASTER_BRANCH unless the user explicitly
-		# stated not to do a back-merge, in that case we use the $BRANCH.
-		if noflag nobackmerge; then
-			MERGE_BRANCH="$BASE_BRANCH"
-		else
-			MERGE_BRANCH="$BRANCH"
-		fi
-
-		# Try to merge into develop.
+	if [ "$BASE_BRANCH" = "$MASTER_BRANCH" ] && noflag nobackmerge; then
+		# Try to merge into develop unless the user specified the nobackmerge option.
 		# In case a previous attempt to finish this release branch has failed,
 		# but the merge into develop was successful, we skip it now
-		if ! git_is_branch_merged_into "$MERGE_BRANCH" "$DEVELOP_BRANCH"; then
-			git_do checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
-
-			if noflag nobackmerge; then
-				# Accounting for 'git describe', if a release is tagged
-				# we use the tag commit instead of the branch.
-				if noflag notag; then
-					commit="$VERSION_PREFIX$TAGNAME"
-				else
-					commit="$BASE_BRANCH"
-				fi
+		if ! git_is_branch_merged_into "$BASE_BRANCH" "$DEVELOP_BRANCH"; then
+			# Accounting for 'git describe', if a release is tagged
+			# we use the tag commit instead of the branch.
+			if noflag notag; then
+				commit="$VERSION_PREFIX$TAGNAME"
 			else
-				commit="$BRANCH"
+				commit="$BASE_BRANCH"
 			fi
 
-			git_do merge --no-ff "$commit" || die "There were merge conflicts."
-			# TODO: What do we do now?
+			# merge master to develop
+			git_do checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
+			git_do merge --no-ff "$commit" || die "There were merge conflicts." # TODO: What do we do now?
 		fi
 	fi
 
