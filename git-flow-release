@@ -565,7 +565,9 @@ v,verbose!           Verbose (more) output
 	require_base_is_local_branch "$base"
 	gitflow_require_version_arg
 
-	require_no_existing_release_branches
+	if ! $(git config --bool --get gitflow.multi-release 2>&1); then
+		require_no_existing_release_branches
+	fi
 
 	# Sanity checks
 	git_config_bool_exists "gitflow.allowdirty" || require_clean_working_tree
