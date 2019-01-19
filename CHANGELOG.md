@@ -39,6 +39,9 @@
 
 # Changelog
 
+#### 1.12.1-dev1
+* Prepare for next release
+
 #### 1.12.0
 [Peter van der Does][petervanderdoes]
 * Bugfix: Remove inconsistency when pre_hook fails (Thanks [Gabriele Pongelli][gpongelli])
