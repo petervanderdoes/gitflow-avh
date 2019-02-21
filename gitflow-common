@@ -609,15 +609,17 @@ gitflow_rename_branch() {
 	# read arguments into global variables
 	if [ -z $1 ]; then
 		NEW_NAME=''
-	else
-		NEW_NAME=$1
-	fi
-
-	if [ -z $2 ]; then
 		NAME=''
 	else
-		NAME=$2
+		if [ -z $2 ]; then
+			NAME=''
+			NEW_NAME=$1
+		else
+			NAME=$1
+			NEW_NAME=$2
+		fi
 	fi
+
 	BRANCH=${PREFIX}${NAME}
 	NEW_BRANCH=${PREFIX}${NEW_NAME}
 
