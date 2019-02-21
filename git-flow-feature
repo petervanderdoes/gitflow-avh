@@ -57,6 +57,7 @@ git flow feature rebase
 git flow feature checkout
 git flow feature pull
 git flow feature delete
+git flow feature rename
 
 Manage your feature branches.
 

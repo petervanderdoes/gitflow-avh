@@ -50,6 +50,7 @@ usage() {
 		OPTIONS_SPEC="\
 git flow support [list]
 git flow support start
+git flow support rebase
 
 Manage your support branches.
 

@@ -57,6 +57,7 @@ git flow bugfix rebase
 git flow bugfix checkout
 git flow bugfix pull
 git flow bugfix delete
+git flow bugfix rename
 
 Manage your bugfix branches.
 
