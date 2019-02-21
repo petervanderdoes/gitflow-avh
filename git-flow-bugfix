@@ -832,7 +832,7 @@ r,[no]remote     Delete remote branch
 
 cmd_rename() {
 	OPTIONS_SPEC="\
-git flow bugfix rename <new_name> [<new_name>]
+git flow bugfix rename <new_name> [<old_name>]
 
 Rename a given bugfix branch
 --

@@ -833,7 +833,7 @@ r,[no]remote     Delete remote branch
 
 cmd_rename() {
 	OPTIONS_SPEC="\
-git flow feature rename <new_name> [<new_name>]
+git flow feature rename <new_name> [<old_name>]
 
 Rename a given feature branch
 --
