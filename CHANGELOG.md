@@ -1,4 +1,5 @@
 [petervanderdoes]: https://github.com/petervanderdoes "Peter van der Does on github"
+[adamrodger]: https://github.com/adamrodger
 [adutra]: https://github.com/adutra
 [aleno]: https://github.com/aleno
 [algernon]: https://github.com/algernon
@@ -44,7 +45,7 @@
 
 #### 1.12.1
 [Peter van der Does][petervanderdoes]
-* When using the `-d` flag during `init` the defaults are empty
+* When using the `-d` flag during `init` the defaults are empty. Identified by [Adam Rodger][adamrodger]
 
 #### 1.12.0
 [Peter van der Does][petervanderdoes]
