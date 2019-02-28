@@ -90,11 +90,11 @@ file=    use given config file
 	DEFINE_boolean 'global' false 'use global config file'
 	DEFINE_boolean 'system' false 'use system config file'
 	DEFINE_string 'file' "" 'use given config file'
-	DEFINE_string 'feature' "" 'feature branches' p
-	DEFINE_string 'bugfix' "" 'bugfix branches' b
-	DEFINE_string 'release' "" 'release branches' r
-	DEFINE_string 'hotfix' "" 'hotfix branches' x
-	DEFINE_string 'support' "" 'support branches' s
+	DEFINE_string 'feature' "feature/" 'feature branches' p
+	DEFINE_string 'bugfix' "bugfix/" 'bugfix branches' b
+	DEFINE_string 'release' "release/" 'release branches' r
+	DEFINE_string 'hotfix' "hotfix/" 'hotfix branches' x
+	DEFINE_string 'support' "support/" 'support branches' s
 	DEFINE_string 'tag' "" 'version tag prefix' t
 
 	# Override defaults with values from config
