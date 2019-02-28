@@ -39,7 +39,7 @@
 
 # Changelog
 
-#### 1.12.1-dev1
+#### 1.12.1
 [Peter van der Does][petervanderdoes]
 * When using the `-d` flag during `init` the defaults are empty
 
