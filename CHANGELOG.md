@@ -40,7 +40,8 @@
 # Changelog
 
 #### 1.12.1-dev1
-* Prepare for next release
+[Peter van der Does][petervanderdoes]
+* When using the `-d` flag during `init` the defaults are empty
 
 #### 1.12.0
 [Peter van der Does][petervanderdoes]

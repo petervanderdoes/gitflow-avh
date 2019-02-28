@@ -306,7 +306,11 @@ file=    use given config file
 
 	# Feature branches
 	if ! git config --get gitflow.prefix.feature >/dev/null 2>&1 || flag force; then
-		default_suggestion=$(echo $FLAGS_feature || git config --get gitflow.prefix.feature || echo feature/)
+	    if [ "$FLAGS_feature" != "" ]; then
+	        default_suggestion=$(echo $FLAGS_feature)
+        else
+	    	default_suggestion=$(git config --get gitflow.prefix.feature || echo feature/)
+        fi
 		printf "Feature branches? [$default_suggestion] "
 		if noflag defaults; then
 			read answer
@@ -319,7 +323,11 @@ file=    use given config file
 
 	# Bugfix branches
 	if ! git config --get gitflow.prefix.bugfix >/dev/null 2>&1 || flag force; then
-		default_suggestion=$(echo $FLAGS_bugfix || git config --get gitflow.prefix.bugfix || echo bugfix/)
+	    if [ "$FLAGS_bugfix" != "" ]; then
+	        default_suggestion=$(echo $FLAGS_bugfix)
+        else
+		    default_suggestion=$(git config --get gitflow.prefix.bugfix || echo bugfix/)
+        fi
 		printf "Bugfix branches? [$default_suggestion] "
 		if noflag defaults; then
 			read answer
@@ -332,7 +340,11 @@ file=    use given config file
 
 	# Release branches
 	if ! git config --get gitflow.prefix.release >/dev/null 2>&1 || flag force; then
-		default_suggestion=$(echo $FLAGS_release || git config --get gitflow.prefix.release || echo release/)
+	    if [ "$FLAGS_release" != "" ]; then
+	        default_suggestion=$(echo $FLAGS_release)
+        else
+		    default_suggestion=$(git config --get gitflow.prefix.release || echo release/)
+        fi
 		printf "Release branches? [$default_suggestion] "
 		if noflag defaults; then
 			read answer
@@ -345,7 +357,11 @@ file=    use given config file
 
 	# Hotfix branches
 	if ! git config --get gitflow.prefix.hotfix >/dev/null 2>&1 || flag force; then
-		default_suggestion=$(echo $FLAGS_hotfix || git config --get gitflow.prefix.hotfix || echo hotfix/)
+	    if [ "$FLAGS_hotfix" != "" ]; then
+	        default_suggestion=$(echo $FLAGS_hotfix)
+        else
+		    default_suggestion=$(git config --get gitflow.prefix.hotfix || echo hotfix/)
+        fi
 		printf "Hotfix branches? [$default_suggestion] "
 		if noflag defaults; then
 			read answer
@@ -358,7 +374,11 @@ file=    use given config file
 
 	# Support branches
 	if ! git config --get gitflow.prefix.support >/dev/null 2>&1 || flag force; then
-		default_suggestion=$(echo $FLAGS_support || git config --get gitflow.prefix.support || echo support/)
+	    if [ "$FLAGS_support" != "" ]; then
+	        default_suggestion=$(echo $FLAGS_support
+        else
+		    default_suggestion=$(git config --get gitflow.prefix.support || echo support/)
+        fi
 		printf "Support branches? [$default_suggestion] "
 		if noflag defaults; then
 			read answer
@@ -371,7 +391,11 @@ file=    use given config file
 	
 	# Version tag prefix
 	if ! git config --get gitflow.prefix.versiontag >/dev/null 2>&1 || flag force; then
-		default_suggestion=$(echo $FLAGS_tag || git config --get gitflow.prefix.versiontag || echo "")
+	    if [ "$FLAGS_tag" != "" ]; then
+		    default_suggestion=$(echo $FLAGS_tag)
+        else
+            default_suggestion=$(git config --get gitflow.prefix.versiontag || echo "")
+        fi
 		printf "Version tag prefix? [$default_suggestion] "
 		if noflag defaults; then
 			read answer
