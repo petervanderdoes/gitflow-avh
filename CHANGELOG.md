@@ -40,8 +40,8 @@
 
 # Changelog
 
-#### 1.12.2-dev0
-* Preparation for next release
+#### 1.12.2
+* Missing parentheses (Thanks [Tiscs Sun][Tiscs] )
 
 #### 1.12.1
 [Peter van der Does][petervanderdoes]
