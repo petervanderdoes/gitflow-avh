@@ -40,6 +40,9 @@
 
 # Changelog
 
+#### 1.12.3-dev0
+* Preparation for next release
+
 #### 1.12.2
 * Missing parentheses (Thanks [Tiscs Sun][Tiscs] )
 
