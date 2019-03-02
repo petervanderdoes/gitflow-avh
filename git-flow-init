@@ -375,7 +375,7 @@ file=    use given config file
 	# Support branches
 	if ! git config --get gitflow.prefix.support >/dev/null 2>&1 || flag force; then
 	    if [ "$FLAGS_support" != "" ]; then
-	        default_suggestion=$(echo $FLAGS_support
+	        default_suggestion=$(echo $FLAGS_support)
         else
 		    default_suggestion=$(git config --get gitflow.prefix.support || echo support/)
         fi
