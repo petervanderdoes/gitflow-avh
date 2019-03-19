@@ -53,6 +53,14 @@ _finish_from_develop() {
 		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
 	fi
 
+	local MERGE_STRATEGY=()
+	if [ "$FLAGS_mergestrategy" != "" ]; then
+		MERGE_STRATEGY[0]="$FLAGS_mergestrategy"
+		if [ "$FLAGS_mergeparam" != "" ]; then
+			MERGE_STRATEGY[1]="$FLAGS_mergeparam"
+		fi
+	fi
+
 	# Check if the local branches have all the commits from the remote branches
 	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
@@ -67,7 +75,7 @@ _finish_from_develop() {
 				if [ $compare_refs_result -eq 1 ]; then
 					warn "Fast forwarding '"$MASTER_BRANCH"'."
 					git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
-					git_do merge  --ff-only "$ORIGIN/$MASTER_BRANCH" >/dev/null 2>&1
+					git_do merge --ff-only "$ORIGIN/$MASTER_BRANCH" >/dev/null 2>&1
 					merge_result=$?
 					git_do checkout "$BRANCH"
 					if [ $merge_result -gt 0 ]; then
@@ -105,9 +113,21 @@ _finish_from_develop() {
 	if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
 			git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
 			if noflag squash; then
-				git_do merge --no-ff "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+				if [ "${#MERGE_STRATEGY[@]}" -eq 0 ]; then
+					git_do merge --no-ff "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+				elif [ "${#MERGE_STRATEGY[@]}" -eq 1 ]; then
+					git_do merge --no-ff "$BRANCH" -s "${MERGE_STRATEGY[0]}" || die "There were merge conflicts." # TODO: What do we do now?
+				elif [ "${#MERGE_STRATEGY[@]}" -eq 2 ]; then
+					git_do merge --no-ff "$BRANCH" -s "${MERGE_STRATEGY[0]}" -X "${MERGE_STRATEGY[1]}" || die "There were merge conflicts." # TODO: What do we do now?
+				fi
 			else
-				git_do merge --squash "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+				if [ "${#MERGE_STRATEGY[@]}" -eq 0 ]; then
+					git_do merge --squash "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+				elif [ "${#MERGE_STRATEGY[@]}" -eq 1 ]; then
+					git_do merge --squash "$BRANCH" -s "${MERGE_STRATEGY[0]}" || die "There were merge conflicts." # TODO: What do we do now?
+				elif [ "${#MERGE_STRATEGY[@]}" -eq 2 ]; then
+					git_do merge --squash "$BRANCH" -s "${MERGE_STRATEGY[0]}" -X "${MERGE_STRATEGY[1]}" || die "There were merge conflicts." # TODO: What do we do now?
+				fi
 				flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$MASTER_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
 				git_do commit
 			fi
@@ -293,15 +313,36 @@ _finish_base() {
 
 	run_pre_hook "$VERSION_PREFIX$TAGNAME" "$ORIGIN" "$BRANCH"
 
+	local MERGE_STRATEGY=()
+	if [ "$FLAGS_mergestrategy" != "" ]; then
+		MERGE_STRATEGY[0]="$FLAGS_mergestrategy"
+		if [ "$FLAGS_mergeparam" != "" ]; then
+			MERGE_STRATEGY[1]="$FLAGS_mergeparam"
+		fi
+	fi
+
 	# Try to merge into base branch.
 	# In case a previous attempt to finish this release branch has failed,
 	# but the merge into develop was successful, we skip it now
 	if ! git_is_branch_merged_into "$BRANCH" "$BASE_BRANCH"; then
 		git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
+
 		if noflag squash; then
-			git_do merge --no-ff "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+			if [ "${#MERGE_STRATEGY[@]}" -eq 0 ]; then
+				git_do merge --no-ff "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+			elif [ "${#MERGE_STRATEGY[@]}" -eq 1 ]; then
+				git_do merge --no-ff "$BRANCH" -s "${MERGE_STRATEGY[0]}" || die "There were merge conflicts." # TODO: What do we do now?
+			elif [ "${#MERGE_STRATEGY[@]}" -eq 2 ]; then
+				git_do merge --no-ff "$BRANCH" -s "${MERGE_STRATEGY[0]}" -X "${MERGE_STRATEGY[1]}" || die "There were merge conflicts." # TODO: What do we do now?
+			fi
 		else
-			git_do merge --squash "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+			if [ "${#MERGE_STRATEGY[@]}" -eq 0 ]; then
+				git_do merge --squash "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+			elif [ "${#MERGE_STRATEGY[@]}" -eq 1 ]; then
+				git_do merge --squash "$BRANCH" -s "${MERGE_STRATEGY[0]}" || die "There were merge conflicts." # TODO: What do we do now?
+			elif [ "${#MERGE_STRATEGY[@]}" -eq 2 ]; then
+				git_do merge --squash "$BRANCH" -s "${MERGE_STRATEGY[0]}" -X "${MERGE_STRATEGY[1]}" || die "There were merge conflicts." # TODO: What do we do now?
+			fi
 			flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$BASE_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
 			git_do commit
 		fi
@@ -603,7 +644,7 @@ v,verbose!           Verbose (more) output
 
 cmd_finish() {
 	OPTIONS_SPEC="\
-git flow release finish [-h] [-F] [-s] [-u] [-m | -f] [-p] [-k] [-n] [-b] [-S] <version>
+git flow release finish [-h] [-F] [-s] [-u] [-m | -f] [-p] [-k] [-n] [-b] [-M] [-X] [-S] <version>
 
 
 Finish a release branch
@@ -625,10 +666,12 @@ k,[no]keep          Keep branch after performing finish
 D,[no]force_delete  Force delete release branch after finish
 n,[no]tag           Don't tag this release
 b,[no]nobackmerge   Don't back-merge master, or tag if applicable, in develop
+M,mergestrategy     Use the given merge strategy
+X,mergesparam       Pass an option to the given merge strategy
 S,[no]squash        Squash release during merge
 [no]ff-master       Fast forward master branch if possible
 T,tagname!          Use given tag name
-nodevelopmerge!  Don't back-merge develop branch
+nodevelopmerge!     Don't back-merge develop branch
 "
 	# Define flags
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
@@ -646,6 +689,8 @@ nodevelopmerge!  Don't back-merge develop branch
 	DEFINE_boolean 'force_delete' false "force delete release branch after finish" D
 	DEFINE_boolean 'notag' false "don't tag this release" n
 	DEFINE_boolean 'nobackmerge' false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
+	DEFINE_string  'mergestrategy' "" "Use the given merge strategy" M
+	DEFINE_string  'mergeparam' "" "Pass an option to the given merge strategy" X
 	DEFINE_boolean 'squash' false "squash release during merge" S
 	DEFINE_boolean 'squash-info' false "add branch info during squash"
 	DEFINE_boolean 'ff-master' false "fast forward master branch if possible"
@@ -667,6 +712,8 @@ nodevelopmerge!  Don't back-merge develop branch
 	gitflow_override_flag_boolean   "release.finish.nobackmerge"    "nobackmerge"
 	gitflow_override_flag_boolean   "release.finish.squash"         "squash"
 	gitflow_override_flag_boolean   "release.finish.squash-info"    "squash_info"
+	gitflow_override_flag_string    "release.finish.mergestrategy"  "mergestrategy"
+	gitflow_override_flag_string    "release.finish.mergeparam"     "mergeparam"
 	gitflow_override_flag_boolean   "release.finish.ff-master"      "ff-master"
 	gitflow_override_flag_string    "release.finish.signingkey"     "signingkey"
 	gitflow_override_flag_string    "release.finish.message"        "message"
