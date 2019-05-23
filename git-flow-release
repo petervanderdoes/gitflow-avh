@@ -437,6 +437,7 @@ git flow release finish
 git flow release publish
 git flow release track
 git flow release delete
+git flow release rename
 
 Manage your release branches.
 
@@ -1113,4 +1114,16 @@ r,[no]remote     Delete remote branch
 	flag remote && echo "- Release branch '$BRANCH' in '$ORIGIN' has been deleted."
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo
+}
+
+cmd_rename() {
+	OPTIONS_SPEC="\
+git flow release rename <new_name> [<new_name>]
+
+Rename a given release branch
+--
+h,help!          Show this help
+showcommands!    Show git commands while executing them
+"
+	gitflow_rename_branch "$@"
 }
