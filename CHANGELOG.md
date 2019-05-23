@@ -40,7 +40,7 @@
 
 # Changelog
 
-#### 1.12.3-dev0
+#### 1.12.3
 * Explicitly get the default values from the system and global config.
 
 #### 1.12.2
