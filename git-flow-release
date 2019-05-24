@@ -434,8 +434,10 @@ usage() {
 git flow release [list]
 git flow release start
 git flow release finish
+git flow release branch
 git flow release publish
 git flow release track
+git flow release rebase
 git flow release delete
 
 Manage your release branches.

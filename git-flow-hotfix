@@ -53,6 +53,9 @@ git flow hotfix start
 git flow hotfix finish
 git flow hotfix publish
 git flow hotfix delete
+git flow hotfix rebase
+git flow hotfix track
+git flow hotfix rename
 
 Manage your hotfix branches.
 
@@ -732,7 +735,7 @@ r,[no]remote          Delete remote branch
 
 cmd_rename() {
 	OPTIONS_SPEC="\
-git flow hotfix rename <new_name> [<new_name>]
+git flow hotfix rename [<old_name>] <new_name>
 
 Rename a given hotfix branch
 --

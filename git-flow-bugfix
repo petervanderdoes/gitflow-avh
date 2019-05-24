@@ -57,6 +57,7 @@ git flow bugfix rebase
 git flow bugfix checkout
 git flow bugfix pull
 git flow bugfix delete
+git flow bugfix rename
 
 Manage your bugfix branches.
 
@@ -831,7 +832,7 @@ r,[no]remote     Delete remote branch
 
 cmd_rename() {
 	OPTIONS_SPEC="\
-git flow bugfix rename <new_name> [<new_name>]
+git flow bugfix rename [<old_name>] <new_name>
 
 Rename a given bugfix branch
 --

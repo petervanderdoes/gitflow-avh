@@ -57,6 +57,7 @@ git flow feature rebase
 git flow feature checkout
 git flow feature pull
 git flow feature delete
+git flow feature rename
 
 Manage your feature branches.
 
@@ -832,7 +833,7 @@ r,[no]remote     Delete remote branch
 
 cmd_rename() {
 	OPTIONS_SPEC="\
-git flow feature rename <new_name> [<new_name>]
+git flow feature rename [<old_name>] <new_name>
 
 Rename a given feature branch
 --
