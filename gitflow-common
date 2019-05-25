@@ -794,14 +794,21 @@ run_pre_hook() {
 #     post-flow-<subcmd>-<subaction>
 #
 # If such a hook script exists and is executable, it is called with the given
-# positional arguments.  Its return code is ignored.
+# positional arguments.  If its return code non-zero, the git-flow action is
+# aborted.
 #
 run_post_hook() {
-	local scriptfile
+	local scriptfile exitcode
 
 	scriptfile="${HOOKS_DIR}/post-flow-${SUBCOMMAND}-${SUBACTION}"
+	exitcode=0
 	if [ -x "$scriptfile" ]; then
 		"$scriptfile" "$@"
+		exitcode=$?
+
+		if [ $exitcode -gt 0 ]; then
+			die "Hook command $scriptfile ended with exit code $exitcode."
+		fi
 	fi
 }
 
