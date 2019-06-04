@@ -421,6 +421,19 @@ file=    use given config file
 		git_do config $gitflow_config_option gitflow.path.hooks "$hooks_dir"
 	fi
 
+	# no-ff setting
+	if ! git config --get gitflow.feature.finish.no-ff >/dev/null 2>&1 || flag force; then
+		default_suggestion=$(git config --get gitflow.feature.finish.no-ff || echo "true")
+		printf "Do not fast forward when finishing? [$default_suggestion] "
+		if noflag defaults; then
+			read answer
+		else
+			printf "\n"
+		fi
+		[ "$answer" = "-" ] && no_ff= || no_ff=${answer:-$default_suggestion}
+		git_do config $gitflow_config_option gitflow.feature.finish.no-ff "$no_ff"
+	fi
+
 	# TODO: what to do with origin?
 }
 
