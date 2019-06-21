@@ -428,6 +428,32 @@ no-ff!                 Never fast-forward during the merge
 	helper_finish_cleanup
 }
 
+cmd_release() {
+	# 1) pull dev from origin
+	# git_do checkout "$BRANCH"
+	# git_do (or somth exists alredy here?)
+
+	# Parse arguments
+	parse_args "$@"
+
+	# Use current branch if no name is given
+	if [ "$NAME" = "" ]; then
+	    gitflow_use_current_branch_name
+	fi
+
+	# 2) merge feature to dev
+	cmd_finish "--fetch" "--squash" "--keep"  $NAME
+
+	# 3) sync back dev to feature
+	echo "Merging $BASE_BRANCH to $BRANCH"
+	git_do checkout "$BRANCH" || die "Could not check out branch '$BRANCH'."
+	git_do merge "$BASE_BRANCH"
+
+	# 4) create release
+	git_do flow release start $NAME
+
+}
+
 helper_finish_cleanup() {
 	local keepmsg remotebranchdeleted localbranchdeleted
 
