@@ -686,7 +686,7 @@ nodevelopmerge!  Don't back-merge develop branch
 	gitflow_override_flag_boolean   "release.finish.nobackmerge"    "nobackmerge"
 	gitflow_override_flag_boolean   "release.finish.squash"         "squash"
 	gitflow_override_flag_boolean   "release.finish.squash-info"    "squash_info"
-	gitflow_override_flag_boolean   "release.finish.ff-master"      "ff-master"
+	gitflow_override_flag_boolean   "release.finish.ff-master"      "ff_master"
 	gitflow_override_flag_string    "release.finish.signingkey"     "signingkey"
 	gitflow_override_flag_string    "release.finish.message"        "message"
 	gitflow_override_flag_string    "release.finish.messagefile"    "messagefile"
