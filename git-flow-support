@@ -202,7 +202,7 @@ F,[no]fetch       Fetch from origin before performing finish
 
 cmd_rebase() {
 	OPTIONS_SPEC="\
-git flow support rebase [-h] [-i] [-p] [<name|nameprefix>]
+git flow support rebase [-h] [-i] [-p] [-F] [<name|nameprefix>]
 
 Rebase <name> on <base_branch>
 --
@@ -210,16 +210,19 @@ h,help!                Show this help
 showcommands!          Show git commands while executing them
 i,[no]interactive      Do an interactive rebase
 p,[no]preserve-merges  Preserve merges
+F,[no]fetch	           Fetch from origin before performing local operation
 "
 	local opts
 
 	# Define flags
 	DEFINE_boolean 'interactive' false 'do an interactive rebase' i
 	DEFINE_boolean 'preserve-merges' false 'try to recreate merges' p
+	DEFINE_boolean 'fetch' false 'fetch from origin before performing local operation' F
 
 	# Override defaults with values from config
 	gitflow_override_flag_boolean   "support.rebase.interactive"       "interactive"
 	gitflow_override_flag_boolean   "support.rebase.preserve-merges"   "preserve_merges"
+	gitflow_override_flag_boolean   "support.rebase.fetch"             "fetch"
 
 	# Parse arguments
 	parse_args "$@"
@@ -247,5 +250,12 @@ p,[no]preserve-merges  Preserve merges
 	if flag preserve_merges; then
 		opts="$opts -p"
 	fi
-	git_do rebase $opts "$BASE_BRANCH"
+
+	# Update local branches with remote branches
+	if flag fetch; then
+		git_fetch_branch "$ORIGIN" "$BASE_BRANCH"
+		git_do rebase $opts "$ORIGIN/$BASE_BRANCH"
+	else
+		git_do rebase $opts "$BASE_BRANCH"
+	fi
 }
