@@ -128,6 +128,11 @@ _finish_from_develop() {
 			opts="-a"
 			flag sign && opts="$opts -s"
 			[ "$FLAGS_signingkey" != "" ] && opts="$opts -u '$FLAGS_signingkey'"
+			if flag changelog; then
+				TEMP=$(mktemp)
+				git-conventional-changelog >> $TEMP
+				opts="$opts -F $TEMP"
+			fi
 			if [ "$FLAGS_message" != "" ]; then
 				# Run filter on the tag message
 				FLAGS_message=$(run_filter_hook release-finish-tag-message "${FLAGS_message}" "$VERSION_PREFIX$TAGNAME")
@@ -555,15 +560,18 @@ Start a new release branch
 h,help!              Show this help
 showcommands!        Show git commands while executing them
 F,[no]fetch          Fetch from $ORIGIN before performing finish
+r,recommended        Use recommended semver as tag name
 v,verbose!           Verbose (more) output
 "
 	local base
 
 	# Define flags
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
+	DEFINE_boolean 'recommended' false "use recommended semver as tag name" r
 
 	# Override defaults with values from config
 	gitflow_override_flag_boolean   "release.start.fetch"   "fetch"
+	gitflow_override_flag_boolean   "release.start.recommended"   "recommended"
 
 	# Parse arguments
 	parse_args "$@"
@@ -574,6 +582,10 @@ v,verbose!           Verbose (more) output
 	VERSION=$(run_filter_hook release-start-version $VERSION)
 	if [ $? -eq 127 ]; then
 		die $VERSION
+	fi
+
+	if flag recommended; then
+		VERSION=$(git-recommended-semver)
 	fi
 
 	# As VERSION might have changed reset BRANCH with new VERSION
@@ -630,6 +642,7 @@ showcommands!       Show git commands while executing them
 F,[no]fetch         Fetch from origin before performing finish
 s,sign!             Sign the release tag cryptographically
 u,signingkey!       Use the given GPG-key for the digital signature (implies -s)
+c,changelog! 		Use the conventional changelog as tag message
 m,message!          Use the given tag message
 f,[no]messagefile=  Use the contents of the given file as a tag message
 p,[no]push          Push to origin after performing finish
@@ -652,6 +665,7 @@ nodevelopmerge!  Don't back-merge develop branch
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
 	DEFINE_boolean 'sign' false "sign the release tag cryptographically" s
 	DEFINE_string  'signingkey' "" "use the given GPG-key for the digital signature (implies -s)" u
+	DEFINE_boolean 'changelog' false "use the conventional changelog as tag message" c
 	DEFINE_string  'message' "" "use the given tag message" m
 	DEFINE_string  'messagefile' "" "use the contents of the given file as a tag message" f
 	DEFINE_boolean 'push' false "push to $ORIGIN after performing finish" p
@@ -673,6 +687,7 @@ nodevelopmerge!  Don't back-merge develop branch
 
 	# Override defaults with values from config
 	gitflow_override_flag_boolean   "release.finish.fetch"          "fetch"
+	gitflow_override_flag_boolean   "release.finish.changelog"      "changelog"
 	gitflow_override_flag_boolean   "release.finish.sign"           "sign"
 	gitflow_override_flag_boolean   "release.finish.push"           "push"
 	gitflow_override_flag_boolean   "release.finish.pushproduction" "pushproduction"
