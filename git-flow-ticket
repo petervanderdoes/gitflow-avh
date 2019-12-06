@@ -1,0 +1,843 @@
+# $Id$
+# vim:et:ft=sh:sts=2:sw=2
+#
+# git-flow -- A collection of Git extensions to provide high-level
+# repository operations for Vincent Driessen's branching model.
+#
+# A blog post presenting this model is found at:
+#    http://blog.avirtualhome.com/development-workflow-using-git/
+#
+# Feel free to contribute to this project at:
+#    http://github.com/petervanderdoes/gitflow
+#
+# Authors:
+# Copyright 2012-2019 Peter van der Does. All rights reserved.
+#
+# Original Author:
+# Copyright 2010 Vincent Driessen. All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+initialize() {
+	require_git_repo
+	require_gitflow_initialized
+	git config --get gitflow.prefix.ticket >/dev/null 2>&1 || die "Ticket prefix not set. Please run 'git flow init'."
+	gitflow_load_settings
+	PREFIX=$(git config --get gitflow.prefix.ticket)
+}
+
+usage() {
+	OPTIONS_SPEC="\
+git flow ticket [list]
+git flow ticket start
+git flow ticket finish
+git flow ticket publish
+git flow ticket track
+git flow ticket diff
+git flow ticket rebase
+git flow ticket checkout
+git flow ticket pull
+git flow ticket delete
+
+Manage your ticket branches.
+
+For more specific help type the command followed by --help
+--
+"
+	flags_help
+}
+
+cmd_default() {
+	cmd_list "$@"
+}
+
+cmd_list() {
+	OPTIONS_SPEC="\
+git flow ticket [list] [-h] [-v]
+
+Lists all the existing ticket branches in the local repository.
+--
+h,help!     Show this help
+v,verbose   Verbose (more) output
+"
+	local ticket_branches current_branch width branch len
+	local base develop_sha branch_sha
+
+	# Define flags
+	DEFINE_boolean 'verbose' false 'verbose (more) output' v
+
+	# Parse argun=ments
+	parse_args "$@"
+
+	ticket_branches=$(git_local_branches_prefixed "$PREFIX")
+	if [ -z "$ticket_branches" ]; then
+		warn "No ticket branches exist."
+		warn ""
+		warn "You can start a new ticket branch:"
+		warn ""
+		warn "    git flow ticket start <name> [<base>]"
+		warn ""
+		exit 0
+	fi
+	current_branch=$(git_current_branch)
+
+	# Determine column width first
+	width=0
+	for branch in $ticket_branches; do
+		len=${#branch}
+		width=$(max $width $len)
+	done
+	width=$(($width+3-${#PREFIX}))
+
+	for branch in $ticket_branches; do
+		base=$(git merge-base "$branch" "$DEVELOP_BRANCH")
+		develop_sha=$(git rev-parse "$DEVELOP_BRANCH")
+		branch_sha=$(git rev-parse "$branch")
+		if [ "$branch" = "$current_branch" ]; then
+			printf "* "
+		else
+			printf "  "
+		fi
+		if flag verbose; then
+			printf "%-${width}s" "${branch#$PREFIX}"
+			if [ "$branch_sha" = "$develop_sha" ]; then
+				printf "(no commits yet)"
+			elif [ "$base" = "$branch_sha" ]; then
+				printf "(is behind develop, may ff)"
+			elif [ "$base" = "$develop_sha" ]; then
+				printf "(based on latest develop)"
+			else
+				printf "(may be rebased)"
+			fi
+		else
+			printf "%s" "${branch#$PREFIX}"
+		fi
+		echo
+	done
+}
+
+cmd_help() {
+	usage
+	exit 0
+}
+
+# Parse arguments and set common variables
+parse_args() {
+	FLAGS "$@" || exit $?
+	eval set -- "${FLAGS_ARGV}"
+
+	# read arguments into global variables
+	if [ -z $1 ]; then
+		NAME=''
+	else
+		NAME=$1
+	fi
+	BRANCH=$PREFIX$NAME
+}
+
+parse_remote_name() {
+	# Parse arguments
+	FLAGS "$@" || exit $?
+	eval set -- "${FLAGS_ARGV}"
+
+	# read arguments into global variables
+	if [ -z $1 ]; then
+		REMOTE=''
+	else
+		REMOTE=$1
+	fi
+
+	if [ -z $2 ]; then
+		NAME=''
+	else
+		NAME=$2
+	fi
+	BRANCH=$PREFIX$NAME
+}
+
+cmd_start() {
+	OPTIONS_SPEC="\
+git flow ticket start [-h] [-F] <name> [<base>]
+
+Start new ticket <name>, optionally basing it on <base> instead of <develop>
+--
+h,help!          Show this help
+showcommands!    Show git commands while executing them
+F,[no]fetch      Fetch from origin before performing local operation
+"
+	local base
+
+	# Define flags
+	DEFINE_boolean 'fetch' false 'fetch from origin before performing local operation' F
+
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "ticket.start.fetch"   "fetch"
+
+	# Parse arguments
+	parse_args "$@"
+	eval set -- "${FLAGS_ARGV}"
+	base=${2:-$DEVELOP_BRANCH}
+
+	require_base_is_local_branch "$base"
+	gitflow_require_name_arg
+
+	# Update the local repo with remote changes, if asked
+	if flag fetch; then
+		git_fetch_branch "$ORIGIN" "$base"
+	fi
+
+	# Sanity checks
+	require_branch_absent "$BRANCH"
+
+	# If the origin branch counterpart exists, assert that the local branch
+	# isn't behind it (to avoid unnecessary rebasing)
+	if git_remote_branch_exists "$ORIGIN/$base"; then
+		require_branches_equal "$base" "$ORIGIN/$base"
+	fi
+
+	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH" "$base"
+
+	gitflow_config_set_base_branch $base $BRANCH
+
+	# create branch
+	git_do checkout -b "$BRANCH" "$base" || die "Could not create ticket branch '$BRANCH'."
+
+	run_post_hook "$NAME" "$ORIGIN" "$BRANCH" "$base"
+
+	echo
+	echo "Summary of actions:"
+	echo "- A new branch '$BRANCH' was created, based on '$base'"
+	echo "- You are now on branch '$(git_current_branch)'"
+	echo ""
+	echo "Now, start committing on your ticket. When done, use:"
+	echo ""
+	echo "     git flow ticket finish $NAME"
+	echo
+}
+
+cmd_finish() {
+	OPTIONS_SPEC="\
+git flow ticket finish [-h] [-F] [-r] [-p] [-k] [-D] [-S] [--no-ff] <name|nameprefix>
+
+Finish ticket <name>
+--
+h,help!                Show this help
+showcommands!          Show git commands while executing them
+F,[no]fetch            Fetch from origin before performing finish
+r,[no]rebase           Rebase before merging
+p,[no]preserve-merges  Preserve merges while rebasing
+[no]push               Push to origin after performing finish
+k,[no]keep             Keep branch after performing finish
+keepremote!        	   Keep the remote branch
+keeplocal!             Keep the local branch
+D,[no]force_delete     Force delete ticket branch after finish
+S,[no]squash           Squash ticket during merge
+no-ff!                 Never fast-forward during the merge
+"
+	local finish_base
+
+	# Define flags
+	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
+	DEFINE_boolean 'rebase' false "rebase before merging" r
+	DEFINE_boolean 'preserve-merges' false 'try to recreate merges while rebasing' p
+	DEFINE_boolean 'push' false "push to $ORIGIN after performing finish"
+	DEFINE_boolean 'keep' false "keep branch after performing finish" k
+	DEFINE_boolean 'keepremote' false "keep the remote branch"
+	DEFINE_boolean 'keeplocal' false "keep the local branch"
+	DEFINE_boolean 'force_delete' false "force delete ticket branch after finish" D
+	DEFINE_boolean 'squash' false "squash ticket during merge" S
+	DEFINE_boolean 'squash-info' false "add branch info during squash"
+	DEFINE_boolean 'no-ff!' false "Don't fast-forward ever during merge "
+
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "ticket.finish.fetch"             "fetch"
+	gitflow_override_flag_boolean   "ticket.finish.rebase"            "rebase"
+	gitflow_override_flag_boolean   "ticket.finish.preserve-merges"   "preserve_merges"
+	gitflow_override_flag_boolean   "ticket.finish.push"              "push"
+	gitflow_override_flag_boolean   "ticket.finish.keep"              "keep"
+	gitflow_override_flag_boolean   "ticket.finish.keepremote"        "keepremote"
+	gitflow_override_flag_boolean   "ticket.finish.keeplocal"         "keeplocal"
+	gitflow_override_flag_boolean   "ticket.finish.force-delete"      "force_delete"
+	gitflow_override_flag_boolean   "ticket.finish.squash"            "squash"
+	gitflow_override_flag_boolean   "ticket.finish.squash-info"       "squash_info"
+	gitflow_override_flag_boolean   "ticket.finish.no-ff"             "no_ff"
+
+	# Parse arguments
+	parse_args "$@"
+
+	# Use current branch if no name is given
+	if [ "$NAME" = "" ]; then
+		gitflow_use_current_branch_name
+	fi
+
+	# Keeping both branches implies the --keep flag to be true.
+	if flag keepremote && flag keeplocal; then
+		FLAGS_keep=$FLAGS_TRUE
+	fi
+
+	# Sanity checks
+	require_branch "$BRANCH"
+
+	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
+	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
+	git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't finish the ticket branch '$BRANCH'."
+
+	# Detect if we're restoring from a merge conflict
+	if [ -f "$DOT_GIT_DIR/.gitflow/MERGE_BASE" ]; then
+		#
+		# TODO: detect that we're working on the correct branch here!
+		# The user need not necessarily have given the same $NAME twice here
+		# (although he/she should).
+		#
+
+		# TODO: git_is_clean_working_tree() should provide an alternative
+		# exit code for "unmerged changes in working tree", which we should
+		# actually be testing for here
+		if git_is_clean_working_tree; then
+			finish_base=$(cat "$DOT_GIT_DIR/.gitflow/MERGE_BASE")
+
+			# Since the working tree is now clean, either the user did a
+			# successful merge manually, or the merge was cancelled.
+			# We detect this using git_is_branch_merged_into()
+			if git_is_branch_merged_into "$BRANCH" "$finish_base"; then
+				rm -f "$DOT_GIT_DIR/.gitflow/MERGE_BASE"
+				helper_finish_cleanup
+				exit 0
+			else
+				# If the user cancelled the merge and decided to wait until
+				# later,that's fine. But we have to acknowledge this by
+				# removing the MERGE_BASE file and continuing normal execution
+				# of the finish
+				rm -f "$DOT_GIT_DIR/.gitflow/MERGE_BASE"
+			fi
+		else
+			echo
+			echo "Merge conflicts not resolved yet, use:"
+			echo "    git mergetool"
+			echo "    git commit"
+			echo
+			echo "You can then complete the finish by running it again:"
+			echo "    git flow ticket finish $NAME"
+			echo
+			exit 1
+		fi
+	fi
+
+	# Sanity checks
+	require_clean_working_tree
+
+	# We always fetch the Branch from Origin
+	# This is done to avoid possible commits on the remote that are not
+	# merged into the local branch
+	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+		git_fetch_branch "$ORIGIN" "$BRANCH"
+	fi
+
+	# Update local branches with remote branches
+	if flag fetch; then
+		git_fetch_branch "$ORIGIN" "$BASE_BRANCH"
+	fi
+
+	# Check if the local branches have all the commits from the remote branches
+	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
+	fi
+	if git_remote_branch_exists "$ORIGIN/$BASE_BRANCH"; then
+		require_branches_equal "$BASE_BRANCH" "$ORIGIN/$BASE_BRANCH"
+	fi
+
+	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
+
+	# If the user wants to rebase, do that first
+	if flag rebase; then
+		local _rebase_opts=""
+		if flag preserve_merges; then
+			_rebase_opts="$_rebase_opts -p"
+		fi
+		if flag showcommands; then
+			_rebase_opts="$_rebase_opts --showcommands"
+		fi
+		if ! git flow ticket rebase $_rebase_opts "$NAME"; then
+			warn "Finish was aborted due to conflicts during rebase."
+			warn "Please finish the rebase manually now."
+			warn "When finished, re-run:"
+			warn "    git flow ticket finish '$NAME' '$BASE_BRANCH'"
+			exit 1
+		fi
+	fi
+
+	# Merge into BASE
+	git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
+
+	if noflag squash; then
+		if flag no_ff; then
+			git_do merge --no-ff "$BRANCH"
+		else
+			if [ "$(git rev-list -n2 "$BASE_BRANCH..$BRANCH" | wc -l)" -eq 1 ]; then
+				git_do merge --ff "$BRANCH"
+			else
+				git_do merge --no-ff "$BRANCH"
+			fi
+		fi
+	else
+		git_do merge --squash "$BRANCH"
+		flag squash_info && gitflow_create_squash_message "Merged ticket branch '$BRANCH'" "$BASE_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
+		git_do commit
+	fi
+
+	if [ $? -ne 0 ]; then
+		# Oops.. we have a merge conflict!
+		# Write the given $BASE_BRANCH to a temporary file as we will
+		# be needing it later.
+		mkdir -p "$DOT_GIT_DIR/.gitflow"
+		echo "$BASE_BRANCH" > "$DOT_GIT_DIR/.gitflow/MERGE_BASE"
+		echo
+		echo "There were merge conflicts. To resolve the merge conflict manually, use:"
+		echo "    git mergetool"
+		echo "    git commit"
+		echo
+		echo "You can then complete the finish by running it again:"
+		echo "    git flow ticket finish $NAME"
+		echo
+		exit 1
+	fi
+
+	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
+
+	# When no merge conflict is detected, just clean up the ticket branch
+	gitflow_config_remove_base_branch "$BRANCH"
+	helper_finish_cleanup
+}
+
+helper_finish_cleanup() {
+	local keepmsg remotebranchdeleted localbranchdeleted
+
+	# Sanity checks
+	require_branch "$BRANCH"
+	require_clean_working_tree
+
+	remotebranchdeleted=$FLAGS_FALSE
+	localbranchdeleted=$FLAGS_FALSE
+
+	if flag push; then
+		git_do push "$ORIGIN" "$BASE_BRANCH" || die "Could not push branch '$BASE_BRANCH' to remote '$ORIGIN'."
+	fi
+
+	if noflag keep; then
+
+		# Always delete remote first
+		if noflag keepremote;then
+			if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+				git_remote_branch_delete "$BRANCH" && remotebranchdeleted=$FLAGS_TRUE
+			fi
+		fi
+
+		# Delete local after remote to avoid warnings
+		if noflag keeplocal; then
+			if [ "$BRANCH" = "$(git_current_branch)" ]; then
+				git_do checkout "$BASE_BRANCH" || die "Could not check out branch '$BASE_BRANCH'."
+			fi
+			if flag force_delete; then
+				git_do branch -D "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
+			else
+				if noflag squash; then
+					git_do branch -d "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
+				else
+					git_do branch -D "$BRANCH" && localbranchdeleted=$FLAGS_TRUE
+				fi
+			fi
+		fi
+
+		# no more branches: we can safely remove config section
+		if ! git_remote_branch_exists "$ORIGIN/$BRANCH" -a ! git_local_branch_exists "$BRANCH"; then
+			gitflow_config_remove_base_section "$BRANCH"
+		fi
+	fi
+
+	echo
+	echo "Summary of actions:"
+	echo "- The ticket branch '$BRANCH' was merged into '$BASE_BRANCH'"
+	#echo "- Merge conflicts were resolved"		# TODO: Add this line when it's supported
+	if noflag keep; then
+		if [ $localbranchdeleted -eq $FLAGS_TRUE ]; then
+			keepmsg="has been locally deleted"
+		else
+			keepmsg="is still locally available"
+		fi
+		if [ $remotebranchdeleted -eq $FLAGS_TRUE ]; then
+			keepmsg=$keepmsg"; it has been remotely deleted from '$ORIGIN'"
+		elif git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			keepmsg=$keepmsg"; it is still remotely available on '$ORIGIN'"
+		fi
+	else
+		keepmsg="is still locally available"
+		if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
+			keepmsg=$keepmsg"; it is still remotely available on '$ORIGIN'"
+		fi
+	fi
+	echo "- Ticket branch '$BRANCH' "$keepmsg
+	echo "- You are now on branch '$(git_current_branch)'"
+	echo
+}
+
+cmd_publish() {
+	OPTIONS_SPEC="\
+git flow ticket publish [-h] [<name>]
+
+Publish ticket branch <name> on $ORIGIN.
+When <name> is omitted the current branch is used, but only if it's a ticket branch.
+--
+h,help!          Show this help
+showcommands!    Show git commands while executing them
+"
+	# Parse arguments
+	parse_args "$@"
+
+	# Use current branch if no name is given
+	if [ "$NAME" = "" ]; then
+		gitflow_use_current_branch_name
+	fi
+
+
+	# Sanity checks
+	require_clean_working_tree
+	require_branch "$BRANCH"
+	git_do fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
+	require_branch_absent "$ORIGIN/$BRANCH"
+
+	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
+
+	# Create remote branch with remote tracking
+	git_do push -u "$ORIGIN" "$BRANCH:$BRANCH"
+	git_do fetch -q "$ORIGIN" "$BRANCH" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
+	git_do checkout "$BRANCH" || die "Could not check out branch '$BRANCH'."
+
+	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
+
+	echo
+	echo "Summary of actions:"
+	echo "- The remote branch '$BRANCH' was created or updated"
+	echo "- The local branch '$BRANCH' was configured to track the remote branch"
+	echo "- You are now on branch '$(git_current_branch)'"
+	echo
+}
+
+cmd_track() {
+	OPTIONS_SPEC="\
+git flow ticket track [-h] <name>
+
+Start tracking ticket <name> that is shared on $ORIGIN
+--
+h,help!          Show this help
+showcommands!    Show git commands while executing them
+"
+	# Parse arguments
+	parse_args "$@"
+
+	gitflow_require_name_arg
+
+	# Sanity checks
+	require_clean_working_tree
+	require_local_branch_absent "$BRANCH"
+
+	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
+
+	git_do fetch -q "$ORIGIN" || die "Could not fetch branch '$BRANCH' from remote '$ORIGIN'."
+	git_remote_branch_exists "$ORIGIN/$BRANCH"
+
+	# Create tracking branch
+	git_do checkout -b "$BRANCH" "$ORIGIN/$BRANCH" || die "Could not create '$BRANCH'."
+
+	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
+
+	echo
+	echo "Summary of actions:"
+	echo "- A new remote tracking branch '$BRANCH' was created"
+	echo "- You are now on branch '$(git_current_branch)'"
+	echo
+}
+
+cmd_diff() {
+	OPTIONS_SPEC="\
+git flow ticket diff [-h] [<name|nameprefix>]
+
+Show all changes in <name> that are not in the base
+--
+h,help!          Show this help
+showcommands!    Show git commands while executing them
+"
+	local base
+
+	# Parse arguments
+	parse_args "$@"
+
+	# Use current branch if no name is given
+	if [ "$NAME" = "" ]; then
+		gitflow_use_current_branch_name
+	fi
+
+	base=$(gitflow_config_get_base_branch $BRANCH)
+	base=${base:-$DEVELOP_BRANCH}
+
+	git_do diff "$base...$BRANCH"
+}
+
+cmd_checkout() {
+	OPTIONS_SPEC="\
+git flow ticket checkout [-h] [<name|nameprefix>]
+
+Switch to ticket branch <name>
+--
+h,help!          Show this help
+showcommands!    Show git commands while executing them
+"
+	# Parse arguments
+	parse_args "$@"
+
+	NAME=$(gitflow_resolve_nameprefix "$NAME" "$PREFIX")
+	if [ $? -eq 0 ]; then
+		BRANCH=$PREFIX$NAME
+		git_do checkout "$BRANCH"  || die "Could not check out branch '$BRANCH'."
+	fi
+}
+
+cmd_co() {
+	# Alias for checkout
+	cmd_checkout "$@"
+}
+
+cmd_rebase() {
+	OPTIONS_SPEC="\
+git flow ticket rebase [-h] [-i] [-p] [<name|nameprefix>]
+
+Rebase <name> on <base_branch>
+--
+h,help!                Show this help
+showcommands!          Show git commands while executing them
+i,[no]interactive      Do an interactive rebase
+p,[no]preserve-merges  Preserve merges
+"
+	local opts
+
+	# Define flags
+	DEFINE_boolean 'interactive' false 'do an interactive rebase' i
+	DEFINE_boolean 'preserve-merges' false 'try to recreate merges' p
+
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "ticket.rebase.interactive"       "interactive"
+	gitflow_override_flag_boolean   "ticket.rebase.preserve-merges"   "preserve_merges"
+
+	# Parse arguments
+	parse_args "$@"
+
+	# Use current branch if no name is given
+	if [ "$NAME" = "" ]; then
+		gitflow_use_current_branch_name
+	fi
+
+
+	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
+	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
+
+	warn "Will try to rebase '$NAME' which is based on '$BASE_BRANCH'..."
+	if ! git_config_bool_exists "rebase.autostash"; then
+		require_clean_working_tree
+	fi
+
+	require_branch "$BRANCH"
+
+	git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't rebase the ticket branch '$BRANCH'."
+
+	git_do checkout -q "$BRANCH"  || die "Could not check out branch '$BRANCH'."
+	if flag interactive; then
+		opts="$opts -i"
+	fi
+	if flag preserve_merges; then
+		opts="$opts -p"
+	fi
+	git_do rebase $opts "$BASE_BRANCH"
+}
+
+avoid_accidental_cross_branch_action() {
+	local current_branch
+
+	current_branch=$(git_current_branch)
+	if [ "$BRANCH" != "$current_branch" ]; then
+		warn "Trying to pull from '$BRANCH' while currently on branch '$current_branch'."
+		warn "To avoid unintended merges, git-flow aborted."
+		return 1
+	fi
+	return 0
+}
+
+cmd_pull() {
+	OPTIONS_SPEC="\
+git flow ticket pull [-h] <remote> [<name>]
+
+Pull ticket <name> from <remote>
+--
+h,help!          Show this help
+showcommands!    Show git commands while executing them
+"
+	local current_branch
+
+	# Define flags
+	DEFINE_boolean 'rebase' false "pull with rebase" r
+
+	warn "The command 'git flow ticket pull' will be deprecated per version 2.0.0. Use 'git flow ticket track' instead."
+
+	# Parse arguments
+	parse_remote_name "$@"
+
+	if [ -z "$REMOTE" ]; then
+		die "Name a remote explicitly."
+	fi
+
+	# Use current branch if no name is given
+	if [ "$NAME" = "" ]; then
+		gitflow_use_current_branch_name
+	fi
+
+	# To avoid accidentally merging different ticket branches into each other,
+	# die if the current ticket branch differs from the requested $NAME
+	# argument.
+	current_branch=$(git_current_branch)
+	if startswith "$current_branch" "$PREFIX"; then
+		# We are on a local ticket branch already, so $BRANCH must be equal to
+		# the current branch
+		avoid_accidental_cross_branch_action || die
+	fi
+
+	require_clean_working_tree
+
+	run_pre_hook "$NAME" "$REMOTE" "$BRANCH"
+
+	if git_local_branch_exists "$BRANCH"; then
+		# Again, avoid accidental merges
+		avoid_accidental_cross_branch_action || die
+
+		# We already have a local branch called like this, so simply pull the
+		# remote changes in
+		if flag rebase; then
+			if ! git_do pull --rebase -q "$REMOTE" "$BRANCH"; then
+				warn "Pull was aborted. There might be conflicts during rebase or '$REMOTE' might be inaccessible."
+				exit 1
+			fi
+		else
+			git_do pull -q "$REMOTE" "$BRANCH" || die "Failed to pull from remote '$REMOTE'."
+		fi
+
+		echo "Pulled $REMOTE's changes into $BRANCH."
+	else
+		# Setup the local branch clone for the first time
+		git_do fetch -q "$REMOTE" "$BRANCH" ||  die "Could not fetch branch '$BRANCH' from remote '$REMOTE'."     # Stores in FETCH_HEAD
+		git_do branch --no-track "$BRANCH" FETCH_HEAD || die "Branch failed."
+		git_do checkout -q "$BRANCH" || die "Could not check out branch '$BRANCH'."
+		echo "Created local branch $BRANCH based on $REMOTE's $BRANCH."
+	fi
+
+	run_post_hook "$NAME" "$REMOTE" "$BRANCH"
+}
+
+cmd_delete() {
+	OPTIONS_SPEC="\
+git flow ticket delete [-h] [-f] [-r] <name>
+
+Delete a given ticket branch
+--
+h,help!          Show this help
+showcommands!    Show git commands while executing them
+f,[no]force      Force deletion
+r,[no]remote     Delete remote branch
+"
+	local current_branch
+
+	# Define flags
+	DEFINE_boolean 'force' false "force deletion" f
+	DEFINE_boolean 'remote' false "delete remote branch" r
+
+	# Override defaults with values from config
+	gitflow_override_flag_boolean   "ticket.delete.force"    "force"
+	gitflow_override_flag_boolean   "ticket.delete.remote"   "remote"
+
+	# Parse arguments
+	parse_args "$@"
+
+	gitflow_require_name_arg
+
+	# Sanity checks
+	require_branch "$BRANCH"
+
+	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
+	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
+
+	run_pre_hook "$NAME" "$ORIGIN" "$BRANCH"
+
+	current_branch=$(git_current_branch)
+	# We can't delete a branch we are on, switch to the develop branch.
+	if [ "$BRANCH" = "$current_branch" ]; then
+		require_clean_working_tree
+		if git_local_branch_exists "$BASE_BRANCH"; then
+			git_do checkout "$BASE_BRANCH"
+		else
+			git_do checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
+		fi
+	fi
+
+	if git_is_branch_merged_into "$BRANCH" "$BASE_BRANCH"; then
+		git_do branch -d "$BRANCH" || die "Could not delete the $BRANCH."
+		if flag remote; then
+			git_remote_branch_delete "$BRANCH"
+		fi
+	else
+		if flag force; then
+			git_do branch -D "$BRANCH" || die "Could not delete the $BRANCH."
+			if flag remote; then
+				git_remote_branch_delete "$BRANCH"
+			fi
+		else
+			die "Ticket branch '$BRANCH' has been not been merged yet. Use -f to force the deletion."
+		fi
+	fi
+
+	gitflow_config_remove_base_section "$BRANCH"
+	run_post_hook "$NAME" "$ORIGIN" "$BRANCH"
+
+	echo
+	echo "Summary of actions:"
+	echo "- Ticket branch '$BRANCH' has been deleted."
+	flag remote && echo "- Ticket branch '$BRANCH' in '$ORIGIN' has been deleted."
+	echo "- You are now on branch '$(git_current_branch)'"
+	echo
+}
+
+cmd_rename() {
+	OPTIONS_SPEC="\
+git flow ticket rename <new_name> [<new_name>]
+
+Rename a given ticket branch
+--
+h,help!          Show this help
+showcommands!    Show git commands while executing them
+"
+	gitflow_rename_branch "$@"
+}

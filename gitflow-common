@@ -379,6 +379,7 @@ gitflow_is_prefixed_branch() {
 	branch=$1
 	case $branch in
 	$(git config --get gitflow.prefix.feature)* | \
+	$(git config --get gitflow.prefix.ticket)* | \
 	$(git config --get gitflow.prefix.bugfix)* | \
 	$(git config --get gitflow.prefix.release)* | \
 	$(git config --get gitflow.prefix.hotfix)*  | \

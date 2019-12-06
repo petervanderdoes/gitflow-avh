@@ -1,0 +1,22 @@
+#!/bin/sh
+#
+# Runs before git flow ticket track
+#
+# Positional arguments:
+# $1    The friendly name of the branch
+# $2    The origin remote
+# $3    The full branch name (including the ticket prefix)
+#
+# The following variables are available as they are exported by git-flow:
+#
+# MASTER_BRANCH - The branch defined as Master
+# DEVELOP_BRANCH - The branch defined as Develop
+#
+NAME=$1
+ORIGIN=$2
+BRANCH=$3
+
+# Implement your script here.
+
+# To terminate the git-flow action, return a non-zero exit code.
+exit 0
