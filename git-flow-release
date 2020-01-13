@@ -614,6 +614,12 @@ v,verbose!           Verbose (more) output
 	# Create branch
 	git_do checkout -b "$BRANCH" "$base" || die "Could not create release branch '$BRANCH'."
 
+	if flag recommended; then
+        echo "$(git-conventional-changelog)" > ./CHANGELOG.md
+        git_do add CHANGELOG.md
+        git_do commit -m "chore: add changelog for $VERSION [skip ci]"
+      fi
+
 	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$base"
 
 	echo
