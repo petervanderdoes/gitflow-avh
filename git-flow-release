@@ -615,10 +615,11 @@ v,verbose!           Verbose (more) output
 	git_do checkout -b "$BRANCH" "$base" || die "Could not create release branch '$BRANCH'."
 
 	if flag recommended; then
-        echo "$(git-conventional-changelog)" > ./CHANGELOG.md
-        git_do add CHANGELOG.md
-        git_do commit -m "chore: add changelog for $VERSION [skip ci]"
-      fi
+		touch ./CHANGELOG.md
+		echo "$(git-conventional-changelog)" >> ./CHANGELOG.md
+		git_do add CHANGELOG.md
+		git_do commit -m "chore: add changelog for $VERSION [skip ci]"
+	fi
 
 	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH" "$base"
 
@@ -648,7 +649,7 @@ showcommands!       Show git commands while executing them
 F,[no]fetch         Fetch from origin before performing finish
 s,sign!             Sign the release tag cryptographically
 u,signingkey!       Use the given GPG-key for the digital signature (implies -s)
-c,changelog! 		Use the conventional changelog as tag message
+c,changelog! 	    Use the conventional changelog as tag message
 m,message!          Use the given tag message
 f,[no]messagefile=  Use the contents of the given file as a tag message
 p,[no]push          Push to origin after performing finish
