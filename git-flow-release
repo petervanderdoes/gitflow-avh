@@ -1100,7 +1100,7 @@ r,[no]remote     Delete remote branch
 				git_remote_branch_delete "$BRANCH"
 			fi
 		else
-			die "Release branch '$BRANCH' has been not been merged in branch '$MASTER_BRANCH' and/or branch '$BASE_BRANCH'. Use -f to force the deletion."
+			die "Release branch '$BRANCH' has not been merged in branch '$MASTER_BRANCH' and/or branch '$BASE_BRANCH'. Use -f to force the deletion."
 		fi
 	fi
 

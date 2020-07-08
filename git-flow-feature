@@ -815,7 +815,7 @@ r,[no]remote     Delete remote branch
 				git_remote_branch_delete "$BRANCH"
 			fi
 		else
-			die "Feature branch '$BRANCH' has been not been merged yet. Use -f to force the deletion."
+			die "Feature branch '$BRANCH' has not been merged yet. Use -f to force the deletion."
 		fi
 	fi
 
