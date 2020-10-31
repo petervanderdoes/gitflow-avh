@@ -1061,7 +1061,7 @@ r,[no]remote     Delete remote branch
 	DEFINE_boolean 'remote' false "delete remote branch" r
 
 	# Override defaults with values from config
-	gitflow_override_flag_boolean   "release.delete.fetch"    "fetch"
+	gitflow_override_flag_boolean   "release.delete.force"    "force"
 	gitflow_override_flag_boolean   "release.delete.remote"   "remote"
 
 	# Parse arguments
