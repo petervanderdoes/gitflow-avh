@@ -616,7 +616,7 @@ v,verbose!           Verbose (more) output
 
 	if flag recommended; then
 		touch ./CHANGELOG.md
-		echo "$(git-conventional-changelog)" >> ./CHANGELOG.md
+		echo "\n\n$(git-conventional-changelog)" >> ./CHANGELOG.md
 		git_do add CHANGELOG.md
 		git_do commit -m "chore: add changelog for $VERSION [skip ci]"
 	fi
