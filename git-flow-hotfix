@@ -381,6 +381,7 @@ n,[no]notag           Don't tag this hotfix
 b,[no]nobackmerge     Don't back-merge master, or tag if applicable, in develop
 S,[no]squash          Squash hotfix during merge
 T,tagname!            Use given tag name
+[no]nodevelopmerge    Don't back-merge develop branch
 "
 	local opts commit keepmsg remotebranchdeleted localbranchdeleted
 
@@ -400,6 +401,7 @@ T,tagname!            Use given tag name
 	DEFINE_boolean 'squash' false "squash release during merge" S
 	DEFINE_boolean 'squash-info' false "add branch info during squash"
 	DEFINE_string  'tagname' "" "use the given tag name" T
+	DEFINE_boolean 'nodevelopmerge' false "don't merge $BRANCH into $DEVELOP_BRANCH "
 
 	# Override defaults with values from config
 	gitflow_override_flag_boolean   "hotfix.finish.fetch"          "fetch"
@@ -416,6 +418,7 @@ T,tagname!            Use given tag name
 	gitflow_override_flag_string    "hotfix.finish.signingkey"     "signingkey"
 	gitflow_override_flag_string    "hotfix.finish.message"        "message"
 	gitflow_override_flag_string    "hotfix.finish.messagefile"    "messagefile"
+	gitflow_override_flag_boolean   "hotfix.finish.nodevelopmerge" "nodevelopmerge"
 
 	# Parse arguments
 	parse_args "$@"
@@ -548,35 +551,37 @@ T,tagname!            Use given tag name
 		fi
 	fi
 
-	if [ "$BASE_BRANCH" = "$MASTER_BRANCH" ]; then
-		# By default we back-merge the $MASTER_BRANCH unless the user explicitly
-		# stated not to do a back-merge, in that case we use the $BRANCH.
-		if noflag nobackmerge; then
-			MERGE_BRANCH="$BASE_BRANCH"
-		else
-			MERGE_BRANCH="$BRANCH"
-		fi
-
-		# Try to merge into develop.
-		# In case a previous attempt to finish this release branch has failed,
-		# but the merge into develop was successful, we skip it now
-		if ! git_is_branch_merged_into "$MERGE_BRANCH" "$DEVELOP_BRANCH"; then
-			git_do checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
-
+	# Try to merge into develop unless 'nodevelopmerge' has been specified.
+	if noflag nodevelopmerge; then
+		if [ "$BASE_BRANCH" = "$MASTER_BRANCH" ]; then
+			# By default we back-merge the $MASTER_BRANCH unless the user explicitly
+			# stated not to do a back-merge, in that case we use the $BRANCH.
 			if noflag nobackmerge; then
-				# Accounting for 'git describe', if a release is tagged
-				# we use the tag commit instead of the branch.
-				if noflag notag; then
-					commit="$VERSION_PREFIX$TAGNAME"
-				else
-					commit="$BASE_BRANCH"
-				fi
+				MERGE_BRANCH="$BASE_BRANCH"
 			else
-				commit="$BRANCH"
+				MERGE_BRANCH="$BRANCH"
 			fi
 
-			git_do merge --no-ff "$commit" || die "There were merge conflicts."
-			# TODO: What do we do now?
+			# In case a previous attempt to finish this release branch has failed,
+			# but the merge into develop was successful, we skip it now
+			if ! git_is_branch_merged_into "$MERGE_BRANCH" "$DEVELOP_BRANCH"; then
+				git_do checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
+
+				if noflag nobackmerge; then
+					# Accounting for 'git describe', if a release is tagged
+					# we use the tag commit instead of the branch.
+					if noflag notag; then
+						commit="$VERSION_PREFIX$TAGNAME"
+					else
+						commit="$BASE_BRANCH"
+					fi
+				else
+					commit="$BRANCH"
+				fi
+
+				git_do merge --no-ff "$commit" || die "There were merge conflicts."
+				# TODO: What do we do now?
+			fi
 		fi
 	fi
 
