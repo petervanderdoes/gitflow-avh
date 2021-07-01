@@ -72,8 +72,8 @@ git flow feature log [<options>]
 Show log on <feature> branch since the fork of <develop> branch
 Options come from git log
 --
-h,help!         Show this help
-showcommands!   Show git commands while executing them
+h,help!             Show this help
+q,showcommands!     Show git commands while executing them
 "
 
 	# Parse arguments

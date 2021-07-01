@@ -119,7 +119,7 @@ main() {
 	. "$GITFLOW_DIR/gitflow-common"
 
 	# allow user to request git action logging
-	DEFINE_boolean 'showcommands' false 'Show actions taken (git commands)'
+	DEFINE_boolean 'showcommands' false 'Show actions taken (git commands)' q
 	# but if the user prefers that the logging is always on,
 	# use the environmental variables.
 	gitflow_override_flag_boolean 'showcommands' 'showcommands'
