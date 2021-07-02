@@ -63,7 +63,7 @@ git flow init [-h] [-d] [-f]
 Setup a git repository for git flow usage. Can also be used to start a git repository.
 --
 h,help!             Show this help
-showcommands!       Show git commands while executing them
+q,showcommands!     Show git commands while executing them
 d,[no]defaults      Use default branch naming conventions
 f,[no]force         Force setting of gitflow branches, even if already configured
 
@@ -75,10 +75,10 @@ s,support!          Support branches
 t,tag!              Version tag prefix
 
 Use config file location
-local!   use repository config file
-global!  use global config file
-system!  use system config file
-file=    use given config file
+L,local!   use repository config file
+G,global!  use global config file
+S,system!  use system config file
+F,file=    use given config file
 "
 	local gitflow_config_option should_check_existence branchcount guess
 	local master_branch develop_branch default_suggestion answer prefix
@@ -86,10 +86,10 @@ file=    use given config file
 	# Define flags
 	DEFINE_boolean 'force' false 'force setting of gitflow branches, even if already configured' f
 	DEFINE_boolean 'defaults' false 'use default branch naming conventions' d
-	DEFINE_boolean 'local' false 'use repository config file'
-	DEFINE_boolean 'global' false 'use global config file'
-	DEFINE_boolean 'system' false 'use system config file'
-	DEFINE_string 'file' "" 'use given config file'
+	DEFINE_boolean 'local' false 'use repository config file' L
+	DEFINE_boolean 'global' false 'use global config file' G
+	DEFINE_boolean 'system' false 'use system config file' S
+	DEFINE_string 'file' "" 'use given config file' F
 	DEFINE_string 'feature' "" 'feature branches' p
 	DEFINE_string 'bugfix' "" 'bugfix branches' b
 	DEFINE_string 'release' "" 'release branches' r

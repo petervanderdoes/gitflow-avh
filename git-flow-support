@@ -163,7 +163,7 @@ git flow support start [-h] [-F] <version> <base>
 Start a new support branch name <version> based on <base>
 --
 h,help!           Show this help
-showcommands!     Show git commands while executing them
+q,showcommands!   Show git commands while executing them
 F,[no]fetch       Fetch from origin before performing finish
 "
 	# Define flags
@@ -207,7 +207,7 @@ git flow support rebase [-h] [-i] [-p] [<name|nameprefix>]
 Rebase <name> on <base_branch>
 --
 h,help!                Show this help
-showcommands!          Show git commands while executing them
+q,showcommands!        Show git commands while executing them
 i,[no]interactive      Do an interactive rebase
 p,[no]preserve-merges  Preserve merges
 "

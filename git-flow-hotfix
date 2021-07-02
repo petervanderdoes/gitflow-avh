@@ -170,7 +170,7 @@ git flow hotfix start [-h] [-F] <version> [<base>]
 Start new hotfix branch named <version>, optionally base it on <base> instead of the <master> branch
 --
 h,help!           Show this help
-showcommands!     Show git commands while executing them
+q,showcommands!   Show git commands while executing them
 F,[no]fetch       Fetch from origin before performing local operation
 "
 	local base
@@ -246,7 +246,7 @@ git flow hotfix publish [-h] <version>
 Start sharing hotfix <name> on $ORIGIN
 --
 h,help!           Show this help
-showcommands!     Show git commands while executing them
+q,showcommands!   Show git commands while executing them
 "
 	# Parse arguments
 	parse_args "$@"
@@ -286,7 +286,7 @@ git flow hotfix rebase [-h] [-i] [-p] [<name|nameprefix>]
 Rebase <name> on <base_branch>
 --
 h,help!                Show this help
-showcommands!          Show git commands while executing them
+q,showcommands!        Show git commands while executing them
 i,[no]interactive      Do an interactive rebase
 p,[no]preserve-merges  Preserve merges
 "
@@ -336,7 +336,7 @@ git flow hotfix track [-h] <version>
 Create a tracking hotfix branch from $ORIGIN
 --
 h,help!           Show this help
-showcommands!     Show git commands while executing them
+q,showcommands!   Show git commands while executing them
 "
 	# Parse arguments
 	parse_args "$@"
@@ -366,7 +366,7 @@ git flow hotfix finish [-h] [-F] [-s] [-u] [-m | -f ] [-p] [-k] [-n] [-b] [-S] <
 Finish hotfix branch <version>
 --
 h,help!               Show this help
-showcommands!         Show git commands while executing them
+q,showcommands!       Show git commands while executing them
 F,[no]fetch           Fetch from origin before performing finish
 s,[no]sign            Sign the release tag cryptographically
 u,[no]signingkey      Use the given GPG-key for the digital signature (implies -s)
@@ -374,12 +374,13 @@ m,[no]message         Use the given tag message
 f,[no]messagefile=    Use the contents of the given file as tag message
 p,[no]push            Push to origin after performing finish
 k,[no]keep            Keep branch after performing finish
-[no]keepremote        Keep the remote branch
-[no]keeplocal         Keep the local branch
+R,[no]keepremote      Keep the remote branch
+L,[no]keeplocal       Keep the local branch
 D,[no]force_delete    Force delete hotfix branch after finish
 n,[no]notag           Don't tag this hotfix
 b,[no]nobackmerge     Don't back-merge master, or tag if applicable, in develop
 S,[no]squash          Squash hotfix during merge
+z,[no]squash-info     Add branch info during squash
 T,tagname!            Use given tag name
 "
 	local opts commit keepmsg remotebranchdeleted localbranchdeleted
@@ -392,13 +393,13 @@ T,tagname!            Use given tag name
 	DEFINE_string  'messagefile' "" "use the contents of the given file as tag message" f
 	DEFINE_boolean 'push' false "push to $ORIGIN after performing finish" p
 	DEFINE_boolean 'keep' false "keep branch after performing finish" k
-	DEFINE_boolean 'keepremote' false "keep the remote branch"
-	DEFINE_boolean 'keeplocal' false "keep the local branch"
+	DEFINE_boolean 'keepremote' false "keep the remote branch" R
+	DEFINE_boolean 'keeplocal' false "keep the local branch" L
 	DEFINE_boolean 'force_delete' false "force delete hotfix branch after finish" D
 	DEFINE_boolean 'notag' false "don't tag this hotfix" n
 	DEFINE_boolean 'nobackmerge' false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
 	DEFINE_boolean 'squash' false "squash release during merge" S
-	DEFINE_boolean 'squash-info' false "add branch info during squash"
+	DEFINE_boolean 'squash-info' false "add branch info during squash" z
 	DEFINE_string  'tagname' "" "use the given tag name" T
 
 	# Override defaults with values from config
@@ -672,7 +673,7 @@ git flow hotfix delete [-h] [-f] [-r] <name>
 Delete the given hotfix branch
 --
 h,help!               Show this help
-showcommands!         Show git commands while executing them
+q,showcommands!       Show git commands while executing them
 f,[no]force           Force deletion
 r,[no]remote          Delete remote branch
 "
@@ -737,7 +738,7 @@ git flow hotfix rename <new_name> [<new_name>]
 Rename a given hotfix branch
 --
 h,help!          Show this help
-showcommands!    Show git commands while executing them
+q,showcommands!  Show git commands while executing them
 "
 	gitflow_rename_branch "$@"
 }

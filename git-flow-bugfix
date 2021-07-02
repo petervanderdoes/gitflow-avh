@@ -181,7 +181,7 @@ git flow bugfix start [-h] [-F] <name> [<base>]
 Start new bugfix <name>, optionally basing it on <base> instead of <develop>
 --
 h,help!          Show this help
-showcommands!    Show git commands while executing them
+q,showcommands!  Show git commands while executing them
 F,[no]fetch      Fetch from origin before performing local operation
 "
 	local base
@@ -241,17 +241,18 @@ git flow bugfix finish [-h] [-F] [-r] [-p] [-k] [-D] [-S] [--no-ff] <name|namepr
 Finish bugfix <name>
 --
 h,help!                Show this help
-showcommands!          Show git commands while executing them
+q,showcommands!        Show git commands while executing them
 F,[no]fetch            Fetch from origin before performing finish
 r,[no]rebase           Rebase before merging
 p,[no]preserve-merges  Preserve merges while rebasing
-[no]push               Push to origin after performing finish
+P,[no]push             Push to origin after performing finish
 k,[no]keep             Keep branch after performing finish
-keepremote!        	   Keep the remote branch
-keeplocal!             Keep the local branch
+R,keepremote!          Keep the remote branch
+L,keeplocal!           Keep the local branch
 D,[no]force_delete     Force delete bugfix branch after finish
 S,[no]squash           Squash bugfix during merge
-no-ff!                 Never fast-forward during the merge
+s,[no]squash_info      Add branch info during squash
+m,no-ff!               Never fast-forward during the merge
 "
 	local finish_base
 
@@ -259,14 +260,14 @@ no-ff!                 Never fast-forward during the merge
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
 	DEFINE_boolean 'rebase' false "rebase before merging" r
 	DEFINE_boolean 'preserve-merges' false 'try to recreate merges while rebasing' p
-	DEFINE_boolean 'push' false "push to $ORIGIN after performing finish"
+	DEFINE_boolean 'push' false "push to $ORIGIN after performing finish" P
 	DEFINE_boolean 'keep' false "keep branch after performing finish" k
-	DEFINE_boolean 'keepremote' false "keep the remote branch"
-	DEFINE_boolean 'keeplocal' false "keep the local branch"
+	DEFINE_boolean 'keepremote' false "keep the remote branch" R
+	DEFINE_boolean 'keeplocal' false "keep the local branch" L
 	DEFINE_boolean 'force_delete' false "force delete bugfix branch after finish" D
 	DEFINE_boolean 'squash' false "squash bugfix during merge" S
-	DEFINE_boolean 'squash-info' false "add branch info during squash"
-	DEFINE_boolean 'no-ff!' false "Don't fast-forward ever during merge "
+	DEFINE_boolean 'squash-info' false "add branch info during squash" s
+	DEFINE_boolean 'no-ff!' false "Don't fast-forward ever during merge " m
 
 	# Override defaults with values from config
 	gitflow_override_flag_boolean   "bugfix.finish.fetch"             "fetch"
@@ -507,7 +508,7 @@ Publish bugfix branch <name> on $ORIGIN.
 When <name> is omitted the current branch is used, but only if it's a bugfix branch.
 --
 h,help!          Show this help
-showcommands!    Show git commands while executing them
+q,showcommands!  Show git commands while executing them
 "
 	# Parse arguments
 	parse_args "$@"
@@ -548,7 +549,7 @@ git flow bugfix track [-h] <name>
 Start tracking bugfix <name> that is shared on $ORIGIN
 --
 h,help!          Show this help
-showcommands!    Show git commands while executing them
+q,showcommands!  Show git commands while executing them
 "
 	# Parse arguments
 	parse_args "$@"
@@ -583,7 +584,7 @@ git flow bugfix diff [-h] [<name|nameprefix>]
 Show all changes in <name> that are not in the base
 --
 h,help!          Show this help
-showcommands!    Show git commands while executing them
+q,showcommands!  Show git commands while executing them
 "
 	local base
 
@@ -608,7 +609,7 @@ git flow bugfix checkout [-h] [<name|nameprefix>]
 Switch to bugfix branch <name>
 --
 h,help!          Show this help
-showcommands!    Show git commands while executing them
+q,showcommands!  Show git commands while executing them
 "
 	# Parse arguments
 	parse_args "$@"
@@ -632,7 +633,7 @@ git flow bugfix rebase [-h] [-i] [-p] [<name|nameprefix>]
 Rebase <name> on <base_branch>
 --
 h,help!                Show this help
-showcommands!          Show git commands while executing them
+q,showcommands!        Show git commands while executing them
 i,[no]interactive      Do an interactive rebase
 p,[no]preserve-merges  Preserve merges
 "
@@ -695,7 +696,7 @@ git flow bugfix pull [-h] <remote> [<name>]
 Pull bugfix <name> from <remote>
 --
 h,help!          Show this help
-showcommands!    Show git commands while executing them
+q,showcommands!  Show git commands while executing them
 "
 	local current_branch
 
@@ -764,7 +765,7 @@ git flow bugfix delete [-h] [-f] [-r] <name>
 Delete a given bugfix branch
 --
 h,help!          Show this help
-showcommands!    Show git commands while executing them
+q,showcommands!  Show git commands while executing them
 f,[no]force      Force deletion
 r,[no]remote     Delete remote branch
 "
@@ -836,7 +837,7 @@ git flow bugfix rename <new_name> [<new_name>]
 Rename a given bugfix branch
 --
 h,help!          Show this help
-showcommands!    Show git commands while executing them
+q,showcommands!  Show git commands while executing them
 "
 	gitflow_rename_branch "$@"
 }
