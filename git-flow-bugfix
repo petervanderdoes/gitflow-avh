@@ -197,6 +197,14 @@ F,[no]fetch      Fetch from origin before performing local operation
 	eval set -- "${FLAGS_ARGV}"
 	base=${2:-$DEVELOP_BRANCH}
 
+	# Run filter on the name
+	NAME=$(run_filter_hook bugfix-start-name $NAME)
+	if [ $? -eq 127 ]; then
+		die $NAME
+	fi
+
+	BRANCH="$PREFIX$NAME"
+
 	require_base_is_local_branch "$base"
 	gitflow_require_name_arg
 

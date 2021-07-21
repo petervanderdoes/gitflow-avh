@@ -1,0 +1,22 @@
+#!/bin/sh
+#
+# Runs during git flow feature start
+#
+# Positional arguments:
+# $1    Name
+#
+# Return NAME - When NAME is returned empty, git-flow will stop as the
+# name is necessary
+#
+# The following variables are available as they are exported by git-flow:
+#
+# MASTER_BRANCH - The branch defined as Master
+# DEVELOP_BRANCH - The branch defined as Develop
+#
+NAME=$1
+
+# Implement your script here.
+
+# Return the NAME
+echo ${NAME}
+exit 0
