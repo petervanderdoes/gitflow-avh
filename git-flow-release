@@ -104,12 +104,15 @@ _finish_from_develop() {
 	# but the merge into master was successful, we skip it now
 	if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
 			git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
+
+			opts=""
+			noflag edit && opts="$opts --no-edit"
 			if noflag squash; then
-				git_do merge --no-ff "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+				git_do merge --no-ff $opts "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
 			else
-				git_do merge --squash "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
+				git_do merge --squash $opts "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
 				flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$MASTER_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
-				git_do commit
+				git_do commit $opts
 			fi
 	fi
 
@@ -131,6 +134,12 @@ _finish_from_develop() {
 				opts="$opts -m '$FLAGS_message'"
 			fi
 			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
+			if noflag edit; then
+				if [ "$FLAGS_message" = "" ] && [ "$FLAGS_messagefile" = "" ]; then
+					# in order to fix annotated tag without message
+					opts="$opts -m $VERSION_PREFIX$TAGNAME"
+				fi
+			fi
 			eval git_do tag $opts "$VERSION_PREFIX$TAGNAME" || die "Tagging failed. Please run finish again to retry."
 		fi
 	fi
@@ -150,6 +159,8 @@ _finish_from_develop() {
 		if ! git_is_branch_merged_into "$merge_branch" "$DEVELOP_BRANCH"; then
 			git_do checkout "$DEVELOP_BRANCH" || die "Could not check out branch '$DEVELOP_BRANCH'."
 
+			opts=""
+			noflag edit && opts="$opts --no-edit"
 			if noflag nobackmerge; then
 				# Accounting for 'git describe', if a release is tagged
 				# we use the tag commit instead of the branch.
@@ -158,15 +169,15 @@ _finish_from_develop() {
 				else
 					commit="$MASTER_BRANCH"
 				fi
-				git_do merge --no-ff "$commit" || die "There were merge conflicts." # TODO: What do we do now?
+				git_do merge --no-ff $opts "$commit" || die "There were merge conflicts." # TODO: What do we do now?
 			else
 				commit="$BRANCH"
 				if noflag squash; then
-					git_do merge --no-ff "$commit" || die "There were merge conflicts." # TODO: What do we do now?
+					git_do merge --no-ff $opts "$commit" || die "There were merge conflicts." # TODO: What do we do now?
 				else
-					git_do merge --squash "$commit" || die "There were merge conflicts." # TODO: What do we do now?
+					git_do merge --squash $opts "$commit" || die "There were merge conflicts." # TODO: What do we do now?
 					flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$DEVELOP_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
-					git_do commit
+					git_do commit $opts
 				fi
 			fi
 		fi
@@ -325,6 +336,12 @@ _finish_base() {
 				opts="$opts -m '$FLAGS_message'"
 			fi
 			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
+			if noflag edit; then
+				if [ "$FLAGS_message" = "" ] && [ "$FLAGS_messagefile" = "" ]; then
+					# in order to fix annotated tag without message
+					opts="$opts -m $VERSION_PREFIX$TAGNAME"
+				fi
+			fi
 			eval git_do tag $opts "$VERSION_PREFIX$TAGNAME" || die "Tagging failed. Please run finish again to retry."
 		fi
 	fi
@@ -603,7 +620,7 @@ v,verbose!           Verbose (more) output
 
 cmd_finish() {
 	OPTIONS_SPEC="\
-git flow release finish [-h] [-F] [-s] [-u] [-m | -f] [-p] [-k] [-n] [-b] [-S] <version>
+git flow release finish [-h] [-F] [-s] [-u] [-m | -f] [-p] [-k] [-n] [-b] [-S] [-e] <version>
 
 
 Finish a release branch
@@ -627,6 +644,7 @@ n,[no]tag           Don't tag this release
 b,[no]nobackmerge   Don't back-merge master, or tag if applicable, in develop
 S,[no]squash        Squash release during merge
 [no]ff-master       Fast forward master branch if possible
+e,[no]edit          The --noedit option can be used to accept the auto-generated message on merging
 T,tagname!          Use given tag name
 nodevelopmerge!  Don't back-merge develop branch
 "
@@ -649,6 +667,7 @@ nodevelopmerge!  Don't back-merge develop branch
 	DEFINE_boolean 'squash' false "squash release during merge" S
 	DEFINE_boolean 'squash-info' false "add branch info during squash"
 	DEFINE_boolean 'ff-master' false "fast forward master branch if possible"
+	DEFINE_boolean 'edit' true "accept the auto-generated message on merging" e
 	DEFINE_string  'tagname' "" "use the given tag name" T
 	DEFINE_boolean 'nodevelopmerge' false "don't merge $BRANCH into $DEVELOP_BRANCH "
 
